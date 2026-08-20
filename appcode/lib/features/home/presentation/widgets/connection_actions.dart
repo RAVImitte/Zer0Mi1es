@@ -33,8 +33,8 @@ class ConnectionActions extends ConsumerWidget {
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        final moods = ['Happy', 'Sad', 'Devastated', 'Overwhelmed', 'Excited', 'Tired'];
-        final emojis = ['😊', '😢', '😭', '🤯', '🤩', '😴'];
+        final moods = ['Happy', 'Sad', 'Devastated', 'Overwhelmed', 'Sorry', 'Tired'];
+        final emojis = ['😊', '😢', '😭', '🤯', '🥺', '😴'];
         
         return Padding(
           padding: const EdgeInsets.all(24.0),

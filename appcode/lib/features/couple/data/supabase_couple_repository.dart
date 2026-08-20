@@ -74,3 +74,24 @@ Future<String?> partnerName(Ref ref) async {
   final profileRes = await client.from('profiles').select('display_name').eq('id', partnerId).single();
   return profileRes['display_name'] as String?;
 }
+
+@riverpod
+Future<String?> partnerRole(Ref ref) async {
+  final client = Supabase.instance.client;
+  final uid = client.auth.currentUser?.id;
+  final coupleId = await ref.watch(activeCoupleIdProvider.future);
+  
+  if (uid == null || coupleId == null) return null;
+
+  // Get the couple row
+  final coupleRes = await client.from('couples').select().eq('id', coupleId).single();
+  
+  // If the current user is the bear, the partner is the bunny, and vice versa
+  if (coupleRes['bear_id'] == uid) {
+    return 'bunny';
+  } else if (coupleRes['bunny_id'] == uid) {
+    return 'bear';
+  }
+  
+  return null;
+}

@@ -116,3 +116,36 @@ final class PartnerNameProvider
 }
 
 String _$partnerNameHash() => r'16eb2152536496404c6759b4c1ef434d03d0727d';
+
+@ProviderFor(partnerRole)
+final partnerRoleProvider = PartnerRoleProvider._();
+
+final class PartnerRoleProvider
+    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
+    with $FutureModifier<String?>, $FutureProvider<String?> {
+  PartnerRoleProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'partnerRoleProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$partnerRoleHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String?> create(Ref ref) {
+    return partnerRole(ref);
+  }
+}
+
+String _$partnerRoleHash() => r'a3dd889ae3af08cf1515184f7c13f24e6669b3a5';

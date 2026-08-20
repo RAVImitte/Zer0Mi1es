@@ -144,6 +144,10 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
         imageFile, 
         comment: comment.isEmpty ? null : comment,
       );
+      
+      // Force refresh the stream to fetch the partner's photo which is now unlocked by RLS
+      ref.invalidate(todayPhotosProvider(coupleId));
+      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));

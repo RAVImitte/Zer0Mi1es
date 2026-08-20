@@ -5,8 +5,10 @@ import '../../../couple/data/supabase_couple_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/partner_status_provider.dart';
 import '../../../outfit/data/supabase_outfit_repository.dart';
+import '../../../avatar/presentation/widgets/dynamic_person_avatar.dart';
 
-final partnerOutfitProvider = StreamProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, coupleId) {
+final partnerOutfitProvider = StreamProvider.autoDispose
+    .family<Map<String, dynamic>?, String>((ref, coupleId) {
   return ref.watch(outfitRepositoryProvider).watchPartnerOutfit(coupleId);
 });
 
@@ -73,164 +75,242 @@ class PartnerPresence extends ConsumerWidget {
         avatarIcon = Icons.chair;
         statusText = 'Resting...';
         break;
+      case AnimationState.moodHappy:
+        avatarColor = Colors.amber;
+        statusText = 'Super Happy!';
+        break;
+      case AnimationState.moodSad:
+        avatarColor = Colors.grey;
+        statusText = 'Feeling Sad...';
+        break;
+      case AnimationState.moodDevastated:
+        avatarColor = Colors.blueGrey;
+        statusText = 'Devastated...';
+        break;
+      case AnimationState.moodOverwhelmed:
+        avatarColor = Colors.deepOrange;
+        statusText = 'Overwhelmed!';
+        break;
+      case AnimationState.moodSorry:
+        avatarColor = Colors.teal;
+        statusText = 'Feeling Sorry 🥺';
+        break;
+      case AnimationState.moodTired:
+        avatarColor = Colors.indigo.shade300;
+        statusText = 'Feeling Tired...';
+        break;
     }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-          partnerNameAsync.when(
-            data: (name) => Text(
-              name ?? 'Partner',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            loading: () => const SizedBox(height: 28),
-            error: (_, __) => const Text('Partner', style: TextStyle(color: AppColors.primary, fontSize: 24)),
-          ),
-          const SizedBox(height: 16),
-          
-          Consumer(
-            builder: (context, ref, _) {
-              final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
-              final outfitAsync = activeCoupleId != null 
-                ? ref.watch(partnerOutfitProvider(activeCoupleId)) 
-                : const AsyncValue<Map<String, dynamic>?>.data(null);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final dynamicSize = screenWidth * 0.48; // Maximize bubble size on the left
 
-              Color topColor = avatarColor.withOpacity(0.2);
-              Color bottomColor = avatarColor.withOpacity(0.2);
-
-              final outfitValue = outfitAsync.value;
-
-              if (outfitValue != null) {
-                final topStr = outfitValue['top_color'] as String;
-                final bottomStr = outfitValue['bottom_color'] as String;
+    return Container(
+      width: screenWidth,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Left Column: Avatar Bubble
+          Expanded(
+            flex: 5,
+            child: Consumer(
+              builder: (context, ref, _) {
+                final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
+                final outfitAsync = activeCoupleId != null
+                    ? ref.watch(partnerOutfitProvider(activeCoupleId))
+                    : const AsyncValue<Map<String, dynamic>?>.data(null);
                 
-                final Map<String, Color> colorMap = {
-                  'Red': Colors.red, 'Blue': Colors.blue, 'Green': Colors.green, 
-                  'Yellow': Colors.yellow, 'Orange': Colors.orange, 'Purple': Colors.purple, 
-                  'Black': Colors.black, 'White': Colors.white, 'Pink': Colors.pink, 'Teal': Colors.teal,
-                };
-                
-                topColor = colorMap[topStr] ?? topColor;
-                bottomColor = colorMap[bottomStr] ?? bottomColor;
-              }
+                final partnerRoleAsync = ref.watch(partnerRoleProvider);
+                final bool isBunny = partnerRoleAsync.value == 'bunny';
 
-              final screenWidth = MediaQuery.sizeOf(context).width;
-              final dynamicSize = screenWidth * 0.35; // Scales beautifully with device width
-              
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                transform: Matrix4.identity()..scale(scale),
-                transformAlignment: Alignment.center,
-                width: dynamicSize,
-                height: dynamicSize,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [topColor, bottomColor],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: avatarColor, width: 4),
-                ),
-                child: Icon(
-                  avatarIcon,
-                  size: dynamicSize * 0.5,
-                  color: avatarColor == Colors.white ? Colors.black : Colors.white, // Contrast against gradient
-                ),
-              );
-            },
-          ),
-          
-          const SizedBox(height: 16),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(
-            statusText,
-            key: ValueKey(statusText),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        
-        // Partner Status Card
-        Consumer(
-          builder: (context, ref, _) {
-            final partnerStatusAsync = ref.watch(partnerStatusProvider);
-            final partnerName = partnerNameAsync.value ?? 'Partner';
+                Color topColor = avatarColor.withOpacity(0.2);
+                Color bottomColor = avatarColor.withOpacity(0.2);
 
-            return partnerStatusAsync.when(
-              data: (status) {
-                if (status.mood == null && status.talkSignal == null) {
-                  return const SizedBox.shrink();
+                final outfitValue = outfitAsync.value;
+
+                if (outfitValue != null) {
+                  final topStr = outfitValue['top_color'] as String;
+                  final bottomStr = outfitValue['bottom_color'] as String;
+
+                  final Map<String, Color> colorMap = {
+                    'Red': Colors.red,
+                    'Blue': Colors.blue,
+                    'Green': Colors.green,
+                    'Yellow': Colors.yellow,
+                    'Orange': Colors.orange,
+                    'Purple': Colors.purple,
+                    'Black': Colors.black,
+                    'White': Colors.white,
+                    'Pink': Colors.pink,
+                    'Teal': Colors.teal,
+                  };
+
+                  topColor = colorMap[topStr] ?? topColor;
+                  bottomColor = colorMap[bottomStr] ?? bottomColor;
                 }
 
-                return Container(
-                  padding: const EdgeInsets.all(16),
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  transform: Matrix4.identity()..scale(scale),
+                  transformAlignment: Alignment.center,
+                  width: dynamicSize,
+                  height: dynamicSize,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      if (status.mood != null) ...[
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.mood, color: Colors.orangeAccent, size: 20),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                '$partnerName is feeling ${status.mood} right now',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (status.mood != null && status.talkSignal != null) 
-                        const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider()),
-                      if (status.talkSignal != null) ...[
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.notifications_active, color: Colors.blueAccent, size: 20),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                () {
-                                  switch (status.talkSignal) {
-                                    case 'text': return '$partnerName requested to text';
-                                    case 'call': return '$partnerName requested a voice call';
-                                    case 'video_call': return '$partnerName requested a video call';
-                                    case 'goodNight': return '$partnerName is going to sleep 🌙';
-                                    default: return '$partnerName sent a signal';
-                                  }
-                                }(),
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ]
+                    color: Colors.white.withOpacity(0.05),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: avatarColor.withOpacity(0.5), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                          color: avatarColor.withOpacity(0.2),
+                          blurRadius: 30,
+                          spreadRadius: 5),
                     ],
+                  ),
+                  child: Center(
+                    child: DynamicPersonAvatar(
+                      state: animationState,
+                      topColor: topColor,
+                      bottomColor: bottomColor,
+                      isBunny: isBunny,
+                      size: dynamicSize * 0.75,
+                    ),
                   ),
                 );
               },
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            );
-          },
-        ),
-      ],
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Right Column: Name, Status Text, Partner Card
+          Expanded(
+            flex: 5,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                partnerNameAsync.when(
+                  data: (name) => Text(
+                    name ?? 'Partner',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  loading: () => const SizedBox(height: 28),
+                  error: (_, __) => const Text('Partner',
+                      style: TextStyle(color: AppColors.primary, fontSize: 24)),
+                ),
+
+                const SizedBox(height: 8),
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    statusText,
+                    key: ValueKey(statusText),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Partner Status Card
+                Consumer(
+                  builder: (context, ref, _) {
+                    final partnerStatusAsync = ref.watch(partnerStatusProvider);
+                    final partnerName = partnerNameAsync.value ?? 'Partner';
+
+                    return partnerStatusAsync.when(
+                      data: (status) {
+                        if (status.mood == null && status.talkSignal == null) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (status.mood != null) ...[
+                                Row(
+                                  children: [
+                                    const Icon(Icons.mood,
+                                        color: Colors.orangeAccent, size: 16),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '$partnerName is ${status.mood}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
+                                            color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (status.mood != null &&
+                                  status.talkSignal != null)
+                                const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 6),
+                                    child: Divider()),
+                              if (status.talkSignal != null) ...[
+                                Row(
+                                  children: [
+                                    const Icon(Icons.notifications_active,
+                                        color: Colors.blueAccent, size: 16),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        () {
+                                          switch (status.talkSignal) {
+                                            case 'text':
+                                              return 'Requested to text';
+                                            case 'call':
+                                              return 'Requested a call';
+                                            case 'video_call':
+                                              return 'Requested video call';
+                                            case 'goodNight':
+                                              return 'Going to sleep 🌙';
+                                            default:
+                                              return 'Sent a signal';
+                                          }
+                                        }(),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
+                                            color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ]
+                            ],
+                          ),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

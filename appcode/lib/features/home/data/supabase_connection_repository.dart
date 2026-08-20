@@ -104,7 +104,13 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       callback: (payload) {
         final newRecord = payload.newRecord;
         if (newRecord['user_id'] != uid) {
-          controller.add(AvatarEvent.playWithPet); // Just an example response to a mood change
+          final mood = newRecord['mood'] as String?;
+          if (mood == 'Happy') controller.add(AvatarEvent.moodHappy);
+          else if (mood == 'Sad') controller.add(AvatarEvent.moodSad);
+          else if (mood == 'Devastated') controller.add(AvatarEvent.moodDevastated);
+          else if (mood == 'Overwhelmed') controller.add(AvatarEvent.moodOverwhelmed);
+          else if (mood == 'Sorry') controller.add(AvatarEvent.moodSorry);
+          else if (mood == 'Tired') controller.add(AvatarEvent.moodTired);
         }
       },
     ).onPostgresChanges(

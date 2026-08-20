@@ -15,7 +15,13 @@ enum AnimationState {
   resting,
   sleeping,
   reaction,
-  talking
+  talking,
+  moodHappy,
+  moodSad,
+  moodDevastated,
+  moodOverwhelmed,
+  moodSorry,
+  moodTired
 }
 
 enum AvatarEvent {
@@ -27,6 +33,12 @@ enum AvatarEvent {
   feedPet,
   petAnimal,
   playWithPet,
+  moodHappy,
+  moodSad,
+  moodDevastated,
+  moodOverwhelmed,
+  moodSorry,
+  moodTired,
 }
 
 @riverpod
@@ -81,12 +93,19 @@ class AvatarViewModel extends _$AvatarViewModel {
         nextState = AnimationState.sleeping;
         duration = const Duration(hours: 8); // Sleep until morning event
         break;
+      case AvatarEvent.moodHappy: nextState = AnimationState.moodHappy; break;
+      case AvatarEvent.moodSad: nextState = AnimationState.moodSad; break;
+      case AvatarEvent.moodDevastated: nextState = AnimationState.moodDevastated; break;
+      case AvatarEvent.moodOverwhelmed: nextState = AnimationState.moodOverwhelmed; break;
+      case AvatarEvent.moodSorry: nextState = AnimationState.moodSorry; break;
+      case AvatarEvent.moodTired: nextState = AnimationState.moodTired; break;
     }
 
     state = nextState;
 
     // Set a timer to return to IDLE (or another ambient state) after the action completes
-    if (nextState != AnimationState.sleeping && nextState != AnimationState.idle) {
+    bool isMoodState = nextState.name.startsWith('mood');
+    if (nextState != AnimationState.sleeping && nextState != AnimationState.idle && !isMoodState) {
       _resetTimer = Timer(duration, () {
         if (state == nextState) {
           state = AnimationState.idle;
