@@ -10,6 +10,7 @@ import 'widgets/daily_status.dart';
 import 'widgets/connection_actions.dart';
 import 'providers/partner_status_provider.dart';
 import '../../notifications/service/push_notification_service.dart';
+import '../../auth/presentation/auth_view_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -44,11 +45,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: const Text('Zer0Mi1es', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.secondary),
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
+          GestureDetector(
+            onLongPress: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    title: const Text('Delete Account'),
+                    content: const Text('Are you sure you want to completely delete your account? This will permanently delete your couple and all associated data.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          ref.read(authViewModelProvider.notifier).deleteAccount();
+                        },
+                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  );
+                },
+              );
             },
+            child: IconButton(
+              icon: const Icon(Icons.logout, color: AppColors.secondary),
+              onPressed: () {
+                ref.read(authViewModelProvider.notifier).signOut();
+              },
+            ),
           ),
         ],
       ),

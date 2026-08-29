@@ -56,15 +56,17 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final partnerName = ref.watch(partnerNameProvider).value ?? 'Your partner';
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Daily Outfit'),
-        backgroundColor: Colors.transparent,
+        title: const Text('My Outfit', style: TextStyle(color: AppColors.primary)),
+        backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,9 +81,9 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Your partner\'s avatar will update to match your outfit!',
-                style: TextStyle(
+              Text(
+                '$partnerName\'s avatar will update to match your outfit!',
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
                 ),
@@ -99,7 +101,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               const SizedBox(height: 12),
               _buildColorSelector(false),
               
-              const Spacer(),
+              const SizedBox(height: 32),
               
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

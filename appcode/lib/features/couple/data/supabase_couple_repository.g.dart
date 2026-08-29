@@ -115,7 +115,7 @@ final class PartnerNameProvider
   }
 }
 
-String _$partnerNameHash() => r'16eb2152536496404c6759b4c1ef434d03d0727d';
+String _$partnerNameHash() => r'ed23c6611e72a705d22c7e11f979cb02268f9ed1';
 
 @ProviderFor(partnerRole)
 final partnerRoleProvider = PartnerRoleProvider._();

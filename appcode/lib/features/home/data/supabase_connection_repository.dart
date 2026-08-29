@@ -109,7 +109,7 @@ class SupabaseConnectionRepository implements ConnectionRepository {
           else if (mood == 'Sad') controller.add(AvatarEvent.moodSad);
           else if (mood == 'Devastated') controller.add(AvatarEvent.moodDevastated);
           else if (mood == 'Overwhelmed') controller.add(AvatarEvent.moodOverwhelmed);
-          else if (mood == 'Sorry') controller.add(AvatarEvent.moodSorry);
+          else if (mood == 'Excited') controller.add(AvatarEvent.moodExcited);
           else if (mood == 'Tired') controller.add(AvatarEvent.moodTired);
         }
       },

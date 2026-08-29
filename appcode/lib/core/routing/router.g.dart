@@ -9,6 +9,39 @@ part of 'router.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(appStartup)
+final appStartupProvider = AppStartupProvider._();
+
+final class AppStartupProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  AppStartupProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'appStartupProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$appStartupHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return appStartup(ref);
+  }
+}
+
+String _$appStartupHash() => r'ff5cacd11da90bf9e2597d9e69ecca5c6e2751d7';
+
 @ProviderFor(router)
 final routerProvider = RouterProvider._();
 
@@ -48,4 +81,4 @@ final class RouterProvider
   }
 }
 
-String _$routerHash() => r'70c22750fde92a23503333a7d28f32fdd5f94f5a';
+String _$routerHash() => r'f3d374497a6f57c9d2c027fb485bae9efa37db92';

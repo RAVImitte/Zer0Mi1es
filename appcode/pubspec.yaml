@@ -22,12 +22,22 @@ dependencies:
   gal: ^2.3.3
   path_provider: ^2.1.6
   flutter_animate: ^4.5.2
+  shared_preferences: ^2.5.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   riverpod_generator: ^4.0.8
   build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.jpg"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon.jpg

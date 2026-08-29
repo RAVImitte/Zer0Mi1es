@@ -50,13 +50,26 @@ class SupabaseOutfitRepository implements OutfitRepository {
   }
 
   @override
-  Stream<Map<String, dynamic>?> watchPartnerOutfit(String coupleId) {
+  Stream<Map<String, dynamic>?> watchPartnerOutfit(String coupleId) async* {
     final uid = _client.auth.currentUser?.id;
-    if (uid == null) return Stream.value(null);
+    if (uid == null) {
+      yield null;
+      return;
+    }
     
     final today = DateTime.now().toIso8601String().split('T').first;
 
-    return _client.from('daily_outfits')
+    // Fetch initial value via HTTP request
+    final initialData = await _client.from('daily_outfits')
+      .select()
+      .eq('couple_id', coupleId)
+      .neq('user_id', uid)
+      .eq('date', today)
+      .maybeSingle();
+    yield initialData;
+
+    // Then listen for realtime updates
+    yield* _client.from('daily_outfits')
       .stream(primaryKey: ['id'])
       .eq('couple_id', coupleId)
       .neq('user_id', uid)

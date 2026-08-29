@@ -60,8 +60,8 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
     // 1. Determine states for the painter
     final bool isSleeping = widget.state == AnimationState.sleeping;
     final bool isLove = widget.state == AnimationState.reaction;
-    final bool isHappy = widget.state == AnimationState.playing || widget.state == AnimationState.petting || widget.state == AnimationState.moodHappy;
-    final bool isSad = widget.state == AnimationState.moodSad || widget.state == AnimationState.moodDevastated || widget.state == AnimationState.moodTired || widget.state == AnimationState.moodSorry;
+    final bool isHappy = widget.state == AnimationState.playing || widget.state == AnimationState.petting || widget.state == AnimationState.moodHappy || widget.state == AnimationState.moodExcited;
+    final bool isSad = widget.state == AnimationState.moodSad || widget.state == AnimationState.moodDevastated || widget.state == AnimationState.moodTired;
 
     // 2. Build the base painted character
     Widget character = AnimatedBuilder(
@@ -154,12 +154,12 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
           .scaleXY(begin: 0.9, end: 1.1, duration: 300.ms)
           .tint(color: Colors.redAccent.withOpacity(0.2));
         break;
-      case AnimationState.moodSorry:
+      case AnimationState.moodExcited:
         animatedCharacter = character
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .moveY(begin: 5, end: 10, duration: 2.seconds, curve: Curves.easeInOut) // Looking down
-          .rotate(begin: -0.05, end: 0.05, duration: 2.seconds) // Slowly shaking head left and right
-          .tint(color: Colors.teal.withOpacity(0.2));
+          .moveY(begin: -10, end: -15, duration: 300.ms, curve: Curves.easeOutBack) // Bouncing up
+          .rotate(begin: -0.1, end: 0.1, duration: 400.ms) // Shaking with excitement
+          .tint(color: Colors.yellowAccent.withOpacity(0.2));
         break;
       case AnimationState.moodTired:
         animatedCharacter = character

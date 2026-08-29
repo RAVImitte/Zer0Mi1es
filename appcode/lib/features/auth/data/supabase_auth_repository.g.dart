@@ -82,3 +82,37 @@ final class AuthStateProvider extends $FunctionalProvider<AsyncValue<AuthState>,
 }
 
 String _$authStateHash() => r'5b6ce11eb4ed4d4001a3e5b734c234d4ad7ecf6c';
+
+@ProviderFor(registrationStatus)
+final registrationStatusProvider = RegistrationStatusProvider._();
+
+final class RegistrationStatusProvider
+    extends $FunctionalProvider<AsyncValue<String>, String, Stream<String>>
+    with $FutureModifier<String>, $StreamProvider<String> {
+  RegistrationStatusProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'registrationStatusProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$registrationStatusHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<String> create(Ref ref) {
+    return registrationStatus(ref);
+  }
+}
+
+String _$registrationStatusHash() =>
+    r'29aceab738d037382912102993dfbff9f140f496';

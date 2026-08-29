@@ -13,6 +13,12 @@ abstract class AuthRepository {
   /// Sign up with email and password
   Future<void> signUp(String email, String password);
 
-  /// Sign out
+  /// Sign out the current user
   Future<void> signOut();
+
+  /// Set up user profile
+  Future<void> setupProfile(String displayName);
+
+  /// Delete the user account completely
+  Future<void> deleteAccount();
 }

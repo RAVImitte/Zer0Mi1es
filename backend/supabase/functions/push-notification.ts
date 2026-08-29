@@ -27,6 +27,19 @@ serve(async (req) => {
     let title = 'Zer0Mi1es'
     let body = 'You have a new notification.'
 
+    let senderId = null;
+    if (payload.table === 'love_drops') senderId = record.sender_id;
+    else if (payload.table === 'connection_signals') senderId = record.user_id;
+    else if (payload.table === 'moods') senderId = record.user_id;
+
+    let senderName = 'Your partner';
+    if (senderId) {
+      const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', senderId).single();
+      if (profile && profile.display_name) {
+        senderName = profile.display_name;
+      }
+    }
+
     // Determine event type based on table name
     if (payload.table === 'love_drops') {
       receiverId = record.couple_id // We need to find the partner
@@ -36,31 +49,34 @@ serve(async (req) => {
         'Kiss': '💋',
         'Hug': '🤗',
         'Heart': '💖',
-        'Coffee': '☕'
+        'Sorry': '🥺'
       };
       const emoji = emojiMap[dropType] || '💖';
 
       title = `Love Drop ${emoji}`
-      body = `Your partner sent you a ${dropType}!`
+      body = `${senderName} sent you a ${dropType}!`
     } else if (payload.table === 'connection_signals') {
       receiverId = record.couple_id // We need to find the partner
       const signalType = record.type || 'signal';
 
       if (signalType === 'text') {
         title = 'I Want to Talk 💬';
-        body = 'Your partner wants you to text them.';
+        body = `${senderName} wants you to text them.`;
       } else if (signalType === 'call') {
         title = 'Incoming Request 📞';
-        body = 'Your partner wants to hear your voice.';
+        body = `${senderName} wants to hear your voice.`;
       } else if (signalType === 'video_call') {
         title = 'Video Call Request 📹';
-        body = 'Your partner wants to see your face.';
+        body = `${senderName} wants to see your face.`;
       } else if (signalType === 'goodNight') {
         title = 'Sweet Dreams 🌙';
-        body = 'Your partner is going to sleep.';
+        body = `${senderName} is going to sleep.`;
+      } else if (signalType === 'goodMorning') {
+        title = 'Rise and Shine ☀️';
+        body = `${senderName} has woken up.`;
       } else {
         title = 'Partner Signal';
-        body = 'Your partner needs affection.';
+        body = `${senderName} needs affection.`;
       }
     } else {
       receiverId = payload.receiver_id
@@ -134,6 +150,10 @@ serve(async (req) => {
           notification: {
             title: title,
             body: body,
+          },
+          data: {
+            table: payload.table || '',
+            type: (payload.table === 'love_drops' || payload.table === 'connection_signals') ? (record.type || '') : (payload.table === 'moods' ? (record.mood || '') : ''),
           }
         }
       })

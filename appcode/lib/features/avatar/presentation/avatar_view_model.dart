@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../home/data/supabase_connection_repository.dart';
 
@@ -20,7 +21,7 @@ enum AnimationState {
   moodSad,
   moodDevastated,
   moodOverwhelmed,
-  moodSorry,
+  moodExcited,
   moodTired
 }
 
@@ -37,7 +38,7 @@ enum AvatarEvent {
   moodSad,
   moodDevastated,
   moodOverwhelmed,
-  moodSorry,
+  moodExcited,
   moodTired,
 }
 
@@ -47,6 +48,8 @@ class AvatarViewModel extends _$AvatarViewModel {
 
   @override
   AnimationState build() {
+    _initFromCache();
+    
     // Listen to real-time events from partner if we have a couple ID
     final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
     if (activeCoupleId != null) {
@@ -59,6 +62,39 @@ class AvatarViewModel extends _$AvatarViewModel {
 
     // Start idle
     return AnimationState.idle;
+  }
+
+  Future<void> _initFromCache() async {
+    // Import shared_preferences if needed, wait, we need to import it at the top
+    final prefs = await SharedPreferences.getInstance();
+    final table = prefs.getString('cached_partner_animation_table');
+    final type = prefs.getString('cached_partner_animation_type');
+    
+    if (table != null && type != null) {
+      if (table == 'moods') {
+        // Convert 'Happy' to 'moodHappy'
+        final moodStr = 'mood$type'; 
+        try {
+          final event = AvatarEvent.values.firstWhere((e) => e.name == moodStr);
+          onEvent(event);
+        } catch (_) {}
+      } else if (table == 'connection_signals') {
+        if (type == 'goodNight') onEvent(AvatarEvent.goodNight);
+        if (type == 'goodMorning') onEvent(AvatarEvent.goodMorning);
+      }
+    }
+  }
+
+  void resetToIdle() {
+    if (state != AnimationState.sleeping) {
+      state = AnimationState.idle;
+      _resetTimer?.cancel();
+      // Clear cache so it doesn't resume this animation on next load
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.remove('cached_partner_animation_table');
+        prefs.remove('cached_partner_animation_type');
+      });
+    }
   }
 
 
@@ -97,7 +133,7 @@ class AvatarViewModel extends _$AvatarViewModel {
       case AvatarEvent.moodSad: nextState = AnimationState.moodSad; break;
       case AvatarEvent.moodDevastated: nextState = AnimationState.moodDevastated; break;
       case AvatarEvent.moodOverwhelmed: nextState = AnimationState.moodOverwhelmed; break;
-      case AvatarEvent.moodSorry: nextState = AnimationState.moodSorry; break;
+      case AvatarEvent.moodExcited: nextState = AnimationState.moodExcited; break;
       case AvatarEvent.moodTired: nextState = AnimationState.moodTired; break;
     }
 

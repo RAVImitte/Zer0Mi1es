@@ -82,12 +82,18 @@ class SupabasePhotoRepository implements PhotoRepository {
   }
 
   @override
-  Stream<List<DailyPhoto>> watchTodayPhotos(String coupleId) {
+  Stream<List<DailyPhoto>> watchTodayPhotos(String coupleId) async* {
     final today = DateTime.now().toIso8601String().split('T').first;
     
-    // We stream all photos for the couple for today. 
-    // RLS will automatically hide the partner's photo if the user hasn't submitted theirs.
-    return _client.from('daily_photos')
+    // Fetch initial value via HTTP request to prevent infinite loading if WebSocket fails
+    final initialData = await _client.from('daily_photos')
+      .select()
+      .eq('couple_id', coupleId)
+      .eq('date', today);
+    yield (initialData as List).map((json) => DailyPhoto.fromJson(json)).toList();
+
+    // Then listen for realtime updates
+    yield* _client.from('daily_photos')
       .stream(primaryKey: ['id'])
       .eq('couple_id', coupleId)
       .eq('date', today)

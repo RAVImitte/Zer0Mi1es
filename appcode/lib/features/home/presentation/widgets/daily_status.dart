@@ -46,6 +46,9 @@ class DailyStatus extends ConsumerWidget {
     final hasOutfit = ref.watch(outfitCompletedProvider).value ?? false;
     final hasPhoto = ref.watch(photoCompletedProvider).value ?? false;
     final hasQuestion = ref.watch(questionCompletedProvider).value ?? false;
+    
+    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
+    final isPaired = activeCoupleId != null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -69,21 +72,27 @@ class DailyStatus extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatusItem(
+                context: context,
                 icon: Icons.checkroom, 
                 label: 'Outfit', 
                 isCompleted: hasOutfit,
+                isPaired: isPaired,
                 onTap: () => context.push('/outfit'),
               ),
               _buildStatusItem(
+                context: context,
                 icon: Icons.photo_camera, 
                 label: 'Photo', 
                 isCompleted: hasPhoto,
+                isPaired: isPaired,
                 onTap: () => context.push('/daily_photo'),
               ),
               _buildStatusItem(
+                context: context,
                 icon: Icons.question_answer,
                 label: 'Question',
                 isCompleted: hasQuestion,
+                isPaired: isPaired,
                 onTap: () => context.push('/daily_question'),
               ),
             ],
@@ -94,13 +103,22 @@ class DailyStatus extends ConsumerWidget {
   }
 
   Widget _buildStatusItem({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required bool isCompleted,
-    VoidCallback? onTap,
+    required bool isPaired,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isPaired ? onTap : () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pair with your partner first to unlock!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
       child: Column(
         children: [
           Container(

@@ -57,4 +57,9 @@ class CoupleViewModel extends _$CoupleViewModel {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
+
+  void cancelCreateCouple() {
+    // Reset state so the user can go back to the join screen
+    state = const CoupleState();
+  }
 }

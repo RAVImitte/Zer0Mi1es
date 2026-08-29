@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_view_model.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -43,9 +44,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     // Listen for errors
     ref.listen(authViewModelProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
+        final error = next.error;
+        String errorMessage = 'An unexpected error occurred.';
+        if (error is AuthException) {
+          errorMessage = error.message;
+        } else {
+          // Fallback to a cleaner string if it's a generic Exception
+          errorMessage = error.toString().replaceAll('Exception: ', '');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.error.toString()),
+            content: Text(errorMessage),
             backgroundColor: AppColors.secondary,
           ),
         );

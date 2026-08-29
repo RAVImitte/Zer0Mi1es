@@ -65,7 +65,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
     }
   }
 
-  void _submitCustomQuestion(String connectionId) async {
+  void _submitCustomQuestion(String coupleId) async {
     final text = _editQuestionController.text.trim();
     if (text.isEmpty) {
       setState(() => _isEditingQuestion = false);
@@ -73,8 +73,11 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
     }
     
     try {
-      await ref.read(questionRepositoryProvider).overwriteQuestion(connectionId, text);
+      await ref.read(questionRepositoryProvider).scheduleQuestionForTomorrow(coupleId, text);
       setState(() => _isEditingQuestion = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Custom question scheduled for tomorrow!')));
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -157,7 +160,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                             ),
                             const SizedBox(height: 12),
                             ElevatedButton(
-                              onPressed: () => _submitCustomQuestion(state.connectionId!),
+                              onPressed: () => _submitCustomQuestion(ref.read(activeCoupleIdProvider).value!),
                               child: const Text('Save Custom Question'),
                             ),
                           ] else ...[
@@ -279,7 +282,61 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                     // Just simple text indicating they haven't answered yet
                     _buildAnswerCard('$partnerName\'s Answer', 'They haven\'t answered yet...', false, isWaitingText: true),
                   ] else if (state.status == QuestionStatus.revealed) ...[
-                    _buildAnswerCard('Your Answer', state.myAnswer!, true),
+                    if (_isEditingAnswer) ...[
+                      const Text('Edit Your Answer', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _answerController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () => _updateAnswer(state.connectionId!),
+                              child: const Text('Update Answer', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          TextButton(
+                            onPressed: () => setState(() => _isEditingAnswer = false),
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Your Answer', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                          TextButton.icon(
+                            onPressed: () {
+                              _answerController.text = state.myAnswer!;
+                              setState(() => _isEditingAnswer = true);
+                            },
+                            icon: const Icon(Icons.edit, size: 16),
+                            label: const Text('Edit'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildAnswerCard('', state.myAnswer!, true, hideTitle: true),
+                    ],
                     const SizedBox(height: 24),
                     _buildAnswerCard('$partnerName\'s Answer', state.partnerAnswer!, false),
                   ]

@@ -2,10 +2,26 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint("Handling a background message: ${message.messageId}");
+  await _cacheNotificationData(message.data);
+}
+
+Future<void> _cacheNotificationData(Map<String, dynamic> data) async {
+  if (data.containsKey('table') && data.containsKey('type')) {
+    final prefs = await SharedPreferences.getInstance();
+    final table = data['table'] as String;
+    final type = data['type'] as String;
+    
+    // We only care about moods or connection signals (like sleep/wake)
+    if (table == 'moods' || table == 'connection_signals') {
+      await prefs.setString('cached_partner_animation_table', table);
+      await prefs.setString('cached_partner_animation_type', type);
+    }
+  }
 }
 
 class PushNotificationService {
@@ -52,6 +68,8 @@ class PushNotificationService {
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('Got a message whilst in the foreground!');
         
+        _cacheNotificationData(message.data);
+
         if (message.notification != null) {
           _showLocalNotification(message.notification!);
         }

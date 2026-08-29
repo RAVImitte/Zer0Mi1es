@@ -33,4 +33,12 @@ class AuthViewModel extends _$AuthViewModel {
       await repo.signOut();
     });
   }
+
+  Future<void> deleteAccount() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.deleteAccount();
+    });
+  }
 }

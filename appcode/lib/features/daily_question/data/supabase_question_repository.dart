@@ -11,7 +11,7 @@ abstract class QuestionRepository {
   Stream<DailyQuestionState> watchDailyQuestion(String coupleId);
   Future<void> submitAnswer(String connectionId, String answer);
   Future<void> editAnswer(String connectionId, String answer);
-  Future<void> overwriteQuestion(String connectionId, String newQuestion);
+  Future<void> scheduleQuestionForTomorrow(String coupleId, String newQuestion);
 }
 
 class SupabaseQuestionRepository implements QuestionRepository {
@@ -39,7 +39,7 @@ class SupabaseQuestionRepository implements QuestionRepository {
             .maybeSingle();
 
         if (connectionRes == null) {
-          controller.add(DailyQuestionState.waiting());
+          if (!controller.isClosed) controller.add(DailyQuestionState.waiting());
           return;
         }
 
@@ -77,19 +77,19 @@ class SupabaseQuestionRepository implements QuestionRepository {
           status = QuestionStatus.readyToAnswer;
         }
 
-        controller.add(DailyQuestionState(
-          status: status,
-          connectionId: connectionId,
-          questionText: questionText,
-          creatorId: creatorId,
-          myAnswer: myAnswer,
-          partnerAnswer: partnerAnswer,
-          partnerHasAnswered: partnerHasAnswered,
-        ));
+        if (!controller.isClosed) {
+          controller.add(DailyQuestionState(
+            status: status,
+            connectionId: connectionId,
+            questionText: questionText,
+            creatorId: creatorId,
+            myAnswer: myAnswer,
+            partnerAnswer: partnerAnswer,
+            partnerHasAnswered: partnerHasAnswered,
+          ));
+        }
       } catch (e, stack) {
-        print('Error fetching daily question: $e');
-        print(stack);
-        controller.add(DailyQuestionState.waiting()); // Prevent hanging entirely, but we log the error
+        if (!controller.isClosed) controller.add(DailyQuestionState.waiting()); // Prevent hanging entirely, but we log the error
       }
     }
 
@@ -145,9 +145,17 @@ class SupabaseQuestionRepository implements QuestionRepository {
   }
 
   @override
-  Future<void> overwriteQuestion(String connectionId, String newQuestion) async {
-    await _client.from('daily_connections').update({
+  Future<void> scheduleQuestionForTomorrow(String coupleId, String newQuestion) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return;
+    
+    final tomorrow = DateTime.now().add(const Duration(days: 1)).toIso8601String().split('T').first;
+    
+    await _client.from('daily_connections').upsert({
+      'couple_id': coupleId,
+      'date': tomorrow,
+      'creator_id': uid,
       'question': newQuestion,
-    }).eq('id', connectionId);
+    }, onConflict: 'couple_id, date');
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../avatar/presentation/avatar_view_model.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -91,9 +92,9 @@ class PartnerPresence extends ConsumerWidget {
         avatarColor = Colors.deepOrange;
         statusText = 'Overwhelmed!';
         break;
-      case AnimationState.moodSorry:
-        avatarColor = Colors.teal;
-        statusText = 'Feeling Sorry 🥺';
+      case AnimationState.moodExcited:
+        avatarColor = Colors.green;
+        statusText = 'Feeling Excited! 🤩';
         break;
       case AnimationState.moodTired:
         avatarColor = Colors.indigo.shade300;
@@ -169,13 +170,39 @@ class PartnerPresence extends ConsumerWidget {
                     ],
                   ),
                   child: Center(
-                    child: DynamicPersonAvatar(
-                      state: animationState,
-                      topColor: topColor,
-                      bottomColor: bottomColor,
-                      isBunny: isBunny,
-                      size: dynamicSize * 0.75,
-                    ),
+                    child: activeCoupleId == null
+                        ? GestureDetector(
+                            onTap: () => context.push('/couple'),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_circle_outline,
+                                  size: dynamicSize * 0.3,
+                                  color: AppColors.primary.withOpacity(0.8),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Pair Partner',
+                                  style: TextStyle(
+                                    color: AppColors.primary.withOpacity(0.8),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : GestureDetector(
+                            onTap: () => ref.read(avatarViewModelProvider.notifier).resetToIdle(),
+                            child: DynamicPersonAvatar(
+                              state: animationState,
+                              topColor: topColor,
+                              bottomColor: bottomColor,
+                              isBunny: isBunny,
+                              size: dynamicSize * 0.75,
+                            ),
+                          ),
                   ),
                 );
               },
@@ -187,23 +214,52 @@ class PartnerPresence extends ConsumerWidget {
           // Right Column: Name, Status Text, Partner Card
           Expanded(
             flex: 5,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                partnerNameAsync.when(
-                  data: (name) => Text(
-                    name ?? 'Partner',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+            child: Consumer(
+              builder: (context, ref, child) {
+                final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
+                if (activeCoupleId == null) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ready to Pair',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap the bubble to connect!',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    partnerNameAsync.when(
+                      data: (name) => Text(
+                        name ?? 'Partner',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      loading: () => const SizedBox(height: 28),
+                      error: (_, __) => const Text('Partner',
+                          style: TextStyle(color: AppColors.primary, fontSize: 24)),
                     ),
-                  ),
-                  loading: () => const SizedBox(height: 28),
-                  error: (_, __) => const Text('Partner',
-                      style: TextStyle(color: AppColors.primary, fontSize: 24)),
-                ),
 
                 const SizedBox(height: 8),
 
@@ -307,10 +363,12 @@ class PartnerPresence extends ConsumerWidget {
                   },
                 ),
               ],
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
-    );
+    ],
+  ),
+);
   }
 }
