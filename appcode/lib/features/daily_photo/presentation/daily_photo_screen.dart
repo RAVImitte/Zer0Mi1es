@@ -97,25 +97,27 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Add a Comment?', style: TextStyle(color: AppColors.textPrimary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.file(imageFile, height: 250, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _commentController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                hintText: 'Optional caption...',
-                hintStyle: TextStyle(color: AppColors.textSecondary),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accent)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(imageFile, height: 250, fit: BoxFit.cover),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: _commentController,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  hintText: 'Optional caption...',
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accent)),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

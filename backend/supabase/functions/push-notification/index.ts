@@ -48,17 +48,15 @@ serve(async (req) => {
       const msg = record.message;
 
       const emojiMap: Record<string, string> = {
-        'Kiss': '💋',
+        'Kiss': '😽',
         'Hug': '🤗',
-        'Heart': '💖',
         'Sorry': '🥺'
       };
-      
       const emoji = emojiMap[dropType] || dropType;
 
       if (msg) {
-        title = `"${emoji}" ${senderName} says...`;
-        body = `"${msg}"`;
+        title = `${emoji} ${emoji} ${senderName} says...`
+        body = `${msg}`;
       } else {
         title = `Love Drop ${emoji}`
         body = `${senderName} sent you a ${dropType}!`
@@ -66,7 +64,7 @@ serve(async (req) => {
     } else if (payload.table === 'connection_signals') {
       receiverId = record.couple_id // We need to find the partner
       const signalType = record.type || record.signal_type || 'signal';
-      
+
       if (signalType === 'text') {
         title = 'I Want to Talk 💬';
         body = `${senderName} wants you to text them.`;

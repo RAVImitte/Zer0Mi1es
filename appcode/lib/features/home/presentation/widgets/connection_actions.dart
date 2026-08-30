@@ -160,8 +160,8 @@ class ConnectionActions extends ConsumerWidget {
 
   void _showLoveDropBottomSheet(BuildContext context, WidgetRef ref) {
     final textController = TextEditingController();
-    final types = ['Kiss', 'Hug', 'Heart', 'Sorry', 'Custom'];
-    final defaultEmojis = ['😽', '🤗', '💖', '🥺', '✨'];
+    final types = ['Kiss', 'Hug', 'Sorry', 'Custom'];
+    final defaultEmojis = ['😽', '🤗', '🥺', '✨'];
     String selectedType = types[0];
     String customEmoji = '✨';
 
