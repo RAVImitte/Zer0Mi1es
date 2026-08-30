@@ -16,8 +16,8 @@ Future<void> _cacheNotificationData(Map<String, dynamic> data) async {
     final table = data['table'] as String;
     final type = data['type'] as String;
     
-    // We only care about moods or connection signals (like sleep/wake)
-    if (table == 'moods' || table == 'connection_signals') {
+    // We care about moods, connection signals, and love drops
+    if (table == 'moods' || table == 'connection_signals' || table == 'love_drops') {
       await prefs.setString('cached_partner_animation_table', table);
       await prefs.setString('cached_partner_animation_type', type);
     }
