@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>💖 Zero Miles</h1>
+  <h1> Zero Miles</h1>
   <p><em>An app designed to empathetically connect long-distance partners and bring you closer, no matter the distance.</em></p>
 </div>
 
