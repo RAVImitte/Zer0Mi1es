@@ -9,12 +9,24 @@ abstract class OutfitRepository {
   Future<void> saveOutfit(String coupleId, String topColor, String bottomColor);
   Future<bool> hasOutfitForToday(String coupleId);
   Stream<Map<String, dynamic>?> watchPartnerOutfit(String coupleId);
+  Stream<Map<String, dynamic>?> watchMyOutfit(String coupleId);
 }
 
 class SupabaseOutfitRepository implements OutfitRepository {
   final SupabaseClient _client;
 
   SupabaseOutfitRepository(this._client);
+
+  Future<void> _triggerNotification(String table, String coupleId, Map<String, dynamic> record) async {
+    try {
+      await _client.functions.invoke('push-notification', body: {
+        'table': table,
+        'record': record,
+      });
+    } catch (e) {
+      print('Failed to trigger notification: $e');
+    }
+  }
 
   @override
   Future<void> saveOutfit(String coupleId, String topColor, String bottomColor) async {
@@ -30,6 +42,11 @@ class SupabaseOutfitRepository implements OutfitRepository {
       'top_color': topColor,
       'bottom_color': bottomColor,
     }, onConflict: 'couple_id, user_id, date');
+    
+    _triggerNotification('daily_outfits', coupleId, {
+      'couple_id': coupleId,
+      'user_id': uid,
+    });
   }
 
   @override
@@ -73,6 +90,34 @@ class SupabaseOutfitRepository implements OutfitRepository {
       .stream(primaryKey: ['id'])
       .eq('couple_id', coupleId)
       .neq('user_id', uid)
+      .eq('date', today)
+      .map((data) => data.isNotEmpty ? data.first : null);
+  }
+
+  @override
+  Stream<Map<String, dynamic>?> watchMyOutfit(String coupleId) async* {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) {
+      yield null;
+      return;
+    }
+    
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    // Fetch initial value via HTTP request
+    final initialData = await _client.from('daily_outfits')
+      .select()
+      .eq('couple_id', coupleId)
+      .eq('user_id', uid)
+      .eq('date', today)
+      .maybeSingle();
+    yield initialData;
+
+    // Then listen for realtime updates
+    yield* _client.from('daily_outfits')
+      .stream(primaryKey: ['id'])
+      .eq('couple_id', coupleId)
+      .eq('user_id', uid)
       .eq('date', today)
       .map((data) => data.isNotEmpty ? data.first : null);
   }

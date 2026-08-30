@@ -7,11 +7,18 @@ final connectionRepositoryProvider = Provider<ConnectionRepository>((ref) {
   return SupabaseConnectionRepository(Supabase.instance.client);
 });
 
+class LoveDropMessage {
+  final String type;
+  final String? message;
+  LoveDropMessage(this.type, this.message);
+}
+
 abstract class ConnectionRepository {
   Future<void> sendLoveDrop(String coupleId, String type, {String? message});
   Future<void> updateMood(String coupleId, String mood);
   Future<void> sendSignal(String coupleId, String signalType);
   Stream<AvatarEvent> watchPartnerEvents(String coupleId);
+  Stream<LoveDropMessage> watchLoveDrops(String coupleId);
 }
 
 class SupabaseConnectionRepository implements ConnectionRepository {
@@ -30,7 +37,7 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       if (message != null) 'message': message,
     });
     
-    _triggerNotification('love_drops', coupleId, type);
+    _triggerNotification('love_drops', coupleId, type, message);
   }
 
   @override
@@ -58,7 +65,7 @@ class SupabaseConnectionRepository implements ConnectionRepository {
     _triggerNotification('connection_signals', coupleId, signalType);
   }
 
-  Future<void> _triggerNotification(String table, String coupleId, String type) async {
+  Future<void> _triggerNotification(String table, String coupleId, String type, [String? message]) async {
     final uid = _client.auth.currentUser?.id;
     try {
       await _client.functions.invoke('push-notification', body: {
@@ -68,6 +75,7 @@ class SupabaseConnectionRepository implements ConnectionRepository {
           'sender_id': uid,
           'user_id': uid,
           'type': type,
+          if (message != null) 'message': message,
         }
       });
     } catch (e) {
@@ -135,6 +143,38 @@ class SupabaseConnectionRepository implements ConnectionRepository {
           } else {
             controller.add(AvatarEvent.hugReceived);
           }
+        }
+      },
+    ).subscribe();
+
+    controller.onCancel = () {
+      _client.removeChannel(channel);
+      controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<LoveDropMessage> watchLoveDrops(String coupleId) {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return const Stream.empty();
+
+    final controller = StreamController<LoveDropMessage>();
+    final channel = _client.channel('public:love_drops:$coupleId');
+    
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'love_drops',
+      filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'couple_id', value: coupleId),
+      callback: (payload) {
+        final newRecord = payload.newRecord;
+        if (newRecord['sender_id'] != uid) {
+          controller.add(LoveDropMessage(
+            newRecord['type'] as String,
+            newRecord['message'] as String?,
+          ));
         }
       },
     ).subscribe();

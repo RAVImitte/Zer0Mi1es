@@ -41,7 +41,7 @@ final class CoupleViewModelProvider
   }
 }
 
-String _$coupleViewModelHash() => r'c3e2915af55ffe91d5401a48deec16bacbcd0be5';
+String _$coupleViewModelHash() => r'0a2f4cdf69ddc5662115331c43fed8d5b56c1dd7';
 
 abstract class _$CoupleViewModel extends $Notifier<CoupleState> {
   CoupleState build();

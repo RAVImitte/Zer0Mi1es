@@ -52,6 +52,17 @@ class SupabasePhotoRepository implements PhotoRepository {
 
   SupabasePhotoRepository(this._client);
 
+  Future<void> _triggerNotification(String table, String coupleId, Map<String, dynamic> record) async {
+    try {
+      await _client.functions.invoke('push-notification', body: {
+        'table': table,
+        'record': record,
+      });
+    } catch (e) {
+      print('Failed to trigger notification: $e');
+    }
+  }
+
   @override
   Future<void> uploadDailyPhoto(String coupleId, File imageFile, {String? comment}) async {
     final uid = _client.auth.currentUser?.id;
@@ -79,6 +90,11 @@ class SupabasePhotoRepository implements PhotoRepository {
       'storage_path': storagePath,
       'comment': comment,
     }, onConflict: 'couple_id, user_id, date');
+    
+    _triggerNotification('daily_photos', coupleId, {
+      'couple_id': coupleId,
+      'user_id': uid,
+    });
   }
 
   @override

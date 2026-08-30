@@ -42,7 +42,7 @@ final class ProfileSetupViewModelProvider
 }
 
 String _$profileSetupViewModelHash() =>
-    r'e35d498b1cf644e0930b14c02b48279584e83d1c';
+    r'6cfe8f95066e16ffefd5912a2849b2f49b2cb68c';
 
 abstract class _$ProfileSetupViewModel extends $Notifier<AsyncValue<void>> {
   AsyncValue<void> build();

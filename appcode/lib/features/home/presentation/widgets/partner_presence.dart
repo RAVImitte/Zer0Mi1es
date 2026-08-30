@@ -13,6 +13,30 @@ final partnerOutfitProvider = StreamProvider.autoDispose
   return ref.watch(outfitRepositoryProvider).watchPartnerOutfit(coupleId);
 });
 
+final myOutfitProvider = StreamProvider.autoDispose
+    .family<Map<String, dynamic>?, String>((ref, coupleId) {
+  return ref.watch(outfitRepositoryProvider).watchMyOutfit(coupleId);
+});
+
+Color _parseColor(String str) {
+  if (str.startsWith('#')) {
+    // Support both #RRGGBB and #AARRGGBB
+    final hex = str.substring(1);
+    if (hex.length == 6) {
+      return Color(int.parse('FF$hex', radix: 16));
+    } else if (hex.length == 8) {
+      return Color(int.parse(hex, radix: 16));
+    }
+  }
+  // Fallback to older saved names if any
+  final Map<String, Color> oldMap = {
+    'Red': Colors.red, 'Blue': Colors.blue, 'Green': Colors.green,
+    'Yellow': Colors.yellow, 'Orange': Colors.orange, 'Purple': Colors.purple,
+    'Black': Colors.black, 'White': Colors.white, 'Pink': Colors.pink, 'Teal': Colors.teal,
+  };
+  return oldMap[str] ?? Colors.transparent;
+}
+
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key});
 
@@ -133,77 +157,127 @@ class PartnerPresence extends ConsumerWidget {
                   final topStr = outfitValue['top_color'] as String;
                   final bottomStr = outfitValue['bottom_color'] as String;
 
-                  final Map<String, Color> colorMap = {
-                    'Red': Colors.red,
-                    'Blue': Colors.blue,
-                    'Green': Colors.green,
-                    'Yellow': Colors.yellow,
-                    'Orange': Colors.orange,
-                    'Purple': Colors.purple,
-                    'Black': Colors.black,
-                    'White': Colors.white,
-                    'Pink': Colors.pink,
-                    'Teal': Colors.teal,
-                  };
-
-                  topColor = colorMap[topStr] ?? topColor;
-                  bottomColor = colorMap[bottomStr] ?? bottomColor;
+                  final parsedTop = _parseColor(topStr);
+                  final parsedBottom = _parseColor(bottomStr);
+                  topColor = parsedTop == Colors.transparent ? topColor : parsedTop;
+                  bottomColor = parsedBottom == Colors.transparent ? bottomColor : parsedBottom;
                 }
 
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  transform: Matrix4.identity()..scale(scale),
-                  transformAlignment: Alignment.center,
-                  width: dynamicSize,
-                  height: dynamicSize,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: avatarColor.withOpacity(0.5), width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: avatarColor.withOpacity(0.2),
-                          blurRadius: 30,
-                          spreadRadius: 5),
-                    ],
-                  ),
-                  child: Center(
-                    child: activeCoupleId == null
-                        ? GestureDetector(
-                            onTap: () => context.push('/couple'),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_circle_outline,
-                                  size: dynamicSize * 0.3,
-                                  color: AppColors.primary.withOpacity(0.8),
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      transform: Matrix4.identity()..scale(scale),
+                      transformAlignment: Alignment.center,
+                      width: dynamicSize,
+                      height: dynamicSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: avatarColor.withOpacity(0.5), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                              color: avatarColor.withOpacity(0.2),
+                              blurRadius: 30,
+                              spreadRadius: 5),
+                        ],
+                      ),
+                      child: Center(
+                        child: activeCoupleId == null
+                            ? GestureDetector(
+                                onTap: () => context.push('/couple'),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_circle_outline,
+                                      size: dynamicSize * 0.3,
+                                      color: AppColors.primary.withOpacity(0.8),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Pair Partner',
+                                      style: TextStyle(
+                                        color: AppColors.primary.withOpacity(0.8),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Pair Partner',
-                                  style: TextStyle(
-                                    color: AppColors.primary.withOpacity(0.8),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                              )
+                            : GestureDetector(
+                                onTap: () => ref.read(avatarViewModelProvider.notifier).resetToIdle(),
+                                child: DynamicPersonAvatar(
+                                  state: animationState,
+                                  topColor: topColor,
+                                  bottomColor: bottomColor,
+                                  isBunny: isBunny,
+                                  size: dynamicSize * 0.75,
+                                ),
+                              ),
+                      ),
+                    ),
+                    if (activeCoupleId != null)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final myRoleAsync = ref.watch(myRoleProvider);
+                            final outfitAsync = ref.watch(myOutfitProvider(activeCoupleId));
+
+                            final isMyBunny = myRoleAsync.value == 'bunny';
+                            Color myTopColor = AppColors.primary.withOpacity(0.2);
+                            Color myBottomColor = AppColors.primary.withOpacity(0.2);
+
+                            final myOutfitValue = outfitAsync.value;
+                            if (myOutfitValue != null) {
+                              myTopColor = _parseColor(myOutfitValue['top_color'] as String);
+                              myBottomColor = _parseColor(myOutfitValue['bottom_color'] as String);
+                              if (myTopColor == Colors.transparent) myTopColor = AppColors.primary.withOpacity(0.2);
+                              if (myBottomColor == Colors.transparent) myBottomColor = AppColors.primary.withOpacity(0.2);
+                            }
+
+                            return Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, spreadRadius: 1),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: OverflowBox(
+                                  maxHeight: 65,
+                                  maxWidth: 65,
+                                  child: Transform.translate(
+                                    offset: const Offset(0, 4), // Shift down slightly so the head isn't cut off by the top edge of the circle
+                                    child: Transform.scale(
+                                      scale: 0.95,
+                                      alignment: Alignment.center,
+                                      child: DynamicPersonAvatar(
+                                        state: AnimationState.resting,
+                                        topColor: myTopColor,
+                                        bottomColor: myBottomColor,
+                                        isBunny: isMyBunny,
+                                        size: 65,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                        : GestureDetector(
-                            onTap: () => ref.read(avatarViewModelProvider.notifier).resetToIdle(),
-                            child: DynamicPersonAvatar(
-                              state: animationState,
-                              topColor: topColor,
-                              bottomColor: bottomColor,
-                              isBunny: isBunny,
-                              size: dynamicSize * 0.75,
-                            ),
-                          ),
-                  ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
@@ -340,6 +414,8 @@ class PartnerPresence extends ConsumerWidget {
                                               return 'Requested video call';
                                             case 'goodNight':
                                               return 'Going to sleep 🌙';
+                                            case 'nudge':
+                                              return 'Nudged you to answer today\'s question! ⏰';
                                             default:
                                               return 'Sent a signal';
                                           }

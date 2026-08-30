@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../../data/supabase_connection_repository.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
 class IsAsleepNotifier extends Notifier<bool> {
   @override
@@ -158,9 +160,10 @@ class ConnectionActions extends ConsumerWidget {
 
   void _showLoveDropBottomSheet(BuildContext context, WidgetRef ref) {
     final textController = TextEditingController();
-    final types = ['Kiss', 'Hug', 'Heart', 'Sorry'];
-    final emojis = ['😽', '🤗', '💖', '🥺'];
+    final types = ['Kiss', 'Hug', 'Heart', 'Sorry', 'Custom'];
+    final defaultEmojis = ['😽', '🤗', '💖', '🥺', '✨'];
     String selectedType = types[0];
+    String customEmoji = '✨';
 
     showModalBottomSheet(
       context: context,
@@ -183,36 +186,65 @@ class ConnectionActions extends ConsumerWidget {
                     style:
                         TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(types.length, (index) {
-                    final isSelected = selectedType == types[index];
-                    return InkWell(
-                      onTap: () => setState(() => selectedType = types[index]),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.2)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(types.length, (index) {
+                      final isSelected = selectedType == types[index];
+                      final isCustom = types[index] == 'Custom';
+                      final displayEmoji = isCustom ? customEmoji : defaultEmojis[index];
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: InkWell(
+                          onTap: () async {
+                            setState(() => selectedType = types[index]);
+                            if (isCustom) {
+                              // Open emoji picker
+                              final emoji = await showModalBottomSheet<String>(
+                                context: context,
+                                builder: (context) => SafeArea(
+                                  child: SizedBox(
+                                    height: 250,
+                                    child: EmojiPicker(
+                                      onEmojiSelected: (category, emoji) {
+                                        Navigator.pop(context, emoji.emoji);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                              if (emoji != null && context.mounted) {
+                                setState(() => customEmoji = emoji);
+                              }
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary
-                                  : Colors.grey.shade300),
+                                  ? AppColors.primary.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : Colors.grey.shade300),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(displayEmoji,
+                                    style: const TextStyle(fontSize: 24)),
+                                const SizedBox(height: 4),
+                                Text(types[index],
+                                    style: const TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Column(
-                          children: [
-                            Text(emojis[index],
-                                style: const TextStyle(fontSize: 24)),
-                            const SizedBox(height: 4),
-                            Text(types[index],
-                                style: const TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 TextField(
@@ -220,7 +252,7 @@ class ConnectionActions extends ConsumerWidget {
                   decoration: InputDecoration(
                     hintText: 'Add an optional message...',
                     filled: true,
-                    fillColor: Colors.grey.withValues(alpha: 0.1),
+                    fillColor: Colors.grey.withOpacity(0.1),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none),
@@ -240,10 +272,11 @@ class ConnectionActions extends ConsumerWidget {
                     onPressed: () {
                       Navigator.pop(context);
                       final msg = textController.text.trim();
+                      final actualType = selectedType == 'Custom' ? customEmoji : selectedType;
                       _fireNetworkEvent(
                           ref,
                           context,
-                          (repo, id) => repo.sendLoveDrop(id, selectedType,
+                          (repo, id) => repo.sendLoveDrop(id, actualType,
                               message: msg.isNotEmpty ? msg : null));
                     },
                     child: const Text('Send'),

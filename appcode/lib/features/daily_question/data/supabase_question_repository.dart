@@ -9,8 +9,8 @@ final questionRepositoryProvider = Provider<QuestionRepository>((ref) {
 
 abstract class QuestionRepository {
   Stream<DailyQuestionState> watchDailyQuestion(String coupleId);
-  Future<void> submitAnswer(String connectionId, String answer);
-  Future<void> editAnswer(String connectionId, String answer);
+  Future<void> submitAnswer(String connectionId, String answer, String guess);
+  Future<void> editAnswer(String connectionId, String answer, String guess);
   Future<void> scheduleQuestionForTomorrow(String coupleId, String newQuestion);
 }
 
@@ -56,22 +56,27 @@ class SupabaseQuestionRepository implements QuestionRepository {
 
         String? myAnswer;
         String? partnerAnswer;
+        String? myGuess;
+        String? partnerGuess;
 
         for (final row in answersRes) {
           if (row['user_id'] == uid) {
-            myAnswer = row['answer'] as String;
+            myAnswer = row['answer'] as String?;
+            myGuess = row['guess'] as String?;
           } else {
-            partnerAnswer = row['answer'] as String;
+            partnerAnswer = row['answer'] as String?;
+            partnerGuess = row['guess'] as String?;
           }
         }
 
-        // Check if partner answered (bypasses RLS)
+        // Check if partner answered/guessed (bypasses RLS)
         final partnerHasAnswered = await _client.rpc('has_partner_answered', params: {'connection_id': connectionId}) as bool;
+        final partnerHasGuessed = await _client.rpc('has_partner_guessed', params: {'connection_id': connectionId}) as bool;
 
         QuestionStatus status;
-        if (myAnswer != null && partnerAnswer != null) {
+        if (myAnswer != null && myAnswer.isNotEmpty && partnerHasAnswered) {
           status = QuestionStatus.revealed;
-        } else if (myAnswer != null) {
+        } else if (myAnswer != null && myAnswer.isNotEmpty) {
           status = QuestionStatus.waitingForPartner;
         } else {
           status = QuestionStatus.readyToAnswer;
@@ -85,7 +90,10 @@ class SupabaseQuestionRepository implements QuestionRepository {
             creatorId: creatorId,
             myAnswer: myAnswer,
             partnerAnswer: partnerAnswer,
+            myGuess: myGuess,
+            partnerGuess: partnerGuess,
             partnerHasAnswered: partnerHasAnswered,
+            partnerHasGuessedRpc: partnerHasGuessed,
           ));
         }
       } catch (e, stack) {
@@ -122,25 +130,63 @@ class SupabaseQuestionRepository implements QuestionRepository {
     return controller.stream;
   }
 
+  Future<void> _triggerNotification(String table, String coupleId, Map<String, dynamic> record) async {
+    try {
+      await _client.functions.invoke('push-notification', body: {
+        'table': table,
+        'record': record,
+      });
+    } catch (e) {
+      print('Failed to trigger notification: $e');
+    }
+  }
+
   @override
-  Future<void> submitAnswer(String connectionId, String answer) async {
+  Future<void> submitAnswer(String connectionId, String answer, String guess) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
     
-    await _client.from('daily_answers').insert({
-      'daily_connection_id': connectionId,
+    // First, find the coupleId for this connectionId
+    final connRes = await _client.from('daily_connections').select('couple_id').eq('id', connectionId).single();
+    final coupleId = connRes['couple_id'] as String?;
+    if (coupleId == null) return;
+
+    final existing = await _client.from('daily_answers')
+        .select('id, answer, guess')
+        .eq('daily_connection_id', connectionId)
+        .eq('user_id', uid)
+        .maybeSingle();
+
+    if (existing != null) {
+      final existingAnswer = existing['answer'] as String? ?? '';
+      final existingGuess = existing['guess'] as String? ?? '';
+      await _client.from('daily_answers').update({
+        'answer': answer.isNotEmpty ? answer : existingAnswer,
+        'guess': guess.isNotEmpty ? guess : existingGuess,
+      }).eq('id', existing['id']);
+    } else {
+      await _client.from('daily_answers').insert({
+        'daily_connection_id': connectionId,
+        'user_id': uid,
+        'answer': answer,
+        'guess': guess,
+      });
+    }
+    
+    _triggerNotification('daily_answers', coupleId, {
+      'couple_id': coupleId,
       'user_id': uid,
-      'answer': answer,
     });
   }
 
   @override
-  Future<void> editAnswer(String connectionId, String answer) async {
+  Future<void> editAnswer(String connectionId, String answer, String guess) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
     
     await _client.from('daily_answers').update({
       'answer': answer,
+      'guess': guess,
     }).eq('daily_connection_id', connectionId).eq('user_id', uid);
   }
 

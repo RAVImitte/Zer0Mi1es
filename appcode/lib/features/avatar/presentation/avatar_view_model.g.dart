@@ -41,7 +41,7 @@ final class AvatarViewModelProvider
   }
 }
 
-String _$avatarViewModelHash() => r'f5ae140913e909603e2c8523c605f7a6112b6629';
+String _$avatarViewModelHash() => r'866426b505897414a1aa67e4909d203eaac5ba90';
 
 abstract class _$AvatarViewModel extends $Notifier<AnimationState> {
   AnimationState build();

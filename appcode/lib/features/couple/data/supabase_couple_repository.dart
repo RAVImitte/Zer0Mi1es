@@ -124,3 +124,23 @@ Future<String?> partnerRole(Ref ref) async {
   
   return null;
 }
+
+@riverpod
+Future<String?> myRole(Ref ref) async {
+  final client = Supabase.instance.client;
+  final uid = client.auth.currentUser?.id;
+  final coupleId = await ref.watch(activeCoupleIdProvider.future);
+  
+  if (uid == null || coupleId == null) return null;
+
+  final coupleRes = await client.from('couples').select().eq('id', coupleId).single();
+  
+  // Return the user's own role
+  if (coupleRes['bear_id'] == uid) {
+    return 'bear';
+  } else if (coupleRes['bunny_id'] == uid) {
+    return 'bunny';
+  }
+  
+  return null;
+}

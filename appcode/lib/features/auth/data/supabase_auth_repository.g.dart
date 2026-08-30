@@ -115,4 +115,4 @@ final class RegistrationStatusProvider
 }
 
 String _$registrationStatusHash() =>
-    r'29aceab738d037382912102993dfbff9f140f496';
+    r'483b64bc0a8178537637782a9d77417bbd49e555';
