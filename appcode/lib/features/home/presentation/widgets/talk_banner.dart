@@ -15,15 +15,15 @@ class TalkBanner extends ConsumerStatefulWidget {
 }
 
 class _TalkBannerState extends ConsumerState<TalkBanner> {
-  String? _answeredId;
-
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(partnerStatusProvider);
     final status = async.unwrapPrevious().asData?.value;
     final talk = status?.talk;
     if (talk == null) return const SizedBox.shrink();
-    if (_answeredId == talk.id) return const SizedBox.shrink();
+    if (ref.watch(dismissedTalkIdsProvider).contains(talk.id)) {
+      return const SizedBox.shrink();
+    }
 
     // Recipient: unanswered ping from partner. Hide as soon as you reply.
     if (!talk.fromMe && talk.status == 'pending') {
@@ -92,14 +92,14 @@ class _TalkBannerState extends ConsumerState<TalkBanner> {
 
   Future<void> _ack(TalkSignal talk, String status) async {
     HapticFeedback.lightImpact();
-    setState(() => _answeredId = talk.id);
+    ref.read(dismissedTalkIdsProvider.notifier).add(talk.id);
     try {
       await ref
           .read(connectionRepositoryProvider)
           .acknowledgeSignal(talk.id, status);
     } catch (e) {
+      ref.read(dismissedTalkIdsProvider.notifier).remove(talk.id);
       if (mounted) {
-        setState(() => _answeredId = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not send that reply')),
         );

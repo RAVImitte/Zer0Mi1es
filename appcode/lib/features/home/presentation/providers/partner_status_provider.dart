@@ -32,6 +32,18 @@ class PartnerStatus {
   final bool iAmAsleep;
 }
 
+class DismissedTalkIds extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => <String>{};
+
+  void add(String id) => state = {...state, id};
+
+  void remove(String id) => state = {...state}..remove(id);
+}
+
+final dismissedTalkIdsProvider =
+    NotifierProvider<DismissedTalkIds, Set<String>>(DismissedTalkIds.new);
+
 final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
   final client = ref.watch(supabaseClientProvider);
   final uid = client.auth.currentUser?.id;
@@ -81,9 +93,26 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
 
       final signals = (rows as List).cast<Map<String, dynamic>>();
       final talkRows = signals.where(isTalk).where(isActive).toList();
+      final dismissed = ref.read(dismissedTalkIdsProvider);
+
+      DateTime? expiresOf(Map<String, dynamic> row) {
+        final raw = row['expires_at'];
+        if (raw == null) return null;
+        return DateTime.tryParse(raw as String)?.toUtc();
+      }
+
+      TalkSignal fromRow(Map<String, dynamic> row, {required bool fromMe}) {
+        return TalkSignal(
+          id: row['id'] as String,
+          type: row['signal_type'] as String,
+          status: row['status'] as String? ?? 'pending',
+          fromMe: fromMe,
+          expiresAt: expiresOf(row),
+        );
+      }
 
       Map<String, dynamic>? incoming;
-      Map<String, dynamic>? outgoingAck;
+      Map<String, dynamic>? myLatest;
       for (final row in talkRows) {
         final sender = row['user_id']?.toString();
         final status = row['status'] as String? ?? 'pending';
@@ -93,54 +122,22 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
             status == 'pending') {
           incoming = row;
         }
-        if (outgoingAck == null &&
-            sender == me &&
-            status != 'pending' &&
-            row['acknowledged_by']?.toString() == partnerId) {
-          outgoingAck = row;
+        if (myLatest == null && sender == me) {
+          myLatest = row;
         }
-      }
-
-      Map<String, dynamic>? myOutgoingPending;
-      for (final row in talkRows) {
-        final sender = row['user_id']?.toString();
-        final status = row['status'] as String? ?? 'pending';
-        if (myOutgoingPending == null && sender == me && status == 'pending') {
-          myOutgoingPending = row;
-        }
-      }
-
-      DateTime? expiresOf(Map<String, dynamic> row) {
-        final raw = row['expires_at'];
-        if (raw == null) return null;
-        return DateTime.tryParse(raw as String)?.toUtc();
       }
 
       TalkSignal? talk;
-      if (incoming != null) {
-        talk = TalkSignal(
-          id: incoming['id'] as String,
-          type: incoming['signal_type'] as String,
-          status: incoming['status'] as String? ?? 'pending',
-          fromMe: false,
-          expiresAt: expiresOf(incoming),
-        );
-      } else if (myOutgoingPending != null) {
-        talk = TalkSignal(
-          id: myOutgoingPending['id'] as String,
-          type: myOutgoingPending['signal_type'] as String,
-          status: 'pending',
-          fromMe: true,
-          expiresAt: expiresOf(myOutgoingPending),
-        );
-      } else if (outgoingAck != null) {
-        talk = TalkSignal(
-          id: outgoingAck['id'] as String,
-          type: outgoingAck['signal_type'] as String,
-          status: outgoingAck['status'] as String,
-          fromMe: true,
-          expiresAt: expiresOf(outgoingAck),
-        );
+      if (incoming != null && !dismissed.contains(incoming['id'])) {
+        talk = fromRow(incoming, fromMe: false);
+      } else if (incoming != null && dismissed.contains(incoming['id'])) {
+        talk = null;
+      } else if (myLatest != null) {
+        final status = myLatest['status'] as String? ?? 'pending';
+        final ackedBy = myLatest['acknowledged_by']?.toString();
+        if (status == 'pending' || ackedBy == partnerId) {
+          talk = fromRow(myLatest, fromMe: true);
+        }
       }
 
       expiryTimer?.cancel();
@@ -175,6 +172,7 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
   }
 
   fetchStatus();
+  final poll = Timer.periodic(const Duration(seconds: 5), (_) => fetchStatus());
 
   final channel = client.channel('public:partner_status:$coupleId');
   channel
@@ -202,9 +200,19 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
       )
       .subscribe();
 
+  final talkChannel = client.channel('talk:$coupleId');
+  talkChannel
+      .onBroadcast(
+        event: 'ack',
+        callback: (_) => fetchStatus(),
+      )
+      .subscribe();
+
   ref.onDispose(() {
     expiryTimer?.cancel();
+    poll.cancel();
     client.removeChannel(channel);
+    client.removeChannel(talkChannel);
     controller.close();
   });
 

@@ -105,8 +105,16 @@ class SupabaseConnectionRepository implements ConnectionRepository {
     if (row == null) {
       throw StateError('Acknowledge did not apply');
     }
+    final coupleId = row['couple_id'] as String;
+    final talkChannel = _client.channel('talk:$coupleId');
+    talkChannel.subscribe();
+    await talkChannel.sendBroadcastMessage(event: 'ack', payload: {
+      'id': signalId,
+      'status': status,
+      'by': uid,
+    });
     await _push.notify(table: 'connection_signals', record: {
-      'couple_id': row['couple_id'],
+      'couple_id': coupleId,
       'user_id': uid,
       'status': status,
       'signal_type': row['signal_type'],
