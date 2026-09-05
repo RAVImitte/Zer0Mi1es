@@ -1,40 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/notifications/push_dispatcher.dart';
+import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/utils/iso_date.dart';
+import '../domain/outfit_repository.dart';
+
 final outfitRepositoryProvider = Provider<OutfitRepository>((ref) {
-  return SupabaseOutfitRepository(Supabase.instance.client);
+  return SupabaseOutfitRepository(ref.watch(supabaseClientProvider));
 });
 
-abstract class OutfitRepository {
-  Future<void> saveOutfit(String coupleId, String topColor, String bottomColor);
-  Future<bool> hasOutfitForToday(String coupleId);
-  Stream<Map<String, dynamic>?> watchPartnerOutfit(String coupleId);
-  Stream<Map<String, dynamic>?> watchMyOutfit(String coupleId);
-}
-
 class SupabaseOutfitRepository implements OutfitRepository {
+  SupabaseOutfitRepository(this._client) : _push = PushDispatcher(_client);
+
   final SupabaseClient _client;
-
-  SupabaseOutfitRepository(this._client);
-
-  Future<void> _triggerNotification(String table, String coupleId, Map<String, dynamic> record) async {
-    try {
-      await _client.functions.invoke('push-notification', body: {
-        'table': table,
-        'record': record,
-      });
-    } catch (e) {
-      print('Failed to trigger notification: $e');
-    }
-  }
+  final PushDispatcher _push;
 
   @override
-  Future<void> saveOutfit(String coupleId, String topColor, String bottomColor) async {
+  Future<void> saveOutfit(
+    String coupleId,
+    String topColor,
+    String bottomColor,
+  ) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
-    
-    final today = DateTime.now().toIso8601String().split('T').first;
-    
+
+    final today = isoDate();
     await _client.from('daily_outfits').upsert({
       'couple_id': coupleId,
       'user_id': uid,
@@ -42,8 +33,8 @@ class SupabaseOutfitRepository implements OutfitRepository {
       'top_color': topColor,
       'bottom_color': bottomColor,
     }, onConflict: 'couple_id, user_id, date');
-    
-    _triggerNotification('daily_outfits', coupleId, {
+
+    await _push.notify(table: 'daily_outfits', record: {
       'couple_id': coupleId,
       'user_id': uid,
     });
@@ -53,16 +44,15 @@ class SupabaseOutfitRepository implements OutfitRepository {
   Future<bool> hasOutfitForToday(String coupleId) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return false;
-    
-    final today = DateTime.now().toIso8601String().split('T').first;
-    
-    final data = await _client.from('daily_outfits')
-      .select('id')
-      .eq('couple_id', coupleId)
-      .eq('user_id', uid)
-      .eq('date', today)
-      .maybeSingle();
-      
+
+    final data = await _client
+        .from('daily_outfits')
+        .select('id')
+        .eq('couple_id', coupleId)
+        .eq('user_id', uid)
+        .eq('date', isoDate())
+        .maybeSingle();
+
     return data != null;
   }
 
@@ -73,25 +63,23 @@ class SupabaseOutfitRepository implements OutfitRepository {
       yield null;
       return;
     }
-    
-    final today = DateTime.now().toIso8601String().split('T').first;
 
-    // Fetch initial value via HTTP request
-    final initialData = await _client.from('daily_outfits')
-      .select()
-      .eq('couple_id', coupleId)
-      .neq('user_id', uid)
-      .eq('date', today)
-      .maybeSingle();
-    yield initialData;
+    final today = isoDate();
+    yield await _client
+        .from('daily_outfits')
+        .select()
+        .eq('couple_id', coupleId)
+        .neq('user_id', uid)
+        .eq('date', today)
+        .maybeSingle();
 
-    // Then listen for realtime updates
-    yield* _client.from('daily_outfits')
-      .stream(primaryKey: ['id'])
-      .eq('couple_id', coupleId)
-      .neq('user_id', uid)
-      .eq('date', today)
-      .map((data) => data.isNotEmpty ? data.first : null);
+    yield* _client
+        .from('daily_outfits')
+        .stream(primaryKey: ['id'])
+        .eq('couple_id', coupleId)
+        .neq('user_id', uid)
+        .eq('date', today)
+        .map((data) => data.isNotEmpty ? data.first : null);
   }
 
   @override
@@ -101,24 +89,22 @@ class SupabaseOutfitRepository implements OutfitRepository {
       yield null;
       return;
     }
-    
-    final today = DateTime.now().toIso8601String().split('T').first;
 
-    // Fetch initial value via HTTP request
-    final initialData = await _client.from('daily_outfits')
-      .select()
-      .eq('couple_id', coupleId)
-      .eq('user_id', uid)
-      .eq('date', today)
-      .maybeSingle();
-    yield initialData;
+    final today = isoDate();
+    yield await _client
+        .from('daily_outfits')
+        .select()
+        .eq('couple_id', coupleId)
+        .eq('user_id', uid)
+        .eq('date', today)
+        .maybeSingle();
 
-    // Then listen for realtime updates
-    yield* _client.from('daily_outfits')
-      .stream(primaryKey: ['id'])
-      .eq('couple_id', coupleId)
-      .eq('user_id', uid)
-      .eq('date', today)
-      .map((data) => data.isNotEmpty ? data.first : null);
+    yield* _client
+        .from('daily_outfits')
+        .stream(primaryKey: ['id'])
+        .eq('couple_id', coupleId)
+        .eq('user_id', uid)
+        .eq('date', today)
+        .map((data) => data.isNotEmpty ? data.first : null);
   }
 }

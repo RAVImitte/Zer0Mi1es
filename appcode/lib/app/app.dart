@@ -12,7 +12,7 @@ class Zer0Mi1esApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Zer0Mi1es',
-      theme: AppTheme.darkTheme, // We start with a dark theme for a dynamic, premium aesthetic
+      theme: AppTheme.darkTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

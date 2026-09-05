@@ -1,41 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../avatar/presentation/avatar_view_model.dart';
-import '../../../couple/data/supabase_couple_repository.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../providers/partner_status_provider.dart';
-import '../../../outfit/data/supabase_outfit_repository.dart';
+import '../../../../core/utils/color_parser.dart';
+import '../../../avatar/presentation/avatar_view_model.dart';
 import '../../../avatar/presentation/widgets/dynamic_person_avatar.dart';
-
-final partnerOutfitProvider = StreamProvider.autoDispose
-    .family<Map<String, dynamic>?, String>((ref, coupleId) {
-  return ref.watch(outfitRepositoryProvider).watchPartnerOutfit(coupleId);
-});
-
-final myOutfitProvider = StreamProvider.autoDispose
-    .family<Map<String, dynamic>?, String>((ref, coupleId) {
-  return ref.watch(outfitRepositoryProvider).watchMyOutfit(coupleId);
-});
-
-Color _parseColor(String str) {
-  if (str.startsWith('#')) {
-    // Support both #RRGGBB and #AARRGGBB
-    final hex = str.substring(1);
-    if (hex.length == 6) {
-      return Color(int.parse('FF$hex', radix: 16));
-    } else if (hex.length == 8) {
-      return Color(int.parse(hex, radix: 16));
-    }
-  }
-  // Fallback to older saved names if any
-  final Map<String, Color> oldMap = {
-    'Red': Colors.red, 'Blue': Colors.blue, 'Green': Colors.green,
-    'Yellow': Colors.yellow, 'Orange': Colors.orange, 'Purple': Colors.purple,
-    'Black': Colors.black, 'White': Colors.white, 'Pink': Colors.pink, 'Teal': Colors.teal,
-  };
-  return oldMap[str] ?? Colors.transparent;
-}
+import '../../../couple/data/supabase_couple_repository.dart';
+import '../../../outfit/presentation/providers/outfit_providers.dart';
+import '../providers/partner_status_provider.dart';
 
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key});
@@ -45,59 +20,48 @@ class PartnerPresence extends ConsumerWidget {
     final animationState = ref.watch(avatarViewModelProvider);
     final partnerNameAsync = ref.watch(partnerNameProvider);
 
-    // Determine visual properties based on state
     Color avatarColor = AppColors.primary;
-    IconData avatarIcon = Icons.person;
     double scale = 1.0;
     String statusText = 'Idle';
 
     switch (animationState) {
       case AnimationState.idle:
         avatarColor = AppColors.primary;
-        avatarIcon = Icons.person_outline;
         statusText = 'Chilling...';
         break;
       case AnimationState.reaction:
         avatarColor = Colors.pinkAccent;
-        avatarIcon = Icons.favorite;
         scale = 1.2;
         statusText = 'Feeling the love!';
         break;
       case AnimationState.talking:
         avatarColor = Colors.blueAccent;
-        avatarIcon = Icons.record_voice_over;
         scale = 1.1;
         statusText = 'Talking...';
         break;
       case AnimationState.playing:
         avatarColor = Colors.orangeAccent;
-        avatarIcon = Icons.sports_esports;
         statusText = 'Playing with pet...';
         break;
       case AnimationState.petting:
         avatarColor = Colors.lightBlueAccent;
-        avatarIcon = Icons.pets;
         statusText = 'Petting...';
         break;
       case AnimationState.feeding:
         avatarColor = Colors.greenAccent;
-        avatarIcon = Icons.restaurant;
         statusText = 'Feeding pet...';
         break;
       case AnimationState.sleeping:
         avatarColor = Colors.indigo;
-        avatarIcon = Icons.bedtime;
         statusText = 'Zzz...';
         break;
       case AnimationState.walking:
         avatarColor = Colors.teal;
-        avatarIcon = Icons.directions_walk;
         statusText = 'Walking...';
         break;
       case AnimationState.sitting:
       case AnimationState.resting:
         avatarColor = Colors.blueGrey;
-        avatarIcon = Icons.chair;
         statusText = 'Resting...';
         break;
       case AnimationState.moodHappy:
@@ -146,7 +110,7 @@ class PartnerPresence extends ConsumerWidget {
                     : const AsyncValue<Map<String, dynamic>?>.data(null);
                 
                 final partnerRoleAsync = ref.watch(partnerRoleProvider);
-                final bool isBunny = partnerRoleAsync.value == 'bunny';
+                final bool isBunny = partnerRoleAsync.value == CoupleRole.bunny;
 
                 Color topColor = avatarColor.withOpacity(0.2);
                 Color bottomColor = avatarColor.withOpacity(0.2);
@@ -157,8 +121,8 @@ class PartnerPresence extends ConsumerWidget {
                   final topStr = outfitValue['top_color'] as String;
                   final bottomStr = outfitValue['bottom_color'] as String;
 
-                  final parsedTop = _parseColor(topStr);
-                  final parsedBottom = _parseColor(bottomStr);
+                  final parsedTop = parseHexColor(topStr);
+                  final parsedBottom = parseHexColor(bottomStr);
                   topColor = parsedTop == Colors.transparent ? topColor : parsedTop;
                   bottomColor = parsedBottom == Colors.transparent ? bottomColor : parsedBottom;
                 }
@@ -188,7 +152,7 @@ class PartnerPresence extends ConsumerWidget {
                       child: Center(
                         child: activeCoupleId == null
                             ? GestureDetector(
-                                onTap: () => context.push('/couple'),
+                                onTap: () => context.push(AppRoutes.couple),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -230,14 +194,14 @@ class PartnerPresence extends ConsumerWidget {
                             final myRoleAsync = ref.watch(myRoleProvider);
                             final outfitAsync = ref.watch(myOutfitProvider(activeCoupleId));
 
-                            final isMyBunny = myRoleAsync.value == 'bunny';
+                            final isMyBunny = myRoleAsync.value == CoupleRole.bunny;
                             Color myTopColor = AppColors.primary.withOpacity(0.2);
                             Color myBottomColor = AppColors.primary.withOpacity(0.2);
 
                             final myOutfitValue = outfitAsync.value;
                             if (myOutfitValue != null) {
-                              myTopColor = _parseColor(myOutfitValue['top_color'] as String);
-                              myBottomColor = _parseColor(myOutfitValue['bottom_color'] as String);
+                              myTopColor = parseHexColor(myOutfitValue['top_color'] as String);
+                              myBottomColor = parseHexColor(myOutfitValue['bottom_color'] as String);
                               if (myTopColor == Colors.transparent) myTopColor = AppColors.primary.withOpacity(0.2);
                               if (myBottomColor == Colors.transparent) myBottomColor = AppColors.primary.withOpacity(0.2);
                             }

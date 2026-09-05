@@ -1,19 +1,12 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
+import '../../../connection/data/supabase_connection_repository.dart';
+import '../../../connection/domain/connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
-import '../../data/supabase_connection_repository.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:flutter/foundation.dart' as foundation;
-
-class IsAsleepNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
-  void toggle() => state = !state;
-}
-
-final isAsleepProvider =
-    NotifierProvider<IsAsleepNotifier, bool>(IsAsleepNotifier.new);
+import '../providers/home_providers.dart';
 
 class ConnectionActions extends ConsumerWidget {
   const ConnectionActions({super.key});

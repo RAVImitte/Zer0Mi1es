@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 import '../data/supabase_photo_repository.dart';
-import 'dart:ui' as dart_ui;
+import '../domain/daily_photo.dart';
 
 class FullScreenPhotoView extends ConsumerStatefulWidget {
   final String imageUrl;

@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../couple/data/supabase_couple_repository.dart';
-import '../../outfit/data/supabase_outfit_repository.dart';
-import 'widgets/partner_presence.dart';
-import 'widgets/daily_status.dart';
-import 'widgets/connection_actions.dart';
-import 'providers/partner_status_provider.dart';
-import '../../notifications/service/push_notification_service.dart';
 import '../../auth/presentation/auth_view_model.dart';
-import '../data/supabase_connection_repository.dart';
-
-import '../../avatar/presentation/widgets/dynamic_person_avatar.dart';
-import '../../avatar/presentation/avatar_view_model.dart';
-
-
-final loveDropsProvider = StreamProvider.autoDispose.family<LoveDropMessage, String>((ref, coupleId) {
-  return ref.watch(connectionRepositoryProvider).watchLoveDrops(coupleId);
-});
+import '../../connection/domain/love_drop_message.dart';
+import '../../couple/data/supabase_couple_repository.dart';
+import '../../notifications/data/push_notification_service.dart';
+import '../../outfit/data/supabase_outfit_repository.dart';
+import 'providers/home_providers.dart';
+import 'widgets/connection_actions.dart';
+import 'widgets/daily_status.dart';
+import 'widgets/partner_presence.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,30 +32,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final outfitRepo = ref.read(outfitRepositoryProvider);
         final hasOutfit = await outfitRepo.hasOutfitForToday(activeCoupleId);
         if (!hasOutfit && mounted) {
-          context.push('/outfit');
+          context.push(AppRoutes.outfit);
         }
       }
       
       // Request permissions and save FCM token for push notifications
-      PushNotificationService().initialize();
+      ref.read(pushNotificationServiceProvider).initialize();
     });
-  }
-
-  Color _parseColor(String str, Color defaultColor) {
-    if (str.startsWith('#')) {
-      final hex = str.substring(1);
-      if (hex.length == 6) {
-        return Color(int.parse('FF$hex', radix: 16));
-      } else if (hex.length == 8) {
-        return Color(int.parse(hex, radix: 16));
-      }
-    }
-    final Map<String, Color> oldMap = {
-      'Red': Colors.red, 'Blue': Colors.blue, 'Green': Colors.green,
-      'Yellow': Colors.yellow, 'Orange': Colors.orange, 'Purple': Colors.purple,
-      'Black': Colors.black, 'White': Colors.white, 'Pink': Colors.pink, 'Teal': Colors.teal,
-    };
-    return oldMap[str] ?? defaultColor;
   }
 
   @override

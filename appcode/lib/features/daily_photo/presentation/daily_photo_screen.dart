@@ -1,46 +1,17 @@
 import 'dart:io';
 import 'dart:ui' as dart_ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/theme/app_colors.dart';
+
+import '../../../core/theme/app_colors.dart';
 import '../../couple/data/supabase_couple_repository.dart';
-import 'dart:async';
 import '../data/supabase_photo_repository.dart';
+import '../domain/daily_photo.dart';
 import 'full_screen_photo_view.dart';
-
-final todayPhotosProvider = StreamProvider.autoDispose.family<List<DailyPhoto>, String>((ref, coupleId) {
-  return ref.watch(photoRepositoryProvider).watchTodayPhotos(coupleId);
-});
-
-final partnerPhotoStatusProvider = StreamProvider.autoDispose.family<bool, String>((ref, coupleId) {
-  final controller = StreamController<bool>();
-  final repo = ref.watch(photoRepositoryProvider);
-  final client = Supabase.instance.client;
-
-  void fetchStatus() async {
-    final hasUploaded = await repo.hasPartnerUploadedPhoto(coupleId);
-    if (!controller.isClosed) controller.add(hasUploaded);
-  }
-
-  fetchStatus();
-
-  final channel = client.channel('public:daily_photos_status:$coupleId');
-  channel.onPostgresChanges(
-    event: PostgresChangeEvent.all,
-    schema: 'public',
-    table: 'daily_photos',
-    callback: (_) => fetchStatus(),
-  ).subscribe();
-
-  ref.onDispose(() {
-    client.removeChannel(channel);
-    controller.close();
-  });
-
-  return controller.stream;
-});
+import 'providers/photo_providers.dart';
 
 class DailyPhotoScreen extends ConsumerStatefulWidget {
   const DailyPhotoScreen({super.key});

@@ -49,4 +49,4 @@ Your partner will instantly receive a push notification to let them know you're 
 *(Provide brief instructions here on how to run the Flutter app and set up Supabase if this repo is open source. Otherwise, this section can be removed.)*
 
 ---
-*Built with Flutter and Supabase.*
+*Built with Flutter (Android & iOS) and Supabase.*

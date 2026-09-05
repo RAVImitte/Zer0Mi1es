@@ -1,47 +1,16 @@
 import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../core/constants/app_constants.dart';
+import '../../connection/data/supabase_connection_repository.dart';
 import '../../couple/data/supabase_couple_repository.dart';
-import '../../home/data/supabase_connection_repository.dart';
 import '../../home/presentation/providers/partner_status_provider.dart';
+import '../domain/avatar_event.dart';
+
+export '../domain/avatar_event.dart';
 
 part 'avatar_view_model.g.dart';
-
-enum AnimationState {
-  idle,
-  walking,
-  playing,
-  petting,
-  feeding,
-  sitting,
-  resting,
-  sleeping,
-  reaction,
-  talking,
-  moodHappy,
-  moodSad,
-  moodDevastated,
-  moodOverwhelmed,
-  moodExcited,
-  moodTired
-}
-
-enum AvatarEvent {
-  loveReceived,
-  hugReceived,
-  talk,
-  goodMorning,
-  goodNight,
-  feedPet,
-  petAnimal,
-  playWithPet,
-  moodHappy,
-  moodSad,
-  moodDevastated,
-  moodOverwhelmed,
-  moodExcited,
-  moodTired,
-}
 
 @riverpod
 class AvatarViewModel extends _$AvatarViewModel {
@@ -80,7 +49,7 @@ class AvatarViewModel extends _$AvatarViewModel {
             else if (status.talkSignal == 'goodMorning') onEvent(AvatarEvent.goodMorning);
           }
         }
-      });
+      }, fireImmediately: true);
     }
 
     // Start idle
@@ -88,10 +57,9 @@ class AvatarViewModel extends _$AvatarViewModel {
   }
 
   Future<void> _initFromCache() async {
-    // Import shared_preferences if needed, wait, we need to import it at the top
     final prefs = await SharedPreferences.getInstance();
-    final table = prefs.getString('cached_partner_animation_table');
-    final type = prefs.getString('cached_partner_animation_type');
+    final table = prefs.getString(CacheKeys.partnerAnimationTable);
+    final type = prefs.getString(CacheKeys.partnerAnimationType);
 
     if (table != null && type != null) {
       if (table == 'moods') {
@@ -122,8 +90,8 @@ class AvatarViewModel extends _$AvatarViewModel {
       _resetTimer?.cancel();
       // Clear cache so it doesn't resume this animation on next load
       SharedPreferences.getInstance().then((prefs) {
-        prefs.remove('cached_partner_animation_table');
-        prefs.remove('cached_partner_animation_type');
+        prefs.remove(CacheKeys.partnerAnimationTable);
+        prefs.remove(CacheKeys.partnerAnimationType);
       });
     }
   }

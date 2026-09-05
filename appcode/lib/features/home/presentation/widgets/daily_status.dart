@@ -1,42 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
-import '../../../daily_question/data/supabase_question_repository.dart';
-
-final outfitCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final client = Supabase.instance.client;
-  final uid = client.auth.currentUser?.id;
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
-  if (uid == null || coupleId == null) return Stream.value(false);
-  final today = DateTime.now().toIso8601String().split('T').first;
-  
-  return client.from('daily_outfits').stream(primaryKey: ['id'])
-    .eq('couple_id', coupleId).eq('user_id', uid).eq('date', today)
-    .map((data) => data.isNotEmpty);
-});
-
-final photoCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final client = Supabase.instance.client;
-  final uid = client.auth.currentUser?.id;
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
-  if (uid == null || coupleId == null) return Stream.value(false);
-  final today = DateTime.now().toIso8601String().split('T').first;
-  
-  return client.from('daily_photos').stream(primaryKey: ['id'])
-    .eq('couple_id', coupleId).eq('user_id', uid).eq('date', today)
-    .map((data) => data.isNotEmpty);
-});
-
-final questionCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
-  if (coupleId == null) return Stream.value(false);
-  
-  final repo = ref.watch(questionRepositoryProvider);
-  return repo.watchDailyQuestion(coupleId).map((state) => state.myAnswer != null);
-});
+import '../providers/home_providers.dart';
 
 class DailyStatus extends ConsumerWidget {
   const DailyStatus({super.key});
@@ -77,7 +46,7 @@ class DailyStatus extends ConsumerWidget {
                 label: 'Outfit', 
                 isCompleted: hasOutfit,
                 isPaired: isPaired,
-                onTap: () => context.push('/outfit'),
+                onTap: () => context.push(AppRoutes.outfit),
               ),
               _buildStatusItem(
                 context: context,
@@ -85,7 +54,7 @@ class DailyStatus extends ConsumerWidget {
                 label: 'Photo', 
                 isCompleted: hasPhoto,
                 isPaired: isPaired,
-                onTap: () => context.push('/daily_photo'),
+                onTap: () => context.push(AppRoutes.dailyPhoto),
               ),
               _buildStatusItem(
                 context: context,
@@ -93,7 +62,7 @@ class DailyStatus extends ConsumerWidget {
                 label: 'Question',
                 isCompleted: hasQuestion,
                 isPaired: isPaired,
-                onTap: () => context.push('/daily_question'),
+                onTap: () => context.push(AppRoutes.dailyQuestion),
               ),
             ],
           ),

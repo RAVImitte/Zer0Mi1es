@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'couple_view_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/auth_view_model.dart';

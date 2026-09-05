@@ -1,21 +1,16 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/theme/app_colors.dart';
+import '../../avatar/presentation/avatar_view_model.dart';
+import '../../avatar/presentation/widgets/dynamic_person_avatar.dart';
+import '../../connection/data/supabase_connection_repository.dart';
 import '../../couple/data/supabase_couple_repository.dart';
+import '../../outfit/presentation/providers/outfit_providers.dart';
 import '../data/supabase_question_repository.dart';
 import '../domain/daily_question_state.dart';
-import '../../avatar/presentation/widgets/dynamic_person_avatar.dart';
-import '../../avatar/presentation/avatar_view_model.dart';
-import '../../home/presentation/widgets/partner_presence.dart';
-import '../../home/data/supabase_connection_repository.dart';
-
-final dailyQuestionStateProvider = StreamProvider.autoDispose<DailyQuestionState>((ref) {
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
-  if (coupleId == null) return Stream.value(DailyQuestionState.loading());
-  return ref.watch(questionRepositoryProvider).watchDailyQuestion(coupleId);
-});
+import 'providers/question_providers.dart';
 
 class DailyQuestionScreen extends ConsumerStatefulWidget {
   const DailyQuestionScreen({super.key});
@@ -914,36 +909,6 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildInteractionPill(IconData icon, String count, {Color? color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: color ?? AppColors.textSecondary),
-          const SizedBox(width: 4),
-          Text(count, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Text(text, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
     );
   }
 

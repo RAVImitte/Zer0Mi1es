@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
+
+import '../../../core/routing/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../data/supabase_outfit_repository.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class OutfitScreen extends ConsumerStatefulWidget {
   const OutfitScreen({super.key});
@@ -48,7 +50,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
           _colorToHex(_selectedBottom!)
         );
         if (mounted) {
-          context.go('/');
+          context.go(AppRoutes.home);
         }
       } catch (e) {
         if (mounted) {
@@ -174,7 +176,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
             child: Icon(
               Icons.palette,
               color: isCustomSelected 
-                  ? (selectedColor!.computeLuminance() > 0.5 ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.4))
+                  ? (selectedColor.computeLuminance() > 0.5 ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.4))
                   : AppColors.primary,
             ),
           ),
