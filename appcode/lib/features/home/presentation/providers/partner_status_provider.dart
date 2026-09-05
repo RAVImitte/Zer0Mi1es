@@ -14,12 +14,14 @@ class TalkSignal {
     required this.type,
     required this.status,
     required this.fromMe,
+    this.expiresAt,
   });
 
   final String id;
   final String type;
   final String status;
   final bool fromMe;
+  final DateTime? expiresAt;
 }
 
 class PartnerStatus {
@@ -40,6 +42,7 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
   }
 
   final controller = StreamController<PartnerStatus>();
+  Timer? expiryTimer;
 
   bool isActive(Map<String, dynamic> row) {
     final exp = row['expires_at'];
@@ -107,6 +110,12 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
         }
       }
 
+      DateTime? expiresOf(Map<String, dynamic> row) {
+        final raw = row['expires_at'];
+        if (raw == null) return null;
+        return DateTime.tryParse(raw as String)?.toUtc();
+      }
+
       TalkSignal? talk;
       if (incoming != null) {
         talk = TalkSignal(
@@ -114,6 +123,7 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
           type: incoming['signal_type'] as String,
           status: incoming['status'] as String? ?? 'pending',
           fromMe: false,
+          expiresAt: expiresOf(incoming),
         );
       } else if (myOutgoingPending != null) {
         talk = TalkSignal(
@@ -121,6 +131,7 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
           type: myOutgoingPending['signal_type'] as String,
           status: 'pending',
           fromMe: true,
+          expiresAt: expiresOf(myOutgoingPending),
         );
       } else if (outgoingAck != null) {
         talk = TalkSignal(
@@ -128,7 +139,17 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
           type: outgoingAck['signal_type'] as String,
           status: outgoingAck['status'] as String,
           fromMe: true,
+          expiresAt: expiresOf(outgoingAck),
         );
+      }
+
+      expiryTimer?.cancel();
+      final expiresAt = talk?.expiresAt;
+      if (expiresAt != null) {
+        final wait = expiresAt.difference(DateTime.now().toUtc());
+        if (wait > Duration.zero) {
+          expiryTimer = Timer(wait + const Duration(seconds: 1), fetchStatus);
+        }
       }
 
       var iAmAsleep = false;
@@ -182,6 +203,7 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
       .subscribe();
 
   ref.onDispose(() {
+    expiryTimer?.cancel();
     client.removeChannel(channel);
     controller.close();
   });

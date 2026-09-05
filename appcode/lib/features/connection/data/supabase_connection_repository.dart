@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/notifications/push_dispatcher.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/utils/talk_expiry.dart';
 import '../../avatar/domain/avatar_event.dart';
 import '../domain/connection_repository.dart';
 import '../domain/love_drop_message.dart';
@@ -81,12 +82,22 @@ class SupabaseConnectionRepository implements ConnectionRepository {
   Future<void> acknowledgeSignal(String signalId, String status) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
+    var iana = 'UTC';
+    final profile = await _client
+        .from('profiles')
+        .select('timezone')
+        .eq('id', uid)
+        .maybeSingle();
+    final tzName = profile?['timezone'] as String?;
+    if (tzName != null && tzName.isNotEmpty) iana = tzName;
+
     final row = await _client
         .from('connection_signals')
         .update({
           'status': status,
           'acknowledged_at': DateTime.now().toUtc().toIso8601String(),
           'acknowledged_by': uid,
+          'expires_at': talkReplyExpiry(status, iana: iana).toIso8601String(),
         })
         .eq('id', signalId)
         .select()
