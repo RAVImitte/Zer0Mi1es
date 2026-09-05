@@ -4,13 +4,13 @@ DateTime talkReplyExpiry(String status, {String iana = 'UTC'}) {
   final now = DateTime.now().toUtc();
   switch (status) {
     case 'yes':
-      return now.add(const Duration(minutes: 30));
+      return now.add(const Duration(minutes: 15));
     case 'soon':
     case 'give_me_10':
-      return now.add(const Duration(hours: 2));
+      return now.add(const Duration(hours: 1));
     case 'not_now':
     case 'cant_today':
-      return now.add(const Duration(hours: 1));
+      return now.add(const Duration(hours: 2));
     case 'tonight':
       return _nextSixAm(iana);
     default:
