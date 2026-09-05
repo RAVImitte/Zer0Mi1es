@@ -24,7 +24,7 @@ final isAsleepProvider =
     NotifierProvider<IsAsleepNotifier, bool>(IsAsleepNotifier.new);
 
 final outfitCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
+  final coupleId = ref.watch(activeCoupleIdProvider.select((v) => v.value));
   if (coupleId == null) return Stream.value(false);
   return ref
       .watch(outfitRepositoryProvider)
@@ -33,7 +33,7 @@ final outfitCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
 });
 
 final photoCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
+  final coupleId = ref.watch(activeCoupleIdProvider.select((v) => v.value));
   final uid = ref.watch(supabaseClientProvider).auth.currentUser?.id;
   if (coupleId == null || uid == null) return Stream.value(false);
   return ref
@@ -43,7 +43,7 @@ final photoCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
 });
 
 final questionCompletedProvider = StreamProvider.autoDispose<bool>((ref) {
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
+  final coupleId = ref.watch(activeCoupleIdProvider.select((v) => v.value));
   if (coupleId == null) return Stream.value(false);
   return ref
       .watch(questionRepositoryProvider)

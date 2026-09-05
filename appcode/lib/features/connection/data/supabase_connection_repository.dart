@@ -90,7 +90,10 @@ class SupabaseConnectionRepository implements ConnectionRepository {
         })
         .eq('id', signalId)
         .select()
-        .single();
+        .maybeSingle();
+    if (row == null) {
+      throw StateError('Acknowledge did not apply');
+    }
     await _push.notify(table: 'connection_signals', record: {
       'couple_id': row['couple_id'],
       'user_id': uid,

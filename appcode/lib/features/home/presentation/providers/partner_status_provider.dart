@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/supabase/supabase_providers.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 
+const _talkTypes = {'text', 'call', 'video_call'};
+
 class TalkSignal {
   const TalkSignal({
     required this.id,
@@ -27,10 +29,10 @@ class PartnerStatus {
   final TalkSignal? talk;
 }
 
-final partnerStatusProvider = StreamProvider.autoDispose<PartnerStatus>((ref) {
+final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
   final client = ref.watch(supabaseClientProvider);
   final uid = client.auth.currentUser?.id;
-  final coupleId = ref.watch(activeCoupleIdProvider).value;
+  final coupleId = ref.watch(activeCoupleIdProvider.select((v) => v.value));
 
   if (uid == null || coupleId == null) {
     return Stream.value(const PartnerStatus());
@@ -38,64 +40,73 @@ final partnerStatusProvider = StreamProvider.autoDispose<PartnerStatus>((ref) {
 
   final controller = StreamController<PartnerStatus>();
 
+  bool isActive(Map<String, dynamic> row) {
+    final exp = row['expires_at'];
+    if (exp == null) return true;
+    return DateTime.parse(exp as String).toUtc().isAfter(DateTime.now().toUtc());
+  }
+
+  bool isTalk(Map<String, dynamic> row) =>
+      _talkTypes.contains(row['signal_type']);
+
   Future<void> fetchStatus() async {
-    final moodData = await client
-        .from('moods')
-        .select('mood')
-        .eq('couple_id', coupleId)
-        .neq('user_id', uid)
-        .maybeSingle();
+    try {
+      final moodData = await client
+          .from('moods')
+          .select('mood')
+          .eq('couple_id', coupleId)
+          .neq('user_id', uid)
+          .maybeSingle();
 
-    final nowIso = DateTime.now().toUtc().toIso8601String();
-    final incoming = await client
-        .from('connection_signals')
-        .select()
-        .eq('couple_id', coupleId)
-        .eq('status', 'pending')
-        .neq('user_id', uid)
-        .or('signal_type.eq.text,signal_type.eq.call,signal_type.eq.video_call')
-        .or('expires_at.is.null,expires_at.gt.$nowIso')
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
+      final rows = await client
+          .from('connection_signals')
+          .select()
+          .eq('couple_id', coupleId)
+          .order('created_at', ascending: false)
+          .limit(30);
 
-    final outgoing = incoming != null
-        ? null
-        : await client
-            .from('connection_signals')
-            .select()
-            .eq('couple_id', coupleId)
-            .eq('user_id', uid)
-            .or('signal_type.eq.text,signal_type.eq.call,signal_type.eq.video_call')
-            .or('expires_at.is.null,expires_at.gt.$nowIso')
-            .order('created_at', ascending: false)
-            .limit(1)
-            .maybeSingle();
+      final signals = (rows as List).cast<Map<String, dynamic>>();
+      final talkRows = signals.where(isTalk).where(isActive).toList();
 
-    TalkSignal? talk;
-    if (incoming != null) {
-      talk = TalkSignal(
-        id: incoming['id'] as String,
-        type: incoming['signal_type'] as String,
-        status: incoming['status'] as String? ?? 'pending',
-        fromMe: false,
-      );
-    } else if (outgoing != null &&
-        outgoing['status'] != null &&
-        outgoing['status'] != 'pending') {
-      talk = TalkSignal(
-        id: outgoing['id'] as String,
-        type: outgoing['signal_type'] as String,
-        status: outgoing['status'] as String,
-        fromMe: true,
-      );
-    }
+      final incoming = talkRows.cast<Map<String, dynamic>?>().firstWhere(
+            (row) =>
+                row!['user_id'] != uid &&
+                (row['status'] as String? ?? 'pending') == 'pending',
+            orElse: () => null,
+          );
 
-    if (!controller.isClosed) {
-      controller.add(PartnerStatus(
-        mood: moodData?['mood'] as String?,
-        talk: talk,
-      ));
+      final outgoingAck = talkRows.cast<Map<String, dynamic>?>().firstWhere(
+            (row) =>
+                row!['user_id'] == uid &&
+                (row['status'] as String? ?? 'pending') != 'pending',
+            orElse: () => null,
+          );
+
+      TalkSignal? talk;
+      if (incoming != null) {
+        talk = TalkSignal(
+          id: incoming['id'] as String,
+          type: incoming['signal_type'] as String,
+          status: incoming['status'] as String? ?? 'pending',
+          fromMe: false,
+        );
+      } else if (outgoingAck != null) {
+        talk = TalkSignal(
+          id: outgoingAck['id'] as String,
+          type: outgoingAck['signal_type'] as String,
+          status: outgoingAck['status'] as String,
+          fromMe: true,
+        );
+      }
+
+      if (!controller.isClosed) {
+        controller.add(PartnerStatus(
+          mood: moodData?['mood'] as String?,
+          talk: talk,
+        ));
+      }
+    } catch (e, st) {
+      if (!controller.isClosed) controller.addError(e, st);
     }
   }
 

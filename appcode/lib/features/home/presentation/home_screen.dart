@@ -40,7 +40,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
+    final activeCoupleId =
+        ref.watch(activeCoupleIdProvider.select((v) => v.value));
     final partnerName = ref.watch(partnerNameProvider).value ?? 'Partner';
     final isPaired = activeCoupleId != null;
     final scene = ref.watch(partnerSceneProvider).value ?? PartnerScene.day;

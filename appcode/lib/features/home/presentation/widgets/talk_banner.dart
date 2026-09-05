@@ -12,7 +12,8 @@ class TalkBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(partnerStatusProvider).value;
+    final async = ref.watch(partnerStatusProvider);
+    final status = async.unwrapPrevious().asData?.value;
     final talk = status?.talk;
     if (talk == null) return const SizedBox.shrink();
 
@@ -32,15 +33,15 @@ class TalkBanner extends ConsumerWidget {
               children: [
                 _AckChip(
                   label: '10 min',
-                  onTap: () => _ack(ref, talk.id, 'give_me_10'),
+                  onTap: () => _ack(context, ref, talk, 'give_me_10'),
                 ),
                 _AckChip(
                   label: 'Tonight',
-                  onTap: () => _ack(ref, talk.id, 'tonight'),
+                  onTap: () => _ack(context, ref, talk, 'tonight'),
                 ),
                 _AckChip(
                   label: 'Thinking of you',
-                  onTap: () => _ack(ref, talk.id, 'cant_today'),
+                  onTap: () => _ack(context, ref, talk, 'cant_today'),
                 ),
               ],
             ),
@@ -63,9 +64,25 @@ class TalkBanner extends ConsumerWidget {
     return const SizedBox.shrink();
   }
 
-  Future<void> _ack(WidgetRef ref, String id, String status) async {
+  Future<void> _ack(
+    BuildContext context,
+    WidgetRef ref,
+    TalkSignal talk,
+    String status,
+  ) async {
     HapticFeedback.lightImpact();
-    await ref.read(connectionRepositoryProvider).acknowledgeSignal(id, status);
+    try {
+      await ref
+          .read(connectionRepositoryProvider)
+          .acknowledgeSignal(talk.id, status);
+      ref.invalidate(partnerStatusProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not send that reply')),
+        );
+      }
+    }
   }
 
   String _incomingLabel(String type) {
