@@ -41,9 +41,14 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
-    await _localNotifications.initialize(settings: initSettings);
+    try {
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/launcher_icon');
+      const initSettings = InitializationSettings(android: androidSettings);
+      await _localNotifications.initialize(settings: initSettings);
+    } catch (e) {
+      debugPrint('Local notifications init failed: $e');
+    }
 
     final settings = await _fcm.requestPermission(
       alert: true,
@@ -57,7 +62,8 @@ class PushNotificationService {
       sound: true,
     );
 
-    if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+        settings.authorizationStatus != AuthorizationStatus.provisional) {
       debugPrint('User declined or has not accepted permission');
       return;
     }
@@ -68,11 +74,11 @@ class PushNotificationService {
     }
     _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
 
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       cacheNotificationData(message.data);
-      if (message.notification != null) {
-        _showLocalNotification(message.notification!);
+      final notification = message.notification;
+      if (notification != null) {
+        _showLocalNotification(notification);
       }
     });
   }
