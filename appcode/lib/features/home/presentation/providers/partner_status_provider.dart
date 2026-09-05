@@ -23,10 +23,11 @@ class TalkSignal {
 }
 
 class PartnerStatus {
-  const PartnerStatus({this.mood, this.talk});
+  const PartnerStatus({this.mood, this.talk, this.iAmAsleep = false});
 
   final String? mood;
   final TalkSignal? talk;
+  final bool iAmAsleep;
 }
 
 final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
@@ -89,8 +90,20 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
             status == 'pending') {
           incoming = row;
         }
-        if (outgoingAck == null && sender == me && status != 'pending') {
+        if (outgoingAck == null &&
+            sender == me &&
+            status != 'pending' &&
+            row['acknowledged_by']?.toString() == partnerId) {
           outgoingAck = row;
+        }
+      }
+
+      Map<String, dynamic>? myOutgoingPending;
+      for (final row in talkRows) {
+        final sender = row['user_id']?.toString();
+        final status = row['status'] as String? ?? 'pending';
+        if (myOutgoingPending == null && sender == me && status == 'pending') {
+          myOutgoingPending = row;
         }
       }
 
@@ -102,6 +115,13 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
           status: incoming['status'] as String? ?? 'pending',
           fromMe: false,
         );
+      } else if (myOutgoingPending != null) {
+        talk = TalkSignal(
+          id: myOutgoingPending['id'] as String,
+          type: myOutgoingPending['signal_type'] as String,
+          status: 'pending',
+          fromMe: true,
+        );
       } else if (outgoingAck != null) {
         talk = TalkSignal(
           id: outgoingAck['id'] as String,
@@ -111,10 +131,21 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
         );
       }
 
+      var iAmAsleep = false;
+      for (final row in signals) {
+        final sender = row['user_id']?.toString();
+        final type = row['signal_type'] as String?;
+        if (sender == me && (type == 'goodNight' || type == 'goodMorning')) {
+          iAmAsleep = type == 'goodNight';
+          break;
+        }
+      }
+
       if (!controller.isClosed) {
         controller.add(PartnerStatus(
           mood: moodData?['mood'] as String?,
           talk: talk,
+          iAmAsleep: iAmAsleep,
         ));
       }
     } catch (e, st) {

@@ -37,7 +37,7 @@ class DailyStatus extends ConsumerWidget {
         ),
         const SizedBox(width: 20),
         _RitualDot(
-          icon: Icons.chat_bubble_outline,
+          icon: Icons.quiz_outlined,
           done: hasQuestion,
           onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
         ),

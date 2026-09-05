@@ -7,16 +7,25 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../providers/partner_status_provider.dart';
 
-class TalkBanner extends ConsumerWidget {
+class TalkBanner extends ConsumerStatefulWidget {
   const TalkBanner({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TalkBanner> createState() => _TalkBannerState();
+}
+
+class _TalkBannerState extends ConsumerState<TalkBanner> {
+  String? _answeredId;
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(partnerStatusProvider);
     final status = async.unwrapPrevious().asData?.value;
     final talk = status?.talk;
     if (talk == null) return const SizedBox.shrink();
+    if (_answeredId == talk.id) return const SizedBox.shrink();
 
+    // Recipient: unanswered ping from partner. Hide as soon as you reply.
     if (!talk.fromMe && talk.status == 'pending') {
       return _Card(
         child: Column(
@@ -33,15 +42,19 @@ class TalkBanner extends ConsumerWidget {
               children: [
                 _AckChip(
                   label: 'Okay',
-                  onTap: () => _ack(context, ref, talk, 'yes'),
+                  onTap: () => _ack(talk, 'yes'),
                 ),
                 _AckChip(
                   label: 'In a bit',
-                  onTap: () => _ack(context, ref, talk, 'soon'),
+                  onTap: () => _ack(talk, 'soon'),
+                ),
+                _AckChip(
+                  label: 'Tonight',
+                  onTap: () => _ack(talk, 'tonight'),
                 ),
                 _AckChip(
                   label: 'Not now',
-                  onTap: () => _ack(context, ref, talk, 'not_now'),
+                  onTap: () => _ack(talk, 'not_now'),
                 ),
               ],
             ),
@@ -50,6 +63,19 @@ class TalkBanner extends ConsumerWidget {
       );
     }
 
+    // Sender: waiting until they answer. Do not show reply chips here.
+    if (talk.fromMe && talk.status == 'pending') {
+      return _Card(
+        child: Text(
+          'Waiting for them to reply',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+              ),
+        ),
+      );
+    }
+
+    // Sender: they answered. Stays until the ping expires.
     if (talk.fromMe && talk.status != 'pending') {
       return _Card(
         child: Text(
@@ -64,20 +90,16 @@ class TalkBanner extends ConsumerWidget {
     return const SizedBox.shrink();
   }
 
-  Future<void> _ack(
-    BuildContext context,
-    WidgetRef ref,
-    TalkSignal talk,
-    String status,
-  ) async {
+  Future<void> _ack(TalkSignal talk, String status) async {
     HapticFeedback.lightImpact();
+    setState(() => _answeredId = talk.id);
     try {
       await ref
           .read(connectionRepositoryProvider)
           .acknowledgeSignal(talk.id, status);
-      ref.invalidate(partnerStatusProvider);
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
+        setState(() => _answeredId = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not send that reply')),
         );
@@ -96,7 +118,8 @@ class TalkBanner extends ConsumerWidget {
   String _outgoingLabel(String status) {
     return switch (status) {
       'yes' => 'They said okay',
-      'soon' || 'give_me_10' || 'tonight' => 'They’ll be there in a bit',
+      'soon' || 'give_me_10' => 'They’ll be there in a bit',
+      'tonight' => 'They said tonight',
       'not_now' || 'cant_today' => 'They can’t right now',
       _ => 'They replied',
     };

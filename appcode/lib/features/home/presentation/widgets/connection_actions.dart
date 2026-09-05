@@ -13,7 +13,7 @@ import '../../../voice_drop/presentation/voice_record_sheet.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../connection/domain/connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
-import '../providers/home_providers.dart';
+import '../providers/partner_status_provider.dart';
 
 class ConnectionActions extends ConsumerWidget {
   const ConnectionActions({super.key});
@@ -237,7 +237,13 @@ class ConnectionActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAsleep = ref.watch(isAsleepProvider);
+    final isAsleep = ref
+            .watch(partnerStatusProvider)
+            .unwrapPrevious()
+            .asData
+            ?.value
+            .iAmAsleep ??
+        false;
     final isPaired = ref.watch(activeCoupleIdProvider).value != null;
 
     Widget row(List<Widget> children) {
@@ -251,18 +257,18 @@ class ConnectionActions extends ConsumerWidget {
       children: [
         row([
           _ConnectIcon(
-            emoji: '💋',
+            emoji: '😘',
             tooltip: 'Kiss',
             label: 'Kiss',
             onTap: () => _requirePair(
               context,
               isPaired,
-              () => _sendDrop(context, ref, type: 'Kiss', emoji: '💋'),
+              () => _sendDrop(context, ref, type: 'Kiss', emoji: '😘'),
             ),
             onLongPress: () => _requirePair(
               context,
               isPaired,
-              () => _showNoteSheet(context, ref, type: 'Kiss', emoji: '💋'),
+              () => _showNoteSheet(context, ref, type: 'Kiss', emoji: '😘'),
             ),
           ),
           _ConnectIcon(
@@ -304,7 +310,7 @@ class ConnectionActions extends ConsumerWidget {
         const SizedBox(height: 12),
         row([
           _ConnectIcon(
-            icon: Icons.chat_bubble_outline,
+            icon: Icons.call_outlined,
             tooltip: 'Talk',
             label: 'Talk',
             onTap: () => _requirePair(
@@ -321,7 +327,6 @@ class ConnectionActions extends ConsumerWidget {
               HapticFeedback.lightImpact();
               final signal = isAsleep ? 'goodMorning' : 'goodNight';
               _run(ref, (repo, id) => repo.sendSignal(id, signal));
-              ref.read(isAsleepProvider.notifier).toggle();
             }),
           ),
           _ConnectIcon(
@@ -407,6 +412,7 @@ class _ConnectIcon extends StatelessWidget {
       message: tooltip,
       child: Material(
         color: Colors.transparent,
+        clipBehavior: Clip.none,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
@@ -420,11 +426,14 @@ class _ConnectIcon extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  height: 28,
+                  height: 36,
                   child: Center(
                     child: emoji != null
-                        ? Text(emoji!, style: const TextStyle(fontSize: 24))
-                        : Icon(icon, color: AppColors.textPrimary, size: 24),
+                        ? Text(
+                            emoji!,
+                            style: const TextStyle(fontSize: 28, height: 1.0),
+                          )
+                        : Icon(icon, color: AppColors.textPrimary, size: 26),
                   ),
                 ),
                 const SizedBox(height: 6),
