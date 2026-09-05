@@ -240,96 +240,112 @@ class ConnectionActions extends ConsumerWidget {
     final isAsleep = ref.watch(isAsleepProvider);
     final isPaired = ref.watch(activeCoupleIdProvider).value != null;
 
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+    Widget row(List<Widget> children) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: children.map((child) => Expanded(child: child)).toList(),
+      );
+    }
+
+    return Column(
       children: [
-        _ConnectIcon(
-          emoji: '💋',
-          tooltip: 'Kiss',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => _sendDrop(context, ref, type: 'Kiss', emoji: '💋'),
+        row([
+          _ConnectIcon(
+            emoji: '💋',
+            tooltip: 'Kiss',
+            label: 'Kiss',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Kiss', emoji: '💋'),
+            ),
+            onLongPress: () => _requirePair(
+              context,
+              isPaired,
+              () => _showNoteSheet(context, ref, type: 'Kiss', emoji: '💋'),
+            ),
           ),
-          onLongPress: () => _requirePair(
-            context,
-            isPaired,
-            () => _showNoteSheet(context, ref, type: 'Kiss', emoji: '💋'),
+          _ConnectIcon(
+            emoji: '🤗',
+            tooltip: 'Hug',
+            label: 'Hug',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Hug', emoji: '🤗'),
+            ),
+            onLongPress: () => _requirePair(
+              context,
+              isPaired,
+              () => _showNoteSheet(context, ref, type: 'Hug', emoji: '🤗'),
+            ),
           ),
-        ),
-        _ConnectIcon(
-          emoji: '🤗',
-          tooltip: 'Hug',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => _sendDrop(context, ref, type: 'Hug', emoji: '🤗'),
+          _ConnectIcon(
+            emoji: '🥺',
+            tooltip: 'Sorry',
+            label: 'Sorry',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Sorry', emoji: '🥺'),
+            ),
           ),
-          onLongPress: () => _requirePair(
-            context,
-            isPaired,
-            () => _showNoteSheet(context, ref, type: 'Hug', emoji: '🤗'),
+          _ConnectIcon(
+            icon: Icons.mood_outlined,
+            tooltip: 'Mood',
+            label: 'Mood',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _showMoodSheet(context, ref),
+            ),
           ),
-        ),
-        _ConnectIcon(
-          emoji: '🥺',
-          tooltip: 'Sorry',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => _sendDrop(context, ref, type: 'Sorry', emoji: '🥺'),
+        ]),
+        const SizedBox(height: 12),
+        row([
+          _ConnectIcon(
+            icon: Icons.chat_bubble_outline,
+            tooltip: 'Talk',
+            label: 'Talk',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _showTalkSheet(context, ref),
+            ),
           ),
-        ),
-        _ConnectIcon(
-          icon: Icons.mood_outlined,
-          tooltip: 'Mood',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => _showMoodSheet(context, ref),
+          _ConnectIcon(
+            icon: isAsleep ? Icons.wb_sunny_outlined : Icons.bedtime_outlined,
+            tooltip: isAsleep ? 'Wake' : 'Sleep',
+            label: isAsleep ? 'Wake' : 'Sleep',
+            onTap: () => _requirePair(context, isPaired, () {
+              HapticFeedback.lightImpact();
+              final signal = isAsleep ? 'goodMorning' : 'goodNight';
+              _run(ref, (repo, id) => repo.sendSignal(id, signal));
+              ref.read(isAsleepProvider.notifier).toggle();
+            }),
           ),
-        ),
-        _ConnectIcon(
-          icon: Icons.chat_bubble_outline,
-          tooltip: 'Talk',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => _showTalkSheet(context, ref),
+          _ConnectIcon(
+            icon: Icons.mic_none,
+            tooltip: 'Voice',
+            label: 'Voice',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => showVoiceRecordSheet(context, ref),
+            ),
           ),
-        ),
-        _ConnectIcon(
-          icon: isAsleep ? Icons.wb_sunny_outlined : Icons.bedtime_outlined,
-          tooltip: isAsleep ? 'Wake' : 'Sleep',
-          onTap: () => _requirePair(context, isPaired, () {
-            HapticFeedback.lightImpact();
-            final signal = isAsleep ? 'goodMorning' : 'goodNight';
-            _run(ref, (repo, id) => repo.sendSignal(id, signal));
-            ref.read(isAsleepProvider.notifier).toggle();
-          }),
-        ),
-        _ConnectIcon(
-          icon: Icons.mic_none,
-          tooltip: 'Voice',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => showVoiceRecordSheet(context, ref),
+          _ConnectIcon(
+            icon: Icons.brush_outlined,
+            tooltip: 'Canvas',
+            label: 'Canvas',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => context.push(AppRoutes.canvas),
+            ),
           ),
-        ),
-        _ConnectIcon(
-          icon: Icons.brush_outlined,
-          tooltip: 'Canvas',
-          onTap: () => _requirePair(
-            context,
-            isPaired,
-            () => context.push(AppRoutes.canvas),
-          ),
-        ),
+        ]),
       ],
-    ),
     );
   }
 }
@@ -373,6 +389,7 @@ class _ConnectIcon extends StatelessWidget {
     this.icon,
     this.emoji,
     required this.tooltip,
+    required this.label,
     required this.onTap,
     this.onLongPress,
   });
@@ -380,6 +397,7 @@ class _ConnectIcon extends StatelessWidget {
   final IconData? icon;
   final String? emoji;
   final String tooltip;
+  final String label;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
@@ -390,19 +408,28 @@ class _ConnectIcon extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          customBorder: const CircleBorder(),
+          borderRadius: BorderRadius.circular(16),
           onTap: () {
             HapticFeedback.lightImpact();
             onTap();
           },
           onLongPress: onLongPress,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Center(
-              child: emoji != null
-                  ? Text(emoji!, style: const TextStyle(fontSize: 22))
-                  : Icon(icon, color: AppColors.textPrimary, size: 24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 28,
+                  child: Center(
+                    child: emoji != null
+                        ? Text(emoji!, style: const TextStyle(fontSize: 24))
+                        : Icon(icon, color: AppColors.textPrimary, size: 24),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+              ],
             ),
           ),
         ),

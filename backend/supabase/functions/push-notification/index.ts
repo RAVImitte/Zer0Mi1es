@@ -74,10 +74,10 @@ serve(async (req) => {
       const ack = record.status;
 
       if (ack && ack !== 'pending') {
-        title = 'They replied';
-        if (ack === 'give_me_10') body = `${senderName} needs 10 minutes.`;
-        else if (ack === 'tonight') body = `${senderName} said tonight.`;
-        else body = `${senderName} is thinking of you.`;
+        title = `${senderName} replied`
+        if (ack === 'yes') body = 'They said okay.';
+        else if (ack === 'soon' || ack === 'give_me_10' || ack === 'tonight') body = 'They’ll be there in a bit.';
+        else body = 'They can’t right now.';
       } else if (signalType === 'text') {
         title = 'I Want to Talk 💬';
         body = `${senderName} wants you to text them.`;

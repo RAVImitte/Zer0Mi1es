@@ -18,26 +18,17 @@ class PartnerPresence extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final animationState = ref.watch(avatarViewModelProvider);
-    final statusText = _statusWord(animationState);
     final avatarColor = _statusColor(animationState);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = (constraints.biggest.shortestSide * 0.72).clamp(180.0, 280.0);
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _AvatarBubble(size: size, avatarColor: avatarColor, scale: _scale(animationState)),
-            const SizedBox(height: 16),
-            AnimatedSwitcher(
-              duration: AppMotion.base,
-              child: Text(
-                statusText,
-                key: ValueKey(statusText),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-          ],
+        final size = (constraints.biggest.shortestSide * 0.78).clamp(180.0, 280.0);
+        return Center(
+          child: _AvatarBubble(
+            size: size,
+            avatarColor: avatarColor,
+            scale: _scale(animationState),
+          ),
         );
       },
     );
@@ -48,26 +39,6 @@ class PartnerPresence extends ConsumerWidget {
       AnimationState.reaction => 1.08,
       AnimationState.talking => 1.04,
       _ => 1.0,
-    };
-  }
-
-  String _statusWord(AnimationState state) {
-    return switch (state) {
-      AnimationState.idle => 'Here',
-      AnimationState.reaction => 'Love',
-      AnimationState.talking => 'Talk',
-      AnimationState.playing => 'Play',
-      AnimationState.petting => 'Soft',
-      AnimationState.feeding => 'Care',
-      AnimationState.sleeping => 'Night',
-      AnimationState.walking => 'Walk',
-      AnimationState.sitting || AnimationState.resting => 'Rest',
-      AnimationState.moodHappy => 'Happy',
-      AnimationState.moodSad => 'Sad',
-      AnimationState.moodDevastated => 'Heavy',
-      AnimationState.moodOverwhelmed => 'Much',
-      AnimationState.moodExcited => 'Spark',
-      AnimationState.moodTired => 'Tired',
     };
   }
 

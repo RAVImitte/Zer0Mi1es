@@ -175,6 +175,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
         if (coupleId != null) unawaited(_persist(coupleId));
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('Canvas'),
           actions: [
@@ -213,7 +214,9 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
         ),
         body: coupleId == null
             ? const Center(child: Text('Pair first'))
-            : LayoutBuilder(
+            : SafeArea(
+                top: false,
+                child: LayoutBuilder(
                 builder: (context, constraints) {
                   final size = Size(constraints.maxWidth, constraints.maxHeight);
                   return Listener(
@@ -240,6 +243,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
                   );
                 },
               ),
+            ),
       ),
     );
   }

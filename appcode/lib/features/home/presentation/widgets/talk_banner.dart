@@ -32,16 +32,16 @@ class TalkBanner extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 _AckChip(
-                  label: '10 min',
-                  onTap: () => _ack(context, ref, talk, 'give_me_10'),
+                  label: 'Okay',
+                  onTap: () => _ack(context, ref, talk, 'yes'),
                 ),
                 _AckChip(
-                  label: 'Tonight',
-                  onTap: () => _ack(context, ref, talk, 'tonight'),
+                  label: 'In a bit',
+                  onTap: () => _ack(context, ref, talk, 'soon'),
                 ),
                 _AckChip(
-                  label: 'Thinking of you',
-                  onTap: () => _ack(context, ref, talk, 'cant_today'),
+                  label: 'Not now',
+                  onTap: () => _ack(context, ref, talk, 'not_now'),
                 ),
               ],
             ),
@@ -95,10 +95,10 @@ class TalkBanner extends ConsumerWidget {
 
   String _outgoingLabel(String status) {
     return switch (status) {
-      'give_me_10' => 'They said give them 10 minutes',
-      'tonight' => 'They said tonight',
-      'cant_today' => 'They’re thinking of you',
-      _ => 'They saw it',
+      'yes' => 'They said okay',
+      'soon' || 'give_me_10' || 'tonight' => 'They’ll be there in a bit',
+      'not_now' || 'cant_today' => 'They can’t right now',
+      _ => 'They replied',
     };
   }
 }

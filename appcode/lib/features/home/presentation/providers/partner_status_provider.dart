@@ -58,6 +58,16 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
           .neq('user_id', uid)
           .maybeSingle();
 
+      final couple = await client
+          .from('couples')
+          .select('bear_id, bunny_id')
+          .eq('id', coupleId)
+          .maybeSingle();
+      final me = uid.toString();
+      final bear = couple?['bear_id']?.toString();
+      final bunny = couple?['bunny_id']?.toString();
+      final partnerId = bear == me ? bunny : bear;
+
       final rows = await client
           .from('connection_signals')
           .select()
@@ -68,19 +78,21 @@ final partnerStatusProvider = StreamProvider<PartnerStatus>((ref) {
       final signals = (rows as List).cast<Map<String, dynamic>>();
       final talkRows = signals.where(isTalk).where(isActive).toList();
 
-      final incoming = talkRows.cast<Map<String, dynamic>?>().firstWhere(
-            (row) =>
-                row!['user_id'] != uid &&
-                (row['status'] as String? ?? 'pending') == 'pending',
-            orElse: () => null,
-          );
-
-      final outgoingAck = talkRows.cast<Map<String, dynamic>?>().firstWhere(
-            (row) =>
-                row!['user_id'] == uid &&
-                (row['status'] as String? ?? 'pending') != 'pending',
-            orElse: () => null,
-          );
+      Map<String, dynamic>? incoming;
+      Map<String, dynamic>? outgoingAck;
+      for (final row in talkRows) {
+        final sender = row['user_id']?.toString();
+        final status = row['status'] as String? ?? 'pending';
+        if (incoming == null &&
+            partnerId != null &&
+            sender == partnerId &&
+            status == 'pending') {
+          incoming = row;
+        }
+        if (outgoingAck == null && sender == me && status != 'pending') {
+          outgoingAck = row;
+        }
+      }
 
       TalkSignal? talk;
       if (incoming != null) {
