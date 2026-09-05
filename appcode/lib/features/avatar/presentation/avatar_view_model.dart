@@ -43,10 +43,10 @@ class AvatarViewModel extends _$AvatarViewModel {
             } catch (_) {}
           }
           
-          // Sync Sleep/Wake
-          if (status.talkSignal != null && (previous?.value?.talkSignal != status.talkSignal)) {
-            if (status.talkSignal == 'goodNight') onEvent(AvatarEvent.goodNight);
-            else if (status.talkSignal == 'goodMorning') onEvent(AvatarEvent.goodMorning);
+          if (status.talk != null &&
+              !status.talk!.fromMe &&
+              previous?.value?.talk?.id != status.talk!.id) {
+            onEvent(AvatarEvent.talk);
           }
         }
       }, fireImmediately: true);

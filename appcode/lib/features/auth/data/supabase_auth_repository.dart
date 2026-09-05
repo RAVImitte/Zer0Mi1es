@@ -48,6 +48,16 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> syncTimezone(String ianaName) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null || ianaName.isEmpty) return;
+    await _client.from('profiles').update({
+      'timezone': ianaName,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', uid);
+  }
+
+  @override
   Future<void> deleteAccount() async {
     await _client.rpc('delete_my_account');
     await signOut();

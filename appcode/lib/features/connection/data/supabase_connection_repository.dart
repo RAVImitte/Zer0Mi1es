@@ -56,10 +56,17 @@ class SupabaseConnectionRepository implements ConnectionRepository {
   Future<void> sendSignal(String coupleId, String signalType) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
+    final isTalk =
+        signalType == 'text' || signalType == 'call' || signalType == 'video_call';
     await _client.from('connection_signals').insert({
       'couple_id': coupleId,
       'user_id': uid,
       'signal_type': signalType,
+      if (isTalk)
+        'expires_at': DateTime.now()
+            .toUtc()
+            .add(const Duration(hours: 12))
+            .toIso8601String(),
     });
 
     await _push.notify(table: 'connection_signals', record: {
@@ -67,6 +74,28 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       'sender_id': uid,
       'user_id': uid,
       'type': signalType,
+    });
+  }
+
+  @override
+  Future<void> acknowledgeSignal(String signalId, String status) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return;
+    final row = await _client
+        .from('connection_signals')
+        .update({
+          'status': status,
+          'acknowledged_at': DateTime.now().toUtc().toIso8601String(),
+          'acknowledged_by': uid,
+        })
+        .eq('id', signalId)
+        .select()
+        .single();
+    await _push.notify(table: 'connection_signals', record: {
+      'couple_id': row['couple_id'],
+      'user_id': uid,
+      'status': status,
+      'signal_type': row['signal_type'],
     });
   }
 

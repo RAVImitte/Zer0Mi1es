@@ -28,7 +28,7 @@ serve(async (req) => {
     let body = 'You have a new notification.'
 
     let senderId = null;
-    if (payload.table === 'love_drops') senderId = record.sender_id;
+    if (payload.table === 'love_drops' || payload.table === 'voice_drops') senderId = record.sender_id || record.user_id;
     else if (['connection_signals', 'moods', 'daily_answers', 'daily_photos', 'daily_outfits'].includes(payload.table)) {
       senderId = record.user_id;
     }
@@ -64,8 +64,14 @@ serve(async (req) => {
     } else if (payload.table === 'connection_signals') {
       receiverId = record.couple_id // We need to find the partner
       const signalType = record.type || record.signal_type || 'signal';
+      const ack = record.status;
 
-      if (signalType === 'text') {
+      if (ack && ack !== 'pending') {
+        title = 'They replied';
+        if (ack === 'give_me_10') body = `${senderName} needs 10 minutes.`;
+        else if (ack === 'tonight') body = `${senderName} said tonight.`;
+        else body = `${senderName} is thinking of you.`;
+      } else if (signalType === 'text') {
         title = 'I Want to Talk 💬';
         body = `${senderName} wants you to text them.`;
       } else if (signalType === 'call') {
@@ -87,6 +93,10 @@ serve(async (req) => {
         title = 'Partner Signal';
         body = `${senderName} needs affection.`;
       }
+    } else if (payload.table === 'voice_drops') {
+      receiverId = record.couple_id
+      title = 'Voice drop 🎙️'
+      body = `${senderName} sent you a voice drop.`
     } else if (payload.table === 'daily_answers') {
       receiverId = record.couple_id;
       if (record.answer && record.answer.length > 0) {

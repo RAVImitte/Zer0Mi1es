@@ -8,6 +8,8 @@ abstract class ConnectionRepository {
 
   Future<void> sendSignal(String coupleId, String signalType);
 
+  Future<void> acknowledgeSignal(String signalId, String status);
+
   Stream<AvatarEvent> watchPartnerEvents(String coupleId);
 
   Stream<LoveDropMessage> watchLoveDrops(String coupleId);

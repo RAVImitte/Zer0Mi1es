@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Zero Miles uses the microphone so you can send a short voice drop to your partner.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Zero Miles uses the camera for your daily photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zero Miles uses your library only if you pick a daily photo.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

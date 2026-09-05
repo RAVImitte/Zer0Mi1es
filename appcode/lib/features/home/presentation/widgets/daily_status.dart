@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../providers/home_providers.dart';
 
@@ -15,105 +18,90 @@ class DailyStatus extends ConsumerWidget {
     final hasOutfit = ref.watch(outfitCompletedProvider).value ?? false;
     final hasPhoto = ref.watch(photoCompletedProvider).value ?? false;
     final hasQuestion = ref.watch(questionCompletedProvider).value ?? false;
-    
-    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
-    final isPaired = activeCoupleId != null;
+    final isPaired = ref.watch(activeCoupleIdProvider).value != null;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Daily Rituals',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatusItem(
-                context: context,
-                icon: Icons.checkroom, 
-                label: 'Outfit', 
-                isCompleted: hasOutfit,
-                isPaired: isPaired,
-                onTap: () => context.push(AppRoutes.outfit),
-              ),
-              _buildStatusItem(
-                context: context,
-                icon: Icons.photo_camera, 
-                label: 'Photo', 
-                isCompleted: hasPhoto,
-                isPaired: isPaired,
-                onTap: () => context.push(AppRoutes.dailyPhoto),
-              ),
-              _buildStatusItem(
-                context: context,
-                icon: Icons.question_answer,
-                label: 'Question',
-                isCompleted: hasQuestion,
-                isPaired: isPaired,
-                onTap: () => context.push(AppRoutes.dailyQuestion),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _RitualDot(
+          icon: Icons.checkroom_outlined,
+          done: hasOutfit,
+          pulse: isPaired && !hasOutfit,
+          onTap: () => _open(context, isPaired, AppRoutes.outfit),
+        ),
+        const SizedBox(width: 20),
+        _RitualDot(
+          icon: Icons.photo_camera_outlined,
+          done: hasPhoto,
+          onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
+        ),
+        const SizedBox(width: 20),
+        _RitualDot(
+          icon: Icons.chat_bubble_outline,
+          done: hasQuestion,
+          onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
+        ),
+      ],
     );
   }
 
-  Widget _buildStatusItem({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required bool isCompleted,
-    required bool isPaired,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: isPaired ? onTap : () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pair with your partner first to unlock!'),
-            duration: Duration(seconds: 2),
+  void _open(BuildContext context, bool isPaired, String route) {
+    HapticFeedback.selectionClick();
+    if (!isPaired) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pair with your partner first')),
+      );
+      return;
+    }
+    context.push(route);
+  }
+}
+
+class _RitualDot extends StatelessWidget {
+  const _RitualDot({
+    required this.icon,
+    required this.done,
+    required this.onTap,
+    this.pulse = false,
+  });
+
+  final IconData icon;
+  final bool done;
+  final bool pulse;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget dot = Material(
+      color: done
+          ? AppColors.primary.withValues(alpha: 0.18)
+          : AppColors.surface,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Icon(
+            icon,
+            size: 22,
+            color: done ? AppColors.primary : AppColors.textSecondary,
           ),
-        );
-      },
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isCompleted ? AppColors.primary.withValues(alpha: 0.2) : Colors.transparent,
-              border: Border.all(
-                color: isCompleted ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.3),
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: isCompleted ? AppColors.primary : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: isCompleted ? AppColors.textPrimary : AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ],
+        ),
       ),
     );
+
+    if (pulse) {
+      dot = dot
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .scale(
+            begin: const Offset(1, 1),
+            end: const Offset(1.06, 1.06),
+            duration: AppMotion.slow,
+            curve: AppMotion.curve,
+          );
+    }
+    return dot;
   }
 }

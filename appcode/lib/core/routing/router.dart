@@ -8,6 +8,7 @@ import '../../features/auth/presentation/profile_setup_screen.dart';
 import '../../features/couple/presentation/couple_screen.dart';
 import '../../features/daily_photo/presentation/daily_photo_screen.dart';
 import '../../features/daily_question/presentation/daily_question_screen.dart';
+import '../../features/canvas/presentation/canvas_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/outfit/presentation/outfit_screen.dart';
 import '../constants/app_constants.dart';
@@ -98,6 +99,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: AppRoutes.dailyPhoto,
         builder: (context, state) => const DailyPhotoScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.canvas,
+        builder: (context, state) => const CanvasScreen(),
       ),
       GoRoute(
         path: AppRoutes.home,
