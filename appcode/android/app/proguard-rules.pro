@@ -20,7 +20,6 @@
 
 # Firebase Crashlytics (stack traces; plugin may be added later)
 -keepattributes SourceFile,LineNumberTable
--keep public class * extends java.lang.Exception
 -keep class com.google.firebase.crashlytics.** { *; }
 -dontwarn com.google.firebase.crashlytics.**
 
@@ -37,10 +36,9 @@
     @com.google.gson.annotations.SerializedName <fields>;
 }
 
-# Kotlin serialization / Java supabase clients if present on the classpath.
+# Kotlin serialization. supabase_flutter is Dart-only; no Java client keep.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
 -dontwarn io.github.jan.supabase.**
--keep class io.github.jan.supabase.** { *; }
 -keepclassmembers class kotlinx.serialization.json.** {
     *** Companion;
 }

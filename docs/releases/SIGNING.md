@@ -1,6 +1,8 @@
 # Android release signing
 
-Production Android builds must be signed with the **upload key**. They are never debug-signed. `android/key.properties` is optional at Gradle configure time (so `flutter test` / analyze work) but **required** for `assembleRelease` / `bundleRelease`.
+Production Android builds must be signed with the **upload key**. They are never debug-signed.
+
+`android/key.properties` is optional at Gradle configure time (`flutter test` / analyze still work). Release packaging does not: `package*Release*`, `sign*ReleaseBundle`, and `bundle*Release` throw a `GradleException` pointing here if the file is missing. Without that check, AGP 8/9 writes an unsigned `app-release.aab` and `flutter build appbundle --release` exits 0.
 
 Never commit `*.jks` or `key.properties`.
 

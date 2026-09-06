@@ -62,12 +62,42 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Leave unsigned when key.properties is missing so assembleRelease
-            // cannot silently ship a debug-signed artifact. Configure still succeeds.
+            // Attach only when key.properties exists so configure (flutter test) still succeeds.
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+    }
+}
+
+fun isReleasePackagingTask(taskName: String): Boolean =
+    taskName.contains("Release") &&
+        (
+            taskName.startsWith("package") ||
+                (taskName.startsWith("sign") && taskName.contains("Bundle")) ||
+                (taskName.startsWith("bundle") && taskName.endsWith("Release"))
+        )
+
+fun requireReleaseKeyProperties() {
+    if (!keystorePropertiesFile.exists()) {
+        throw GradleException(
+            "android/key.properties is required to package a signed release. " +
+                "See docs/releases/SIGNING.md.",
+        )
+    }
+}
+
+// AGP skips validateSigningRelease unless signing is ready, then FinalizeBundleTask
+// writes an unsigned app-release.aab that Flutter accepts. Fail packaging instead.
+gradle.taskGraph.whenReady {
+    if (allTasks.any { isReleasePackagingTask(it.name) }) {
+        requireReleaseKeyProperties()
+    }
+}
+
+tasks.configureEach {
+    if (isReleasePackagingTask(name)) {
+        doFirst { requireReleaseKeyProperties() }
     }
 }
 
