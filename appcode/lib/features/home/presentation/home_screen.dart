@@ -9,6 +9,7 @@ import '../../auth/data/supabase_auth_repository.dart';
 import '../../connection/domain/love_drop_message.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../notifications/data/push_notification_service.dart';
+import '../data/home_widget_sync.dart';
 import 'providers/home_providers.dart';
 import 'providers/partner_scene_provider.dart';
 import 'widgets/connection_actions.dart';
@@ -25,21 +26,41 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(pushNotificationServiceProvider).initialize();
       try {
         final name = await FlutterTimezone.getLocalTimezone();
         await ref.read(authRepositoryProvider).syncTimezone(name);
       } catch (_) {}
+      await syncHomeWidget(ref);
     });
   }
 
   @override
+  void dispose() {
+    cancelHomeWidgetSync();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      cancelHomeWidgetSync();
+      syncHomeWidget(ref);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    bindHomeWidgetListeners(ref);
     final activeCoupleId =
         ref.watch(activeCoupleIdProvider.select((v) => v.value));
     final partnerName = ref.watch(partnerNameProvider).value ?? 'Partner';

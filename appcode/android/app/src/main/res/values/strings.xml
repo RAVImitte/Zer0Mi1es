@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="partner_widget_description">Your partner\'s presence</string>
+    <string name="partner_widget_placeholder_name">Partner</string>
+</resources>
