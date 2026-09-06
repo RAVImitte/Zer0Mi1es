@@ -2,14 +2,52 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { JWT } from 'npm:google-auth-library@9'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const jsonHeaders = { 'Content-Type': 'application/json' }
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: jsonHeaders })
+}
+
+function jwtSub(authHeader: string): string | null {
+  const match = authHeader.match(/^Bearer\s+(\S+)/i)
+  if (!match) return null
+  const parts = match[1].split('.')
+  if (parts.length < 2) return null
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
+    const payload = JSON.parse(atob(padded))
+    return typeof payload.sub === 'string' && payload.sub.length > 0
+      ? payload.sub
+      : null
+  } catch {
+    return null
+  }
+}
+
+function claimedIdsMatchSub(record: Record<string, unknown>, sub: string): boolean {
+  for (const key of ['sender_id', 'user_id'] as const) {
+    const value = record[key]
+    if (typeof value === 'string' && value.length > 0 && value !== sub) {
+      return false
+    }
+  }
+  return true
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { status: 204 })
+  }
+
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader) {
+    return jsonResponse({ error: 'Unauthorized' }, 401)
+  }
+
+  const sub = jwtSub(authHeader)
+  if (!sub) {
+    return jsonResponse({ error: 'Unauthorized' }, 401)
   }
 
   try {
@@ -18,16 +56,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Parse the payload from the Database Webhook
     const payload = await req.json()
-    console.log('Webhook payload:', payload)
+    const table = typeof payload?.table === 'string' ? payload.table : ''
+    console.log('push-notification table:', table || 'unknown')
 
     const record = payload.record ?? payload
     if (!record || typeof record !== 'object') {
-      return new Response(JSON.stringify({ error: 'Missing record' }), {
-        status: 400,
-        headers: corsHeaders,
-      })
+      return jsonResponse({ error: 'Missing record' }, 400)
+    }
+
+    if (!claimedIdsMatchSub(record, sub)) {
+      return jsonResponse({ error: 'Forbidden' }, 403)
     }
 
     let receiverId = null
@@ -132,33 +171,29 @@ serve(async (req) => {
     }
 
     if (!receiverId) {
-      return new Response(JSON.stringify({ error: 'No receiver found' }), { status: 400 })
+      return jsonResponse({ error: 'No receiver found' }, 400)
     }
 
     // Get the FCM token for the receiver
     let actualReceiverId = receiverId
     if (['love_drops', 'connection_signals', 'daily_answers', 'daily_photos', 'daily_outfits', 'voice_drops'].includes(payload.table)) {
       const { data: couple, error: coupleErr } = await supabase.from('couples').select('bear_id, bunny_id').eq('id', receiverId).single()
-      if (coupleErr) console.error('Couple lookup error:', coupleErr)
+      if (coupleErr) console.error('Couple lookup error')
 
       if (couple) {
         const sid = record.sender_id || record.user_id;
         actualReceiverId = (couple.bear_id === sid) ? couple.bunny_id : couple.bear_id
-        console.log(`Resolved actualReceiverId: ${actualReceiverId}`)
       }
     }
 
     const { data: profile, error: profileErr } = await supabase.from('profiles').select('fcm_token').eq('id', actualReceiverId).single()
-    if (profileErr) console.error('Profile lookup error:', profileErr)
+    if (profileErr) console.error('Profile lookup error')
 
     const fcmToken = profile?.fcm_token
 
     if (!fcmToken) {
-      console.log(`No FCM token found for user ${actualReceiverId}. Exiting early.`)
-      return new Response(JSON.stringify({ message: 'User has no FCM token' }), { headers: corsHeaders })
+      return jsonResponse({ message: 'User has no FCM token' })
     }
-
-    console.log(`Found FCM token for ${actualReceiverId}: ${fcmToken.substring(0, 15)}...`)
 
     // --- Firebase HTTP v1 API Integration ---
     // 1. Get the Service Account JSON string from Supabase Secrets
@@ -207,17 +242,13 @@ serve(async (req) => {
     })
 
     const fcmResult = await fcmResponse.json()
-    console.log('FCM Result:', fcmResult)
+    if (!fcmResponse.ok) {
+      console.error('FCM send failed')
+    }
 
-    return new Response(JSON.stringify({ success: true, fcmResult }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return jsonResponse({ success: true, fcmResult })
   } catch (error) {
-    console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+    console.error('Error')
+    return jsonResponse({ error: error.message }, 400)
   }
 })

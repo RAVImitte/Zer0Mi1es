@@ -23,7 +23,7 @@ max_rows = 1000
 # auto_expose_new_tables = true
 
 [functions.push-notification]
-verify_jwt = false
+verify_jwt = true
 
 [api.tls]
 # Enable HTTPS endpoints locally using a self-signed certificate.

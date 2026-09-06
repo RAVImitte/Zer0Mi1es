@@ -18,3 +18,21 @@ class Zer0Mi1esApp extends ConsumerWidget {
     );
   }
 }
+
+class MissingServerConfigApp extends StatelessWidget {
+  const MissingServerConfigApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text(
+            'This build is missing server configuration; cannot start',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}

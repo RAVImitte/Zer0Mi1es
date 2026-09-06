@@ -9,6 +9,8 @@ abstract class AuthRepository {
 
   Future<void> signUp(String email, String password);
 
+  Future<void> resetPassword(String email);
+
   Future<void> signOut();
 
   Future<void> setupProfile(String displayName);

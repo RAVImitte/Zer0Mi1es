@@ -36,6 +36,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+
+    await ref.read(authViewModelProvider.notifier).resetPassword(email);
+    if (!mounted) return;
+    if (!ref.read(authViewModelProvider).hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Check your email for a reset link.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
@@ -47,7 +62,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         final error = next.error;
         String errorMessage = 'An unexpected error occurred.';
         if (error is AuthException) {
-          errorMessage = error.message;
+          errorMessage = error.statusCode == '429'
+              ? 'Too many attempts. Try again in a few minutes.'
+              : error.message;
         } else {
           // Fallback to a cleaner string if it's a generic Exception
           errorMessage = error.toString().replaceAll('Exception: ', '');
@@ -107,6 +124,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       )
                     : Text(_isLogin ? 'Sign in' : 'Create account'),
               ),
+              if (_isLogin)
+                TextButton(
+                  onPressed: isLoading ? null : _forgotPassword,
+                  child: const Text(
+                    'Forgot password?',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               TextButton(
                 onPressed: isLoading ? null : () {
                   setState(() {

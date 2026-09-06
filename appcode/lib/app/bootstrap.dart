@@ -10,9 +10,23 @@ import '../features/notifications/data/push_notification_service.dart';
 import '../firebase_options.dart';
 import 'app.dart';
 
+Future<void> recoverExistingSession(GoTrueClient auth) async {
+  if (auth.currentSession == null) return;
+  try {
+    await auth.refreshSession();
+  } on AuthException {
+    await auth.signOut();
+  }
+}
+
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   tzdata.initializeTimeZones();
+
+  if (!Env.isConfigured) {
+    runApp(const MissingServerConfigApp());
+    return;
+  }
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -23,6 +37,8 @@ Future<void> bootstrap() async {
     url: Env.supabaseUrl,
     publishableKey: Env.supabaseAnonKey,
   );
+
+  await recoverExistingSession(Supabase.instance.client.auth);
 
   runApp(
     const ProviderScope(
