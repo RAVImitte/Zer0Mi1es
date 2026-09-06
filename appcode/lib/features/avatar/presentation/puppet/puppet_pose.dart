@@ -1,4 +1,4 @@
-import '../avatar_view_model.dart';
+import '../../domain/avatar_event.dart';
 
 /// Continuous puppet parameters. All motion lerps toward these — never snaps.
 class PuppetPose {
@@ -72,7 +72,6 @@ class PuppetPose {
   static PuppetPose forState(AnimationState state, {bool leftSeat = true}) {
     switch (state) {
       case AnimationState.sleeping:
-      case AnimationState.resting:
         return const PuppetPose(
           headTilt: 0.2,
           headY: 0.012,
@@ -83,27 +82,7 @@ class PuppetPose {
           mouthSmile: 0.12,
           blush: 0.18,
         );
-      case AnimationState.reaction:
-        return const PuppetPose(
-          headTilt: -0.04,
-          armL: -0.85,
-          armR: 0.85,
-          eyeOpen: 1,
-          mouthSmile: 1,
-          blush: 1,
-          heartEyes: 1,
-          squashX: 1.04,
-          squashY: 1.08,
-        );
-      case AnimationState.talking:
-        return const PuppetPose(
-          headY: -0.004,
-          mouthSmile: 0.35,
-          mouthOpen: 0.55,
-          blush: 0.45,
-        );
       case AnimationState.moodHappy:
-      case AnimationState.playing:
         return const PuppetPose(
           headY: -0.01,
           armL: -0.35,
@@ -151,18 +130,20 @@ class PuppetPose {
           blush: 0.15,
           tear: 1,
         );
-      case AnimationState.moodOverwhelmed:
+      case AnimationState.moodAngry:
         return const PuppetPose(
-          headTilt: -0.08,
-          armL: -0.7,
-          armR: 0.7,
+          headTilt: -0.05,
+          headY: 0.008,
+          bodySquash: 0.96,
+          armL: 0.45,
+          armR: -0.45,
           eyeOpen: 1,
-          eyeScaleY: 1.06,
-          browWorry: 1,
-          mouthSmile: -0.15,
-          mouthOpen: 0.55,
-          blush: 0.65,
-          sweat: 1,
+          eyeScaleY: 0.82,
+          browDown: 1,
+          mouthSmile: -0.3,
+          blush: 0.9,
+          squashX: 1.06,
+          squashY: 0.94,
         );
       case AnimationState.moodTired:
         return const PuppetPose(
@@ -176,20 +157,7 @@ class PuppetPose {
           mouthSmile: 0.08,
           blush: 0.2,
         );
-      case AnimationState.petting:
-      case AnimationState.feeding:
-        return const PuppetPose(
-          armR: 0.9,
-          mouthSmile: 0.85,
-          blush: 0.5,
-        );
-      case AnimationState.walking:
-        return const PuppetPose(
-          mouthSmile: 0.6,
-          squashY: 1.02,
-        );
       case AnimationState.idle:
-      case AnimationState.sitting:
         return const PuppetPose();
       case AnimationState.giving:
         return leftSeat

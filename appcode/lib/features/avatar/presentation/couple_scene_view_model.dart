@@ -6,7 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../home/presentation/providers/home_providers.dart';
 import '../../home/presentation/providers/partner_status_provider.dart';
-import 'avatar_view_model.dart';
+import '../domain/avatar_event.dart';
 
 class CoupleDrop {
   const CoupleDrop({
@@ -201,7 +201,7 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
       'Happy' => AnimationState.moodHappy,
       'Sad' => AnimationState.moodSad,
       'Devastated' => AnimationState.moodDevastated,
-      'Overwhelmed' => AnimationState.moodOverwhelmed,
+      'Angry' || 'Overwhelmed' => AnimationState.moodAngry,
       'Excited' => AnimationState.moodExcited,
       'Tired' => AnimationState.moodTired,
       _ => AnimationState.idle,

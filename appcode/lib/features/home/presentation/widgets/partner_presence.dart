@@ -8,9 +8,9 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/color_parser.dart';
-import '../../../avatar/presentation/avatar_view_model.dart';
+import '../../../avatar/domain/avatar_event.dart';
 import '../../../avatar/presentation/couple_scene_view_model.dart';
-import '../../../avatar/presentation/widgets/dynamic_person_avatar.dart';
+import '../../../avatar/presentation/widgets/layered_person_avatar.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../../../outfit/presentation/providers/outfit_providers.dart';
 
@@ -187,7 +187,7 @@ class _Seat extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: DynamicPersonAvatar(
+                child: LayeredPersonAvatar(
                   state: state,
                   topColor: top,
                   bottomColor: bottom,
@@ -219,7 +219,6 @@ class _Seat extends ConsumerWidget {
 
   Color _statusColor(AnimationState state) {
     return switch (state) {
-      AnimationState.reaction ||
       AnimationState.receiving ||
       AnimationState.giving ||
       AnimationState.leanIn =>

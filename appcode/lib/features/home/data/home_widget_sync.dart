@@ -9,8 +9,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/color_parser.dart';
 import '../../../core/utils/partner_scene.dart';
-import '../../avatar/presentation/avatar_view_model.dart';
-import '../../avatar/presentation/widgets/dynamic_person_avatar.dart';
+import '../../avatar/presentation/widgets/person_painter.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../outfit/presentation/providers/outfit_providers.dart';
 import '../presentation/providers/partner_scene_provider.dart';
@@ -70,19 +69,13 @@ void bindHomeWidgetListeners(WidgetRef ref) {
   ref.listen(partnerStatusProvider, (previous, next) {
     final prev = previous?.unwrapPrevious().asData?.value;
     final curr = next.unwrapPrevious().asData?.value;
-    if (prev?.mood != curr?.mood) {
+    if (prev?.mood != curr?.mood ||
+        prev?.partnerAsleep != curr?.partnerAsleep) {
       scheduleHomeWidgetSync(ref);
     }
   });
   ref.listen(partnerSceneProvider, (previous, next) {
     if (previous?.asData?.value != next.asData?.value) {
-      scheduleHomeWidgetSync(ref);
-    }
-  });
-  ref.listen(avatarViewModelProvider, (previous, next) {
-    final wasAsleep = previous == AnimationState.sleeping;
-    final isAsleep = next == AnimationState.sleeping;
-    if (wasAsleep != isAsleep) {
       scheduleHomeWidgetSync(ref);
     }
   });
@@ -116,8 +109,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
     final coupleId = ref.read(activeCoupleIdProvider).value;
     final isBunny =
         ref.read(partnerRoleProvider).value == CoupleRole.bunny;
-    final isSleeping =
-        ref.read(avatarViewModelProvider) == AnimationState.sleeping;
+    final isSleeping = status?.partnerAsleep ?? false;
 
     Color top = const Color(0xFF6366F1).withValues(alpha: 0.4);
     Color bottom = const Color(0xFF6366F1).withValues(alpha: 0.4);

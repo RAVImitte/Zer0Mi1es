@@ -8,8 +8,6 @@ abstract final class CacheKeys {
   static const registrationStatus = 'registration_status_cache';
   static const activeCoupleId = 'active_couple_id_cache';
   static const partnerName = 'partner_name';
-  static const partnerAnimationTable = 'cached_partner_animation_table';
-  static const partnerAnimationType = 'cached_partner_animation_type';
 }
 
 abstract final class NotificationConstants {

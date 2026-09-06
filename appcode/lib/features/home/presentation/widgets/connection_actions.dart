@@ -11,7 +11,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/widgets/affection_toast.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../voice_drop/presentation/voice_record_sheet.dart';
-import '../../../avatar/presentation/avatar_view_model.dart';
+import '../../../avatar/domain/avatar_event.dart';
 import '../../../avatar/presentation/couple_scene_view_model.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../connection/domain/connection_repository.dart';

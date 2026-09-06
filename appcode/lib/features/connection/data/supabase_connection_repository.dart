@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/notifications/push_dispatcher.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/utils/talk_expiry.dart';
-import '../../avatar/domain/avatar_event.dart';
 import '../domain/connection_repository.dart';
 import '../domain/love_drop_message.dart';
 
@@ -119,97 +118,6 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       'status': status,
       'signal_type': row['signal_type'],
     });
-  }
-
-  @override
-  Stream<AvatarEvent> watchPartnerEvents(String coupleId) {
-    final uid = _client.auth.currentUser?.id;
-    if (uid == null) return const Stream.empty();
-
-    final controller = StreamController<AvatarEvent>();
-    final channel = _client.channel('public:events:$coupleId');
-
-    channel
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'love_drops',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'couple_id',
-            value: coupleId,
-          ),
-          callback: (payload) {
-            if (payload.newRecord['sender_id'] != uid) {
-              controller.add(AvatarEvent.loveReceived);
-            }
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'moods',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'couple_id',
-            value: coupleId,
-          ),
-          callback: (payload) {
-            if (payload.newRecord['user_id'] == uid) return;
-            final mood = payload.newRecord['mood'] as String?;
-            switch (mood) {
-              case 'Happy':
-                controller.add(AvatarEvent.moodHappy);
-              case 'Sad':
-                controller.add(AvatarEvent.moodSad);
-              case 'Devastated':
-                controller.add(AvatarEvent.moodDevastated);
-              case 'Angry':
-              case 'Overwhelmed':
-                controller.add(AvatarEvent.moodAngry);
-              case 'Excited':
-                controller.add(AvatarEvent.moodExcited);
-              case 'Tired':
-                controller.add(AvatarEvent.moodTired);
-            }
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'connection_signals',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'couple_id',
-            value: coupleId,
-          ),
-          callback: (payload) {
-            if (payload.newRecord['user_id'] == uid) return;
-            final type = payload.newRecord['signal_type'] as String;
-            switch (type) {
-              case 'feed':
-                controller.add(AvatarEvent.feedPet);
-              case 'pet':
-                controller.add(AvatarEvent.petAnimal);
-              case 'goodMorning':
-                controller.add(AvatarEvent.goodMorning);
-              case 'goodNight':
-                controller.add(AvatarEvent.goodNight);
-              case 'talk':
-                controller.add(AvatarEvent.talk);
-              default:
-                controller.add(AvatarEvent.hugReceived);
-            }
-          },
-        )
-        .subscribe();
-
-    controller.onCancel = () {
-      _client.removeChannel(channel);
-      controller.close();
-    };
-
-    return controller.stream;
   }
 
   @override

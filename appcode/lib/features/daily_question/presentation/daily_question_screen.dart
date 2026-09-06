@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../avatar/presentation/avatar_view_model.dart';
-import '../../avatar/presentation/widgets/dynamic_person_avatar.dart';
+import '../../avatar/domain/avatar_event.dart';
+import '../../avatar/presentation/widgets/layered_person_avatar.dart';
 import '../../connection/data/supabase_connection_repository.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../outfit/presentation/providers/outfit_providers.dart';
@@ -301,7 +301,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                 offset: const Offset(0, 4),
                 child: Transform.scale(
                   scale: 0.95,
-                  child: DynamicPersonAvatar(
+                  child: LayeredPersonAvatar(
                     state: AnimationState.idle,
                     topColor: topColor,
                     bottomColor: bottomColor,
@@ -847,7 +847,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                           offset: const Offset(0, 3),
                           child: Transform.scale(
                             scale: 0.95,
-                            child: DynamicPersonAvatar(
+                            child: LayeredPersonAvatar(
                               state: AnimationState.idle,
                               topColor: topColor,
                               bottomColor: bottomColor,

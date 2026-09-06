@@ -11,7 +11,7 @@ Long-distance relationships can be challenging, but **Zero Miles** bridges the g
 
 Say goodbye to feeling disconnected and hello to meaningful daily interactions.
 
-## ✨ Core Features
+## ✨ Core Features (V1)
 
 ### 🔗 Secure Couple Pairing
 Your private sanctuary. Securely link your account with your partner using a unique, time-sensitive pairing token. Once paired, the app becomes a dedicated space just for the two of you.
@@ -29,24 +29,38 @@ Visually bridge the distance. Share your Outfit of the Day (OOTD) or a candid da
 *(📸 Add screenshot/GIF here showing the photo/outfit sharing feature)*
 
 ### 💧 Love Drops & Mood Sharing
-Sometimes words aren't enough. Send quick emotional gestures called **Love Drops** (like a Kiss 💋, Hug 🤗, Heart 💖, or Sorry 🥺) directly to your partner's phone. You can also update your current **Mood** so your partner always knows how you're feeling.
+Quick gestures (Kiss 💋, Hug 🤗, Heart 💖, Sorry 🥺) and a shared mood so they know how you feel.
 <br>
-*(📸 Add screenshot/GIF here showing the mood selector or love drop animation)*
+*(📸 Add screenshot/GIF here showing the mood selector or love drop)*
 
 ### 🔔 Real-Time Connection Signals
-Need their attention right now? Send instant connection signals like:
-- 💬 "I Want to Talk"
-- 📞 "Call Request"
-- 📹 "Video Call Request"
-- 🌙 "Good Night" / ☀️ "Good Morning"
+Text / call / video pings plus Good Night / Good Morning, with a push to their phone.
 
-Your partner will instantly receive a push notification to let them know you're thinking of them.
+---
+
+## ✨ V2 (shipped 2026-09-05 – 2026-09-06)
+
+App version **2.0.0**. Last 72 hours on `main`:
+
+- **Couple scene** — both of you on Home as layered person puppets; Love Drops fly between seats; sleep persists
+- **Talk banner** — one line (“Gwen wants to call” + Okay + ⋯); replies expire (Okay 15m / In a bit 1h / Not now 2h / Tonight → 6am)
+- **Moods** — 2-column sheet; **Angry** replaces Overwhelmed (stomp + 💢)
+- **Android widget** — name, mood, scene, avatar snapshot (no talk/kisses)
+- **Voice drops** and a **shared canvas** (strokes survive offline)
+- **Sanctuary lighting** on Home (dawn / day / dusk / night)
 
 ---
 
 ## 🚀 Getting Started (For Developers)
 
-*(Provide brief instructions here on how to run the Flutter app and set up Supabase if this repo is open source. Otherwise, this section can be removed.)*
+Flutter client lives in `appcode/`. Supabase migrations and the push Edge Function live in `backend/supabase/`.
+
+```bat
+cd appcode
+flutter run --dart-define-from-file=.env
+```
+
+See `appcode/README.md` and `AGENTS.md` (use `npx supabase` for DB commands). Product docs: `D:\Chadukunta\zeromiles\docs\Fin docs\`.
 
 ---
 *Built with Flutter (Android & iOS) and Supabase.*

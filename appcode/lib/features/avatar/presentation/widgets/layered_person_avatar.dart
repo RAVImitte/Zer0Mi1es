@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../avatar_view_model.dart';
+import '../../domain/avatar_event.dart';
 import '../puppet/puppet_pose.dart';
 
 class LayeredPersonAvatar extends StatefulWidget {
@@ -56,8 +56,7 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
   void didUpdateWidget(covariant LayeredPersonAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.state != widget.state &&
-        (widget.state == AnimationState.reaction ||
-            widget.state == AnimationState.receiving)) {
+        widget.state == AnimationState.receiving) {
       _squashPulse = 1;
     }
   }
@@ -101,35 +100,38 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
   Widget build(BuildContext context) {
     final breathe = math.sin(_time * math.pi * 2 / 2.35);
     final sway = math.sin(_time * math.pi * 2 / 3.4);
-    final talkWave = widget.state == AnimationState.talking
-        ? (0.35 + 0.65 * (0.5 + 0.5 * math.sin(_time * math.pi * 8)))
-        : 0.0;
-    final walk = widget.state == AnimationState.walking
-        ? math.sin(_time * math.pi * 6)
-        : 0.0;
     final happyHop = widget.state == AnimationState.moodHappy ||
             widget.state == AnimationState.moodExcited
         ? (0.5 + 0.5 * math.sin(_time * math.pi * 5)).clamp(0.0, 1.0)
         : 0.0;
+    final angryStomp = widget.state == AnimationState.moodAngry
+        ? (0.5 + 0.5 * math.sin(_time * math.pi * 9)).clamp(0.0, 1.0)
+        : 0.0;
 
     final pulse = math.sin(_squashPulse * math.pi);
-    final squashX = _pose.squashX * (1 + 0.08 * pulse) * (1 - 0.012 * breathe);
-    final squashY = _pose.squashY * (1 - 0.07 * pulse) * (1 + 0.018 * breathe);
+    final squashX = _pose.squashX *
+        (1 + 0.08 * pulse) *
+        (1 - 0.012 * breathe) *
+        (1 + 0.05 * angryStomp);
+    final squashY = _pose.squashY *
+        (1 - 0.07 * pulse) *
+        (1 + 0.018 * breathe) *
+        (1 - 0.06 * angryStomp);
 
     final blinkLid = 1 - _blink;
     final pose = PuppetPose(
-      headTilt: _pose.headTilt + sway * 0.035,
-      headY: _pose.headY + breathe * 0.006 - happyHop * 0.018,
+      headTilt: _pose.headTilt + sway * 0.035 + angryStomp * 0.04,
+      headY: _pose.headY + breathe * 0.006 - happyHop * 0.018 + angryStomp * 0.01,
       bodySquash: _pose.bodySquash,
-      armL: _pose.armL + walk * 0.28,
-      armR: _pose.armR - walk * 0.28,
+      armL: _pose.armL,
+      armR: _pose.armR,
       eyeOpen: _pose.eyeOpen,
       eyeScaleY: _pose.eyeScaleY,
       lidDrop: math.max(_pose.lidDrop, blinkLid),
       browDown: _pose.browDown,
       browWorry: _pose.browWorry,
       mouthSmile: _pose.mouthSmile,
-      mouthOpen: math.max(_pose.mouthOpen, talkWave),
+      mouthOpen: _pose.mouthOpen,
       blush: _pose.blush,
       heartEyes: _pose.heartEyes,
       sparkle: _pose.sparkle,
@@ -160,6 +162,8 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
             _ZzzOverlay(size: widget.size, t: _time),
           if (_pose.heartEyes > 0.4)
             _HeartOverlay(size: widget.size, t: _time),
+          if (widget.state == AnimationState.moodAngry)
+            _AngerOverlay(size: widget.size, t: _time),
         ],
       ),
     );
@@ -186,6 +190,28 @@ class _ZzzOverlay extends StatelessWidget {
             fontSize: size * 0.12,
             fontWeight: FontWeight.w800,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AngerOverlay extends StatelessWidget {
+  const _AngerOverlay({required this.size, required this.t});
+  final double size;
+  final double t;
+
+  @override
+  Widget build(BuildContext context) {
+    final phase = (t % 0.42) / 0.42;
+    return Positioned(
+      top: size * (0.02 - 0.06 * phase),
+      right: size * 0.04,
+      child: Opacity(
+        opacity: (1 - phase).clamp(0.0, 1.0),
+        child: Transform.scale(
+          scale: 0.75 + 0.45 * phase,
+          child: Text('💢', style: TextStyle(fontSize: size * 0.14)),
         ),
       ),
     );

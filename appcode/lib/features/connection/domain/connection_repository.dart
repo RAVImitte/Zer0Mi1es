@@ -1,4 +1,3 @@
-import '../../avatar/domain/avatar_event.dart';
 import 'love_drop_message.dart';
 
 abstract class ConnectionRepository {
@@ -9,8 +8,6 @@ abstract class ConnectionRepository {
   Future<void> sendSignal(String coupleId, String signalType);
 
   Future<void> acknowledgeSignal(String signalId, String status);
-
-  Stream<AvatarEvent> watchPartnerEvents(String coupleId);
 
   Stream<LoveDropMessage> watchLoveDrops(String coupleId);
 }

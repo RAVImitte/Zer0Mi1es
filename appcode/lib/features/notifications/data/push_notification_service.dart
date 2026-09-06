@@ -2,7 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -11,21 +10,6 @@ import '../../../core/supabase/supabase_providers.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling a background message: ${message.messageId}');
-  await cacheNotificationData(message.data);
-}
-
-Future<void> cacheNotificationData(Map<String, dynamic> data) async {
-  if (!data.containsKey('table') || !data.containsKey('type')) return;
-
-  final table = data['table'] as String;
-  final type = data['type'] as String;
-  if (table != 'moods' && table != 'connection_signals' && table != 'love_drops') {
-    return;
-  }
-
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(CacheKeys.partnerAnimationTable, table);
-  await prefs.setString(CacheKeys.partnerAnimationType, type);
 }
 
 final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
@@ -75,7 +59,6 @@ class PushNotificationService {
     _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      cacheNotificationData(message.data);
       final notification = message.notification;
       if (notification != null) {
         _showLocalNotification(notification);
