@@ -7,12 +7,19 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/utils/color_parser.dart';
+import '../../../../core/utils/partner_scene.dart';
+import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/widgets/living_window.dart';
 import '../../../avatar/domain/avatar_event.dart';
 import '../../../avatar/presentation/couple_scene_view_model.dart';
 import '../../../avatar/presentation/widgets/layered_person_avatar.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../../../outfit/presentation/providers/outfit_providers.dart';
+import '../providers/partner_scene_provider.dart';
+import '../providers/partner_status_provider.dart';
+import 'connection_actions.dart';
 
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key});
@@ -24,6 +31,9 @@ class PartnerPresence extends ConsumerWidget {
     final myRole = roleAsync.unwrapPrevious().value;
     final coupleId = ref.watch(activeCoupleIdProvider).value;
     final partnerName = ref.watch(partnerNameProvider).value ?? 'Partner';
+    final myScene = ref.watch(mySceneProvider);
+    final theirScene =
+        ref.watch(partnerSceneProvider).value ?? myScene;
 
     if (coupleId != null && myRole == null) {
       return const Center(
@@ -36,19 +46,23 @@ class PartnerPresence extends ConsumerWidget {
     }
 
     final iAmLeft = myRole != CoupleRole.bunny;
+    final myAsleep =
+        (iAmLeft ? scene.left : scene.right) == AnimationState.sleeping;
+    final theirAsleep =
+        (iAmLeft ? scene.right : scene.left) == AnimationState.sleeping;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        const labelBand = 46.0;
-        final byHeight =
-            (constraints.maxHeight - labelBand).clamp(96.0, 200.0);
-        final byWidth = (constraints.maxWidth * 0.42).clamp(96.0, 200.0);
-        final avatarSize = math.min(byHeight, byWidth);
+        final seatW = (constraints.maxWidth - 12) / 2;
+        final windowW = seatW.clamp(96.0, 200.0);
+        final windowH = windowW * 4 / 3;
+        final avatarSize = (windowW * 0.62).clamp(72.0, 140.0);
+
         return SizedBox(
           width: constraints.maxWidth,
           height: constraints.maxHeight,
           child: Stack(
-            clipBehavior: Clip.none,
+            clipBehavior: Clip.hardEdge,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,26 +71,33 @@ class PartnerPresence extends ConsumerWidget {
                     child: _Seat(
                       leftSeat: true,
                       isMe: iAmLeft,
-                      label: iAmLeft ? 'You' : partnerName,
-                      caption: scene.leftMood,
+                      label: iAmLeft ? 'You' : _firstName(partnerName),
                       state: scene.left,
                       isBunny: false,
                       coupleId: coupleId,
                       size: avatarSize,
                       unpairedEmpty: coupleId == null && !iAmLeft,
+                      windowScene: iAmLeft ? myScene : theirScene,
+                      sleeping: iAmLeft ? myAsleep : theirAsleep,
+                      mood: scene.leftMood,
+                      partnerName: partnerName,
                     ),
                   ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _Seat(
                       leftSeat: false,
                       isMe: !iAmLeft,
-                      label: iAmLeft ? partnerName : 'You',
-                      caption: scene.rightMood,
+                      label: iAmLeft ? _firstName(partnerName) : 'You',
                       state: scene.right,
                       isBunny: true,
                       coupleId: coupleId,
                       size: avatarSize,
                       unpairedEmpty: coupleId == null && iAmLeft,
+                      windowScene: iAmLeft ? theirScene : myScene,
+                      sleeping: iAmLeft ? theirAsleep : myAsleep,
+                      mood: scene.rightMood,
+                      partnerName: partnerName,
                     ),
                   ),
                 ],
@@ -99,57 +120,70 @@ class PartnerPresence extends ConsumerWidget {
   }
 }
 
+String _firstName(String name) {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) return 'Partner';
+  return trimmed.split(RegExp(r'\s+')).first;
+}
+
 class _Seat extends ConsumerWidget {
   const _Seat({
     required this.leftSeat,
     required this.isMe,
     required this.label,
-    required this.caption,
     required this.state,
     required this.isBunny,
     required this.coupleId,
     required this.size,
     required this.unpairedEmpty,
+    required this.windowScene,
+    required this.sleeping,
+    required this.mood,
+    required this.partnerName,
   });
 
   final bool leftSeat;
   final bool isMe;
   final String label;
-  final String? caption;
   final AnimationState state;
   final bool isBunny;
   final String? coupleId;
   final double size;
   final bool unpairedEmpty;
+  final PartnerScene windowScene;
+  final bool sleeping;
+  final String? mood;
+  final String partnerName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final glow = _statusColor(state);
 
     if (unpairedEmpty) {
-      return GestureDetector(
-        onTap: () => context.push(AppRoutes.couple),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: size * 0.72,
-              height: size * 0.72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.hairline, width: 1.5),
-              ),
-              child: const Icon(Icons.add, color: AppColors.primary),
+      return _framedSeat(
+        context: context,
+        label: 'Them',
+        window: LivingWindow(
+          scene: windowScene,
+          unpaired: true,
+          onTap: () => context.push(AppRoutes.couple),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.pair, color: AppColors.primary, size: 28),
+                const SizedBox(height: 6),
+                Text(
+                  'Pair',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: AppColors.primary),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Pair',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(color: AppColors.primary),
-            ),
-          ],
+          ),
         ),
       );
     }
@@ -168,52 +202,91 @@ class _Seat extends ConsumerWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: glow.withValues(alpha: 0.18),
-                      blurRadius: 28,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: LayeredPersonAvatar(
-                  state: state,
-                  topColor: top,
-                  bottomColor: bottom,
-                  isBunny: isBunny,
-                  leftSeat: leftSeat,
-                  size: size,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            caption ?? 'Here',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+    return _framedSeat(
+      context: context,
+      label: label,
+      window: LivingWindow(
+        scene: windowScene,
+        sleeping: sleeping,
+        rimColor: glow,
+        onTap: () {
+          if (isMe) {
+            showMoodSheet(context, ref);
+          } else {
+            _showPresence(context, ref);
+          }
+        },
+        onLongPress: isMe ? () => showLoveSheet(context, ref) : null,
+        child: LayeredPersonAvatar(
+          state: state,
+          topColor: top,
+          bottomColor: bottom,
+          isBunny: isBunny,
+          leftSeat: leftSeat,
+          size: size,
+        ),
       ),
+    );
+  }
+
+  Widget _framedSeat({
+    required BuildContext context,
+    required String label,
+    required Widget window,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = constraints.maxWidth;
+        final maxH = math.max(constraints.maxHeight - 36, 80.0);
+        var width = maxW;
+        var height = width * 4 / 3;
+        if (height > maxH) {
+          height = maxH;
+          width = height * 3 / 4;
+        }
+        return Align(
+          alignment: const Alignment(0, 0.72),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: width,
+                height: height,
+                child: window,
+              ),
+              WindowSillCaption(label: label),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPresence(BuildContext context, WidgetRef ref) {
+    final status = ref.read(partnerStatusProvider).value;
+    showAppSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                partnerName,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                sleeping
+                    ? 'Resting'
+                    : (status?.mood ?? mood ?? 'Here'),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

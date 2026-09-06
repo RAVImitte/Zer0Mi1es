@@ -5,26 +5,27 @@ import 'app_radii.dart';
 
 class AppTheme {
   static const String fontFamily = 'Inter';
+  static const String displayFamily = 'Fraunces';
 
   static TextTheme get _textTheme {
     const color = AppColors.textPrimary;
     return const TextTheme(
       displaySmall: TextStyle(
-        fontFamily: fontFamily,
+        fontFamily: displayFamily,
         fontSize: 32,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.4,
         color: color,
       ),
       headlineMedium: TextStyle(
-        fontFamily: fontFamily,
+        fontFamily: displayFamily,
         fontSize: 24,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
         color: color,
       ),
       titleLarge: TextStyle(
-        fontFamily: fontFamily,
+        fontFamily: displayFamily,
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: color,
@@ -79,13 +80,16 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.danger,
+        onPrimary: Color(0xFF2A1614),
+        onSecondary: Colors.white,
+        onSurface: AppColors.textPrimary,
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: textTheme.titleMedium,
+        titleTextStyle: textTheme.titleLarge,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -110,7 +114,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: const Color(0xFF2A1614),
           elevation: 0,
           minimumSize: const Size.fromHeight(52),
           textStyle: textTheme.labelLarge,
@@ -123,6 +127,14 @@ class AppTheme {
           minimumSize: const Size.fromHeight(52),
           textStyle: textTheme.labelLarge,
           side: const BorderSide(color: AppColors.primary),
+          shape: RoundedRectangleBorder(borderRadius: radius),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: const Color(0xFF2A1614),
+          textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(borderRadius: radius),
         ),
       ),
@@ -151,11 +163,13 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.elevated,
-        contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
+        contentTextStyle:
+            textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: radius),
       ),
       dividerColor: AppColors.hairline,
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
     );
   }
 }

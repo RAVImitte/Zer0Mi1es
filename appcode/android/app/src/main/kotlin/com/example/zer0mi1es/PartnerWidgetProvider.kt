@@ -39,7 +39,7 @@ class PartnerWidgetProvider : HomeWidgetProvider() {
                     "setBackgroundResource",
                     when (scene) {
                         "Dawn" -> R.drawable.partner_widget_bg_dawn
-                        "Dusk" -> R.drawable.partner_widget_bg_dusk
+                        "Evening", "Dusk" -> R.drawable.partner_widget_bg_dusk
                         "Night" -> R.drawable.partner_widget_bg_night
                         else -> R.drawable.partner_widget_bg_day
                     },

@@ -39,10 +39,11 @@ String _moodLine(String? mood) {
 
 Color _sceneFill(PartnerScene scene) {
   return switch (scene) {
-    PartnerScene.dawn => const Color(0xFF4C2C3A),
-    PartnerScene.day => const Color(0xFF152038),
-    PartnerScene.dusk => const Color(0xFF3B1F4A),
-    PartnerScene.night => const Color(0xFF070B16),
+    PartnerScene.dawn => const Color(0xFF4A2E2A),
+    PartnerScene.morning => const Color(0xFF1C1820),
+    PartnerScene.afternoon => const Color(0xFF241810),
+    PartnerScene.evening => const Color(0xFF3A1E28),
+    PartnerScene.night => const Color(0xFF0C0A10),
   };
 }
 
@@ -105,14 +106,14 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
         ref.read(partnerStatusProvider).unwrapPrevious().asData?.value;
     final scene =
         ref.read(partnerSceneProvider).unwrapPrevious().asData?.value ??
-            PartnerScene.day;
+            PartnerScene.afternoon;
     final coupleId = ref.read(activeCoupleIdProvider).value;
     final isBunny =
         ref.read(partnerRoleProvider).value == CoupleRole.bunny;
     final isSleeping = status?.partnerAsleep ?? false;
 
-    Color top = const Color(0xFF6366F1).withValues(alpha: 0.4);
-    Color bottom = const Color(0xFF6366F1).withValues(alpha: 0.4);
+    Color top = const Color(0xFFE8A090).withValues(alpha: 0.4);
+    Color bottom = const Color(0xFFE8A090).withValues(alpha: 0.4);
     if (coupleId != null) {
       final outfit = ref.read(partnerOutfitProvider(coupleId)).value;
       if (outfit != null) {
@@ -123,6 +124,17 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
       }
     }
 
+    if (coupleId == null) {
+      await HomeWidget.saveWidgetData<String>('widget_name', 'Pair in the app');
+      await HomeWidget.saveWidgetData<String>('widget_mood', '');
+      await HomeWidget.saveWidgetData<String>('widget_scene', '');
+      await HomeWidget.updateWidget(
+        qualifiedAndroidName: _androidWidget,
+        iOSName: 'PartnerWidget',
+      );
+      return;
+    }
+
     final mood = status?.mood;
     final isHappy = mood == 'Happy' || mood == 'Excited';
     final isSad =
@@ -130,7 +142,10 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
     final isAngry = mood == 'Angry' || mood == 'Overwhelmed';
 
     await HomeWidget.saveWidgetData<String>('widget_name', name);
-    await HomeWidget.saveWidgetData<String>('widget_mood', _moodLine(mood));
+    await HomeWidget.saveWidgetData<String>(
+      'widget_mood',
+      isSleeping ? 'Sleeping' : _moodLine(mood),
+    );
     await HomeWidget.saveWidgetData<String>('widget_scene', sceneLabel(scene));
 
     await HomeWidget.renderFlutterWidget(

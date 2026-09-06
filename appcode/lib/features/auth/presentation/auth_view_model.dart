@@ -26,6 +26,14 @@ class AuthViewModel extends _$AuthViewModel {
     });
   }
 
+  Future<void> resetPassword(String email) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.resetPassword(email);
+    });
+  }
+
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {

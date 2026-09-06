@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../data/supabase_voice_repository.dart';
 import '../domain/voice_drop.dart';
@@ -78,14 +79,29 @@ class _PlayPillState extends ConsumerState<_PlayPill> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_playing ? Icons.stop : Icons.play_arrow,
+              Icon(_playing ? AppIcons.stop : AppIcons.play,
                   color: AppColors.affection, size: 20),
               const SizedBox(width: 8),
-              Text('Voice drop', style: Theme.of(context).textTheme.labelLarge),
+              Flexible(
+                child: Text(
+                  _label(context, ref),
+                  style: Theme.of(context).textTheme.labelLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _label(BuildContext context, WidgetRef ref) {
+    final name = ref.watch(partnerNameProvider).value ?? 'They';
+    final first = name.trim().split(RegExp(r'\s+')).first;
+    final secs = (widget.drop.durationMs / 1000).ceil();
+    final left = widget.drop.expiresAt.difference(DateTime.now());
+    final hours = left.inHours.clamp(0, 24);
+    return '$first left a voice · 0:${secs.toString().padLeft(2, '0')} · ${hours}h left';
   }
 }

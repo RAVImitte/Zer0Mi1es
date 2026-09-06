@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_routes.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
+
+import '../../../core/utils/color_parser.dart';
+import '../../../core/widgets/app_page.dart';
+import '../../avatar/domain/avatar_event.dart';
+import '../../avatar/presentation/widgets/layered_person_avatar.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../data/supabase_outfit_repository.dart';
+import 'providers/outfit_providers.dart';
 
 class OutfitScreen extends ConsumerStatefulWidget {
   const OutfitScreen({super.key});
@@ -31,102 +37,135 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
   Color? _selectedTop;
   Color? _selectedBottom;
   bool _isLoading = false;
+  bool _prefilled = false;
 
   String _colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+    return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
   }
 
   void _saveOutfit() async {
     if (_selectedTop == null || _selectedBottom == null) return;
-    
+
     setState(() => _isLoading = true);
     final coupleId = ref.read(activeCoupleIdProvider).value;
-    
+
     if (coupleId != null) {
       try {
         await ref.read(outfitRepositoryProvider).saveOutfit(
-          coupleId, 
-          _colorToHex(_selectedTop!), 
-          _colorToHex(_selectedBottom!)
-        );
+              coupleId,
+              _colorToHex(_selectedTop!),
+              _colorToHex(_selectedBottom!),
+            );
         if (mounted) {
-          context.go(AppRoutes.home);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Outfit updated')),
+          );
+          Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving outfit: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not save that outfit')),
+          );
         }
       }
     }
-    
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final partnerName = ref.watch(partnerNameProvider).value ?? 'Your partner';
+    final partnerName = ref.watch(partnerNameProvider).value ?? 'them';
+    final coupleId = ref.watch(activeCoupleIdProvider).value;
+    final myRole = ref.watch(myRoleProvider).value;
+    final isBunny = myRole == CoupleRole.bunny;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Outfit', style: TextStyle(color: AppColors.primary)),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'What are you wearing today?',
+    if (coupleId != null && !_prefilled) {
+      final mine = ref.watch(myOutfitProvider(coupleId)).value;
+      if (mine != null) {
+        _prefilled = true;
+        _selectedTop = parseHexColor(mine['top_color'] as String);
+        _selectedBottom = parseHexColor(mine['bottom_color'] as String);
+      }
+    }
+
+    Map<String, dynamic>? partnerOutfit;
+    if (coupleId != null) {
+      partnerOutfit = ref.watch(partnerOutfitProvider(coupleId)).value;
+    }
+
+    return AppPage(
+      title: 'My outfit',
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'What are you wearing today?',
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'They’ll see this on you.',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: LayeredPersonAvatar(
+                state: AnimationState.idle,
+                topColor: _selectedTop ?? AppColors.primary.withValues(alpha: 0.3),
+                bottomColor:
+                    _selectedBottom ?? AppColors.primary.withValues(alpha: 0.3),
+                isBunny: isBunny,
+                size: 140,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Top',
                 style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$partnerName\'s avatar will update to match your outfit!',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              const Text('Top Color', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              _buildColorSelector(true),
-              
-              const SizedBox(height: 32),
-              
-              const Text('Bottom Color', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              _buildColorSelector(false),
-              
-              const SizedBox(height: 32),
-              
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: (_selectedTop != null && _selectedBottom != null && !_isLoading) ? _saveOutfit : null,
-                child: _isLoading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Save Outfit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildColorSelector(true),
+            const SizedBox(height: 24),
+            const Text('Bottom',
+                style: TextStyle(
+                    color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildColorSelector(false),
+            if (partnerOutfit != null) ...[
+              const SizedBox(height: 20),
+              OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedTop =
+                        parseHexColor(partnerOutfit!['top_color'] as String);
+                    _selectedBottom =
+                        parseHexColor(partnerOutfit['bottom_color'] as String);
+                  });
+                },
+                child: Text('Match $partnerName'),
               ),
             ],
-          ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: (_selectedTop != null &&
+                      _selectedBottom != null &&
+                      !_isLoading)
+                  ? _saveOutfit
+                  : null,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFF2A1614)))
+                  : const Text('Save outfit'),
+            ),
+          ],
         ),
       ),
     );
@@ -134,8 +173,6 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
 
   Widget _buildColorSelector(bool isTop) {
     final selectedColor = isTop ? _selectedTop : _selectedBottom;
-    
-    // Check if the selected color is one of the presets
     final isPresetSelected = _availableColors.values.contains(selectedColor);
     final isCustomSelected = selectedColor != null && !isPresetSelected;
 
@@ -155,7 +192,6 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
             });
           });
         }),
-        // Custom Color Button
         GestureDetector(
           onTap: () => _showColorPicker(isTop),
           child: Container(
@@ -165,20 +201,11 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               color: isCustomSelected ? selectedColor : AppColors.surface,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isCustomSelected ? AppColors.primary : Colors.grey.shade300,
-                width: isCustomSelected ? 4 : 1,
+                color: isCustomSelected ? AppColors.primary : AppColors.hairline,
+                width: isCustomSelected ? 3 : 1,
               ),
-              boxShadow: [
-                if (isCustomSelected)
-                  BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, spreadRadius: 2),
-              ],
             ),
-            child: Icon(
-              Icons.palette,
-              color: isCustomSelected 
-                  ? (selectedColor.computeLuminance() > 0.5 ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.4))
-                  : AppColors.primary,
-            ),
+            child: Icon(AppIcons.palette, color: AppColors.primary, size: 20),
           ),
         ),
       ],
@@ -195,26 +222,23 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey.shade300,
-            width: isSelected ? 4 : 1,
+            color: isSelected ? AppColors.primary : AppColors.hairline,
+            width: isSelected ? 3 : 1,
           ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, spreadRadius: 2),
-          ],
         ),
       ),
     );
   }
 
   void _showColorPicker(bool isTop) {
-    Color pickerColor = (isTop ? _selectedTop : _selectedBottom) ?? AppColors.primary;
+    Color pickerColor =
+        (isTop ? _selectedTop : _selectedBottom) ?? AppColors.primary;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Pick a color!'),
+          title: const Text('Custom color'),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickerColor,
@@ -229,7 +253,11 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Got it'),
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Use'),
               onPressed: () {
                 setState(() {
                   if (isTop) {

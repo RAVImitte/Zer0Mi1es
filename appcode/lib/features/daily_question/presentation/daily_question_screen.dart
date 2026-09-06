@@ -178,13 +178,13 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             const Icon(Icons.hourglass_empty, size: 64, color: AppColors.primary),
             const SizedBox(height: 24),
             const Text(
-              "Today's question is not ready yet!",
+              "Tomorrow’s question is still on its way.",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             const Text(
-              "The daily question hasn't been generated.\nPlease ensure the cron job is running or you manually ran the generate function in Supabase.",
+              "Come back in a bit.",
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -373,7 +373,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                   children: [
                     Icon(Icons.edit, size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
-                    Text('Write custom question instead', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text('Ask something tomorrow', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   ],
                 ),
               ),
@@ -526,13 +526,14 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             const SizedBox(width: 4),
             const Text('Your Answer', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 13)),
             const Spacer(),
-            Text('0/240', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            Text('${_answerController.text.length}/240', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           ],
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _answerController,
           maxLines: 2,
+          onChanged: (_) => setState(() {}),
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Be honest, spontaneous and romantic...',
@@ -619,13 +620,14 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             const SizedBox(width: 4),
             const Text('Your Answer', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 13)),
             const Spacer(),
-            Text('0/240', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            Text('${_answerController.text.length}/240', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           ],
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _answerController,
           maxLines: 2,
+          onChanged: (_) => setState(() {}),
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: "Tell ${partnerName} your thoughts...",
@@ -751,7 +753,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                     const Text('🎉', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     const Expanded(
-                      child: Text('Both Answered! Connection Unlocked', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
+                      child: Text('You’re both in', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),

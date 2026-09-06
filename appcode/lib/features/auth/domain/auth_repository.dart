@@ -9,9 +9,13 @@ abstract class AuthRepository {
 
   Future<void> signUp(String email, String password);
 
+  Future<void> resetPassword(String email);
+
   Future<void> signOut();
 
   Future<void> setupProfile(String displayName);
+
+  Future<void> updateDisplayName(String displayName);
 
   Future<void> syncTimezone(String ianaName);
 

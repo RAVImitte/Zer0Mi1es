@@ -7,16 +7,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../data/canvas_repository.dart';
 
 class _Stroke {
-  _Stroke(this.color, this.points);
+  _Stroke(this.color, this.points, {this.erase = false, this.width = 4});
   final Color color;
   final List<Offset> points;
+  final bool erase;
+  final double width;
 
   Map<String, dynamic> toJson() => {
         'color': color.toARGB32(),
+        'erase': erase,
+        'width': width,
         'points': [
           for (final p in points) [p.dx, p.dy],
         ],
@@ -30,6 +35,8 @@ class _Stroke {
         for (final p in rawPoints)
           Offset((p[0] as num).toDouble(), (p[1] as num).toDouble()),
       ],
+      erase: json['erase'] as bool? ?? false,
+      width: (json['width'] as num?)?.toDouble() ?? 4,
     );
   }
 }
@@ -48,6 +55,9 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
   RealtimeChannel? _tableChannel;
   bool _erasing = false;
   bool _loaded = false;
+  double _width = 6;
+  Color? _inkOverride;
+  DateTime? _partnerDrawing;
   Timer? _saveDebounce;
 
   @override
@@ -105,13 +115,19 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
           event: 'stroke',
           callback: (payload) {
             if (payload['user_id'] == uid || !mounted) return;
+            setState(() => _partnerDrawing = DateTime.now());
             final pts = (payload['points'] as List)
                 .map((p) => Offset(
                       (p[0] as num).toDouble(),
                       (p[1] as num).toDouble(),
                     ))
                 .toList();
-            setState(() => _strokes.add(_Stroke(Color(payload['color'] as int), pts)));
+            setState(() => _strokes.add(_Stroke(
+                  Color(payload['color'] as int),
+                  pts,
+                  erase: payload['erase'] == true,
+                  width: (payload['width'] as num?)?.toDouble() ?? 4,
+                )));
           },
         )
         .onBroadcast(
@@ -125,6 +141,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
   }
 
   Color get _ink {
+    if (_inkOverride != null) return _inkOverride!;
     final role = ref.read(myRoleProvider).value;
     return role == CoupleRole.bunny ? AppColors.affection : AppColors.primary;
   }
@@ -152,6 +169,8 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
     _liveChannel!.sendBroadcastMessage(event: 'stroke', payload: {
       'user_id': uid,
       'color': stroke.color.toARGB32(),
+      'erase': stroke.erase,
+      'width': stroke.width,
       'points': [
         for (final p in stroke.points) [p.dx, p.dy],
       ],
@@ -177,12 +196,22 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('Canvas'),
+          title: const Text('Our mural'),
           actions: [
+            IconButton(
+              tooltip: 'Undo',
+              onPressed: _strokes.isEmpty
+                  ? null
+                  : () {
+                      setState(() => _strokes.removeLast());
+                      _scheduleSave();
+                    },
+              icon: Icon(AppIcons.undo),
+            ),
             IconButton(
               tooltip: _erasing ? 'Draw' : 'Erase',
               onPressed: () => setState(() => _erasing = !_erasing),
-              icon: Icon(_erasing ? Icons.brush : Icons.auto_fix_off),
+              icon: Icon(_erasing ? AppIcons.brush : AppIcons.erase),
             ),
             IconButton(
               tooltip: 'Clear',
@@ -208,7 +237,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
                     event: 'clear', payload: {'user_id': uid});
                 if (coupleId != null) await _persist(coupleId);
               },
-              icon: const Icon(Icons.delete_outline),
+              icon: Icon(AppIcons.trash),
             ),
           ],
         ),
@@ -216,14 +245,37 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
             ? const Center(child: Text('Pair first'))
             : SafeArea(
                 top: false,
-                child: LayoutBuilder(
+                child: Column(
+                  children: [
+                    if (_partnerDrawing != null &&
+                        DateTime.now().difference(_partnerDrawing!) <
+                            const Duration(seconds: 3))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '${ref.watch(partnerNameProvider).value ?? 'They'} is drawing',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    if (_strokes.isEmpty && _loaded)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          'Draw something for them. It stays.',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    Expanded(
+                      child: LayoutBuilder(
                 builder: (context, constraints) {
                   final size = Size(constraints.maxWidth, constraints.maxHeight);
                   return Listener(
                     onPointerDown: (e) {
                       _current = _Stroke(
-                        _erasing ? AppColors.background : _ink,
+                        _ink,
                         [_normalized(e.localPosition, size)],
+                        erase: _erasing,
+                        width: _erasing ? _width * 2.2 : _width,
                       );
                       setState(() => _strokes.add(_current!));
                     },
@@ -242,8 +294,78 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
                     ),
                   );
                 },
+                      ),
+                    ),
+                    _toolbar(),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _toolbar() {
+    const inks = [
+      Color(0xFFE8A090),
+      Color(0xFFE25C7A),
+      Color(0xFFF2C6B8),
+      Color(0xFFE0B56A),
+      Color(0xFFF6F0E8),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Row(
+        children: [
+          for (final color in inks)
+            GestureDetector(
+              onTap: () => setState(() {
+                _inkOverride = color;
+                _erasing = false;
+              }),
+              child: Container(
+                width: 28,
+                height: 28,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: (!_erasing && (_inkOverride ?? _ink) == color)
+                        ? AppColors.textPrimary
+                        : AppColors.hairline,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
+          const Spacer(),
+          for (final w in [3.0, 6.0, 10.0])
+            GestureDetector(
+              onTap: () => setState(() => _width = w),
+              child: Container(
+                width: 28,
+                height: 28,
+                margin: const EdgeInsets.only(left: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _width == w
+                        ? AppColors.primary
+                        : AppColors.hairline,
+                  ),
+                ),
+                child: Container(
+                  width: w + 2,
+                  height: w + 2,
+                  decoration: const BoxDecoration(
+                    color: AppColors.textPrimary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -256,14 +378,16 @@ class _MuralPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.saveLayer(Offset.zero & size, Paint());
     canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.background);
     for (final stroke in strokes) {
       if (stroke.points.length < 2) continue;
       final paint = Paint()
-        ..color = stroke.color
-        ..strokeWidth = 4
+        ..strokeWidth = stroke.width
         ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
+        ..style = PaintingStyle.stroke
+        ..blendMode = stroke.erase ? BlendMode.clear : BlendMode.srcOver
+        ..color = stroke.erase ? Colors.transparent : stroke.color;
       final path = Path()
         ..moveTo(
           stroke.points.first.dx * size.width,
@@ -274,6 +398,7 @@ class _MuralPainter extends CustomPainter {
       }
       canvas.drawPath(path, paint);
     }
+    canvas.restore();
   }
 
   @override

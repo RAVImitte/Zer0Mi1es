@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_motion.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../providers/home_providers.dart';
 
@@ -19,27 +21,57 @@ class DailyStatus extends ConsumerWidget {
     final hasPhoto = ref.watch(photoCompletedProvider).value ?? false;
     final hasQuestion = ref.watch(questionCompletedProvider).value ?? false;
     final isPaired = ref.watch(activeCoupleIdProvider).value != null;
+    final doneCount =
+        [hasOutfit, hasPhoto, hasQuestion].where((v) => v).length;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        _RitualDot(
-          icon: Icons.checkroom_outlined,
-          done: hasOutfit,
-          pulse: isPaired && !hasOutfit,
-          onTap: () => _open(context, isPaired, AppRoutes.outfit),
+        Row(
+          children: [
+            Text('Today', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(width: 10),
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: i < doneCount
+                      ? AppColors.primary
+                      : AppColors.hairline,
+                ),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(width: 20),
-        _RitualDot(
-          icon: Icons.photo_camera_outlined,
-          done: hasPhoto,
-          onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
-        ),
-        const SizedBox(width: 20),
-        _RitualDot(
-          icon: Icons.quiz_outlined,
-          done: hasQuestion,
-          onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _RitualChip(
+              icon: AppIcons.outfit,
+              label: 'Outfit',
+              done: hasOutfit,
+              pulse: isPaired && !hasOutfit,
+              onTap: () => _open(context, isPaired, AppRoutes.outfit),
+            ),
+            const SizedBox(width: 8),
+            _RitualChip(
+              icon: AppIcons.photo,
+              label: 'Photo',
+              done: hasPhoto,
+              pulse: isPaired && !hasPhoto,
+              onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
+            ),
+            const SizedBox(width: 8),
+            _RitualChip(
+              icon: AppIcons.question,
+              label: 'Question',
+              done: hasQuestion,
+              pulse: isPaired && !hasQuestion,
+              onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
+            ),
+          ],
         ),
       ],
     );
@@ -48,60 +80,80 @@ class DailyStatus extends ConsumerWidget {
   void _open(BuildContext context, bool isPaired, String route) {
     HapticFeedback.selectionClick();
     if (!isPaired) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pair with your partner first')),
-      );
+      context.push(AppRoutes.couple);
       return;
     }
     context.push(route);
   }
 }
 
-class _RitualDot extends StatelessWidget {
-  const _RitualDot({
+class _RitualChip extends StatelessWidget {
+  const _RitualChip({
     required this.icon,
+    required this.label,
     required this.done,
     required this.onTap,
     this.pulse = false,
   });
 
   final IconData icon;
+  final String label;
   final bool done;
   final bool pulse;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    Widget dot = Material(
+    Widget chip = Material(
       color: done
-          ? AppColors.primary.withValues(alpha: 0.18)
+          ? AppColors.primary.withValues(alpha: 0.16)
           : AppColors.surface,
-      shape: const CircleBorder(),
+      borderRadius: BorderRadius.circular(AppRadii.control),
       child: InkWell(
-        customBorder: const CircleBorder(),
         onTap: onTap,
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Icon(
-            icon,
-            size: 22,
-            color: done ? AppColors.primary : AppColors.textSecondary,
+        borderRadius: BorderRadius.circular(AppRadii.control),
+        child: Semantics(
+          button: true,
+          label: done ? '$label, done' : label,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: done ? AppColors.primary : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: done
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
 
-    if (pulse) {
-      dot = dot
+    if (pulse && !MediaQuery.disableAnimationsOf(context)) {
+      chip = chip
           .animate(onPlay: (c) => c.repeat(reverse: true))
           .scale(
             begin: const Offset(1, 1),
-            end: const Offset(1.06, 1.06),
+            end: const Offset(1.04, 1.04),
             duration: AppMotion.slow,
             curve: AppMotion.curve,
           );
     }
-    return dot;
+    return Expanded(child: chip);
   }
 }

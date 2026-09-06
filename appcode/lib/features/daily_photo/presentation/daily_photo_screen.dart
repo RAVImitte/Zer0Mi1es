@@ -44,9 +44,9 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
     }
   }
 
-  Future<void> _takePhoto() async {
+  Future<void> _pickPhoto(ImageSource source) async {
     final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
+      source: source,
       maxWidth: 1080,
       maxHeight: 1080,
       imageQuality: 75,
@@ -58,6 +58,30 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
     if (coupleId == null) return;
 
     _showCommentDialog(File(image.path), coupleId);
+  }
+
+  Future<void> _chooseSource() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Camera'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                title: const Text('Library'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (source != null) await _pickPhoto(source);
   }
 
   void _showCommentDialog(File imageFile, String coupleId) {
@@ -154,7 +178,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Memories', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+        title: const Text('Today’s photo'),
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
@@ -206,8 +230,8 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                         icon: _isUploading 
                           ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white)) 
                           : const Icon(Icons.camera_alt, size: 28),
-                        label: Text(_isUploading ? 'Uploading...' : 'Take Today\'s Photo', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        onPressed: _isUploading ? null : _takePhoto,
+                        label: Text(_isUploading ? 'Uploading…' : 'Share today’s photo', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        onPressed: _isUploading ? null : _chooseSource,
                       ),
                     ),
                   ],
@@ -353,7 +377,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                               Icon(Icons.lock_outline, size: 48, color: AppColors.primary),
                               SizedBox(height: 12),
                               Text(
-                                'Hidden until you upload',
+                                'Share your moment to see theirs',
                                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
                               ),
                             ],
