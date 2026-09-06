@@ -4,16 +4,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/widgets/affection_toast.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../voice_drop/presentation/voice_record_sheet.dart';
+import '../../../avatar/presentation/avatar_view_model.dart';
+import '../../../avatar/presentation/couple_scene_view_model.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../connection/domain/connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
-import '../providers/partner_status_provider.dart';
 
 class ConnectionActions extends ConsumerWidget {
   const ConnectionActions({super.key});
@@ -56,6 +58,7 @@ class ConnectionActions extends ConsumerWidget {
     );
     if (!context.mounted) return;
     if (ok) {
+      ref.read(coupleSceneProvider.notifier).playDrop(type, fromMe: true);
       showAffectionToast(context, emoji: emoji, label: 'Sent');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,6 +96,7 @@ class ConnectionActions extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
+
                     ),
               ),
               const SizedBox(height: 20),
@@ -267,13 +271,11 @@ class ConnectionActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAsleep = ref
-            .watch(partnerStatusProvider)
-            .unwrapPrevious()
-            .asData
-            ?.value
-            .iAmAsleep ??
-        false;
+    final scene = ref.watch(coupleSceneProvider);
+    final iAmLeft =
+        ref.watch(myRoleProvider).unwrapPrevious().value != CoupleRole.bunny;
+    final isAsleep =
+        (iAmLeft ? scene.left : scene.right) == AnimationState.sleeping;
     final isPaired = ref.watch(activeCoupleIdProvider).value != null;
 
     Widget row(List<Widget> children) {
@@ -356,6 +358,7 @@ class ConnectionActions extends ConsumerWidget {
             onTap: () => _requirePair(context, isPaired, () {
               HapticFeedback.lightImpact();
               final signal = isAsleep ? 'goodMorning' : 'goodNight';
+              ref.read(coupleSceneProvider.notifier).setMyAsleep(!isAsleep);
               _run(ref, (repo, id) => repo.sendSignal(id, signal));
             }),
           ),

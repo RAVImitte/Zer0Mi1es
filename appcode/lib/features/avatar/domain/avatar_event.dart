@@ -32,4 +32,8 @@ enum AnimationState {
   moodAngry,
   moodExcited,
   moodTired,
+  giving,
+  receiving,
+  leanIn,
+  sorry,
 }

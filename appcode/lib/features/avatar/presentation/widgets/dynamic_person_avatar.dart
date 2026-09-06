@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+
 import '../avatar_view_model.dart';
+import 'layered_person_avatar.dart';
 
-class DynamicPersonAvatar extends StatefulWidget {
-  final AnimationState state;
-  final Color topColor;
-  final Color bottomColor;
-  final bool isBunny;
-  final double size;
-
+class DynamicPersonAvatar extends StatelessWidget {
   const DynamicPersonAvatar({
     super.key,
     required this.state,
     required this.topColor,
     required this.bottomColor,
     this.isBunny = false,
+    this.leftSeat = true,
     this.size = 150.0,
   });
 
