@@ -2,7 +2,7 @@
 gsd_state_version: '1.0'
 status: planning
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-09-06)
 Phase: 1 of 5 (Couple Identity & Private Sanctuary)
 Plan: — of — in current phase
 Status: Ready to plan
-Last activity: 2026-09-06 — Roadmap created from ingest (brownfield; V1/V2 already on main)
+Last activity: 2026-09-06 — Codebase audit: all 13 v1 surfaces exist on main; GSD phases still unplanned (0 plans)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (GSD plans). Product code: V1+V2 shipped (`2.0.0+2`).
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Recent decisions affecting current work:
 - Canonical v1 = PRD only; archive variants (auth-v2, love-drops-v2, history/reactions/unpairing-legacy) out of scope
 - Brownfield: do not rebuild shipped V1/V2; phases harden status consistency
 - Unpaired Home stays reachable (ADR-0007 wins over architecture.md pairing gate)
+- 2026-09-06 codebase audit: do not check off GSD phases. Code present for all 13 REQ IDs; remaining work is collision/UAT hardening plus the `guess` schema gap.
 
 ### Pending Todos
 
@@ -64,9 +65,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Daily-question client writes `guess`, but in-repo migrations do not `ADD COLUMN guess` (SPEC-daily-rituals schema gap). Phase 4: unlock stays answer-based; do not leak partner answers.
-- Two-phone UAT is required for Phases 1–5; `flutter analyze` is not acceptance.
-- Compile/cleanup after the UI-experiment + feature merge may still be local on `main` until committed.
+- Daily-question client writes `guess` (`daily_question_screen.dart`); `06_daily_questions.sql` creates `daily_answers.answer` only. `has_partner_guessed` reads `guess` with no in-repo `ADD COLUMN guess`. Phase 4: unlock stays answer-based; do not leak partner answers.
+- Two-phone UAT is required for Phases 1–5; `flutter analyze` is not acceptance. No `.planning/phases/` yet.
+- `google-services.json` / `firebase_options.dart` are in the Android tree (FCM client config). Not a Supabase service-role key.
 
 ## Deferred Items
 
@@ -77,5 +78,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-06
-Stopped at: Wrote PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md from ingest
+Stopped at: Codebase audit vs roadmap; GSD still at Phase 1 unplanned
 Resume file: None

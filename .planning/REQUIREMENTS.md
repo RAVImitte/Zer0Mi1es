@@ -76,19 +76,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REQ-auth-v1 | Phase 1 | Pending |
-| REQ-couple-pairing | Phase 1 | Pending |
-| REQ-private-sanctuary | Phase 1 | Pending |
-| REQ-secrets-not-in-git | Phase 1 | Pending |
-| REQ-home-couple-scene | Phase 2 | Pending |
-| REQ-home-hub-no-tabs | Phase 2 | Pending |
-| REQ-moods | Phase 3 | Pending |
-| REQ-love-drops-v1 | Phase 3 | Pending |
-| REQ-talk-requests | Phase 3 | Pending |
-| REQ-daily-question | Phase 4 | Pending |
-| REQ-daily-photo-outfit | Phase 4 | Pending |
-| REQ-android-widget | Phase 5 | Pending |
-| REQ-voice-canvas | Phase 5 | Pending |
+| REQ-auth-v1 | Phase 1 | Code on main / UAT pending |
+| REQ-couple-pairing | Phase 1 | Code on main / UAT pending |
+| REQ-private-sanctuary | Phase 1 | Code on main / UAT pending |
+| REQ-secrets-not-in-git | Phase 1 | Code on main / UAT pending |
+| REQ-home-couple-scene | Phase 2 | Code on main / UAT pending |
+| REQ-home-hub-no-tabs | Phase 2 | Code on main / UAT pending |
+| REQ-moods | Phase 3 | Code on main / UAT pending |
+| REQ-love-drops-v1 | Phase 3 | Code on main / UAT pending |
+| REQ-talk-requests | Phase 3 | Code on main / UAT pending |
+| REQ-daily-question | Phase 4 | Code on main / UAT pending (`guess` schema gap) |
+| REQ-daily-photo-outfit | Phase 4 | Code on main / UAT pending |
+| REQ-android-widget | Phase 5 | Code on main / UAT pending |
+| REQ-voice-canvas | Phase 5 | Code on main / UAT pending |
 
 **Coverage:**
 - v1 requirements: 13 total
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-09-06*
-*Last updated: 2026-09-06 after roadmap creation*
+*Last updated: 2026-09-06 after codebase progress audit*

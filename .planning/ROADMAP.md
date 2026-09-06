@@ -85,10 +85,30 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Execution Order:**
 Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Couple Identity & Private Sanctuary | 0/? | Not started | - |
-| 2. Home Hub Couple Scene | 0/? | Not started | - |
-| 3. Live Signals Without Collisions | 0/? | Not started | - |
-| 4. Daily Rituals Without Leaks | 0/? | Not started | - |
-| 5. Widget & Media Without Data Loss | 0/? | Not started | - |
+GSD phase boxes stay unchecked until plans exist, two-phone UAT passes, and verification is `passed`. Code on `main` (`2.0.0+2`) already ships the product surfaces; this milestone hardens consistency.
+
+| Phase | Plans Complete | Code on main | GSD status | Completed |
+|-------|----------------|--------------|------------|-----------|
+| 1. Couple Identity & Private Sanctuary | 0/? | Auth email/password, pairing alphabet + 24h hash, unpaired Pair seat, `.env` gitignored, no service-role in Dart | Not planned | - |
+| 2. Home Hub Couple Scene | 0/? | Dual `LayeredPersonAvatar`, no `BottomNavigationBar`, sanctuary lighting, sleep via `partnerStatus` | Not planned | - |
+| 3. Live Signals Without Collisions | 0/? | Mood sheet Happy/Excited/Tired/Sad/Angry/Devastated; Overwhelmed maps to Angry; Kiss/Hug/Sorry; `talk_banner.dart` | Not planned | - |
+| 4. Daily Rituals Without Leaks | 0/? | Daily question/photo/outfit screens; unlock functions answer-based | Not planned | - |
+| 5. Widget & Media Without Data Loss | 0/? | `home_widget_sync.dart` name/mood/scene/sleep/outfit, no talk/kiss listeners; voice + canvas features | Not planned | - |
+
+### Codebase audit (2026-09-06)
+
+Evidence from `Zer0Mi1es/appcode` + `backend/supabase/migrations` on `main`. Not a substitute for two-phone UAT.
+
+**Present:**
+- `features/auth/` — `signInWithPassword` / `signUp` email+password; `profile_setup_screen.dart`
+- `features/couple/` — 6-char alphabet `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`
+- `features/home/` — hub, `talk_banner.dart`, `connection_actions.dart` (Kiss/Hug/Sorry, Pair-first snackbar)
+- `features/avatar/` — `layered_person_avatar.dart`; `PersonPainter` used for widget snapshot
+- `features/home/data/home_widget_sync.dart` — listeners: name, mood/sleep, scene, outfit only
+- `features/voice_drop/`, `features/canvas/`
+- `.gitignore` includes `.env` / `.env.*`; `Env` uses dart-defines only
+
+**Open gaps (do not treat phases as done):**
+- Client still writes `guess` (`daily_question_screen.dart`); `daily_answers` create (`06_daily_questions.sql`) has `answer` only. Functions in `20260830_fix_daily_questions_logic.sql` read `guess` with no in-repo `ADD COLUMN guess`. Unlock stays answer-based (`has_user_answered` requires non-empty `answer`).
+- Two-phone UAT not recorded (no phase directories, no `*-UAT.md`).
+- `google-services.json` / `firebase_options.dart` exist in the Android tree (Firebase client config, not a Supabase service-role key).
