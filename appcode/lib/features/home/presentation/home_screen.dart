@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -33,11 +34,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(pushNotificationServiceProvider).initialize();
+      final notificationsOn =
+          await ref.read(pushNotificationServiceProvider).initialize();
+      if (!notificationsOn && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notifications are off. You will not get partner alerts.',
+            ),
+          ),
+        );
+      }
       try {
         final name = await FlutterTimezone.getLocalTimezone();
         await ref.read(authRepositoryProvider).syncTimezone(name);
-      } catch (_) {}
+      } catch (e, stack) {
+        FirebaseCrashlytics.instance.recordError(e, stack);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not sync timezone')),
+          );
+        }
+      }
       await syncHomeWidget(ref);
     });
   }

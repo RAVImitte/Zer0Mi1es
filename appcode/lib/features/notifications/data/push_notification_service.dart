@@ -24,7 +24,8 @@ class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> initialize() async {
+  /// Returns `false` when notification permission is denied.
+  Future<bool> initialize() async {
     try {
       const androidSettings =
           AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -48,8 +49,7 @@ class PushNotificationService {
 
     if (settings.authorizationStatus != AuthorizationStatus.authorized &&
         settings.authorizationStatus != AuthorizationStatus.provisional) {
-      debugPrint('User declined or has not accepted permission');
-      return;
+      return false;
     }
 
     final token = await _fcm.getToken();
@@ -64,6 +64,7 @@ class PushNotificationService {
         _showLocalNotification(notification);
       }
     });
+    return true;
   }
 
   Future<void> _showLocalNotification(RemoteNotification notification) async {

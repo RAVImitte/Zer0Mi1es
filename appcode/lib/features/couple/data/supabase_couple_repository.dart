@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -27,14 +28,20 @@ class SupabaseCoupleRepository extends CoupleRepository {
 
     await for (final rows in _client.from('couples').stream(primaryKey: ['id'])) {
       try {
-        final activeRow = rows.firstWhere((row) =>
+        final activeRows = rows.where((row) =>
             (row['bear_id'] == uid || row['bunny_id'] == uid) &&
             row['bear_id'] != null &&
             row['bunny_id'] != null);
-        final coupleId = activeRow['id'] as String;
+        if (activeRows.isEmpty) {
+          prefs.remove(CacheKeys.activeCoupleId);
+          yield null;
+          continue;
+        }
+        final coupleId = activeRows.first['id'] as String;
         prefs.setString(CacheKeys.activeCoupleId, coupleId);
         yield coupleId;
-      } catch (_) {
+      } catch (e, stack) {
+        FirebaseCrashlytics.instance.recordError(e, stack);
         prefs.remove(CacheKeys.activeCoupleId);
         yield null;
       }
@@ -106,7 +113,8 @@ Future<String?> _fetchAndCachePartnerName(
       await prefs.setString(CacheKeys.partnerName, name);
     }
     return name;
-  } catch (_) {
+  } catch (e, stack) {
+    FirebaseCrashlytics.instance.recordError(e, stack);
     return prefs.getString(CacheKeys.partnerName) ?? 'Partner';
   }
 }

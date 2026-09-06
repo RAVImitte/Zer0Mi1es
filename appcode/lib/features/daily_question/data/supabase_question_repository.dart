@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -94,7 +95,8 @@ class SupabaseQuestionRepository implements QuestionRepository {
             partnerHasGuessedRpc: partnerHasGuessed,
           ));
         }
-      } catch (_) {
+      } catch (e, stack) {
+        FirebaseCrashlytics.instance.recordError(e, stack);
         if (!controller.isClosed) controller.add(DailyQuestionState.waiting());
       }
     }

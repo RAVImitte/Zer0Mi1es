@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PushDispatcher {
@@ -15,8 +15,8 @@ class PushDispatcher {
         'table': table,
         'record': record,
       });
-    } catch (e) {
-      debugPrint('Failed to trigger notification: $e');
+    } catch (e, stack) {
+      FirebaseCrashlytics.instance.recordError(e, stack);
     }
   }
 }

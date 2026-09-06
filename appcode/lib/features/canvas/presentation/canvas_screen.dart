@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -84,7 +85,14 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
             ..addAll(mural.strokes.map(_Stroke.fromJson));
         });
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      FirebaseCrashlytics.instance.recordError(e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not load canvas')),
+        );
+      }
+    }
     if (mounted) setState(() => _loaded = true);
 
     _tableChannel = ref.read(canvasRepositoryProvider).subscribe(
