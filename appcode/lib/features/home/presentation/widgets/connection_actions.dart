@@ -69,44 +69,72 @@ class ConnectionActions extends ConsumerWidget {
 
   void _showMoodSheet(BuildContext context, WidgetRef ref) {
     const moods = [
-      ('Happy', '😊'),
-      ('Sad', '😢'),
-      ('Devastated', '😭'),
-      ('Overwhelmed', '🤯'),
-      ('Excited', '🤩'),
-      ('Tired', '😴'),
+      _MoodChoice('Happy', '😊', Color(0xFFFBBF24)),
+      _MoodChoice('Excited', '🤩', Color(0xFFF59E0B)),
+      _MoodChoice('Tired', '😴', Color(0xFF94A3B8)),
+      _MoodChoice('Sad', '😢', Color(0xFF60A5FA)),
+      _MoodChoice('Angry', '😠', Color(0xFFF87171)),
+      _MoodChoice('Devastated', '😭', Color(0xFF64748B)),
     ];
     showAppSheet(
       context: context,
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('How are you feeling?',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: [
-                  for (final mood in moods)
-                    _MoodChip(
-                      label: mood.$1,
-                      emoji: mood.$2,
-                      onTap: () {
-                        Navigator.pop(context);
-                        HapticFeedback.lightImpact();
-                        _run(ref, (repo, id) => repo.updateMood(id, mood.$1));
-                        ref
-                            .read(coupleSceneProvider.notifier)
-                            .setMyMood(mood.$1);
-                      },
-                    ),
-                ],
+              Text(
+                'How are you feeling?',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
+              const SizedBox(height: 4),
+              Text(
+                'They will see this on their home.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+
+                    ),
+              ),
+              const SizedBox(height: 20),
+              for (var i = 0; i < moods.length; i += 2) ...[
+                if (i > 0) const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _MoodTile(
+                        mood: moods[i],
+                        onTap: () {
+                          Navigator.pop(context);
+                          HapticFeedback.lightImpact();
+                          _run(
+                            ref,
+                            (repo, id) => repo.updateMood(id, moods[i].label),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MoodTile(
+                        mood: moods[i + 1],
+                        onTap: () {
+                          Navigator.pop(context);
+                          HapticFeedback.lightImpact();
+                          _run(
+                            ref,
+                            (repo, id) =>
+                                repo.updateMood(id, moods[i + 1].label),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         );
@@ -360,32 +388,50 @@ class ConnectionActions extends ConsumerWidget {
   }
 }
 
-class _MoodChip extends StatelessWidget {
-  const _MoodChip({
-    required this.label,
-    required this.emoji,
-    required this.onTap,
-  });
+class _MoodChoice {
+  const _MoodChoice(this.label, this.emoji, this.tint);
 
   final String label;
   final String emoji;
+  final Color tint;
+}
+
+class _MoodTile extends StatelessWidget {
+  const _MoodTile({
+    required this.mood,
+    required this.onTap,
+  });
+
+  final _MoodChoice mood;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.background,
-      borderRadius: BorderRadius.circular(AppRadii.control),
+      color: Color.alphaBlend(
+        mood.tint.withValues(alpha: 0.16),
+        AppColors.elevated,
+      ),
+      borderRadius: BorderRadius.circular(AppRadii.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.control),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(color: mood.tint.withValues(alpha: 0.32)),
+          ),
           child: Column(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 6),
-              Text(label, style: Theme.of(context).textTheme.labelSmall),
+              Text(mood.emoji, style: const TextStyle(fontSize: 28, height: 1)),
+              const SizedBox(height: 8),
+              Text(
+                mood.label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+              ),
             ],
           ),
         ),

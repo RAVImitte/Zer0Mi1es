@@ -28,6 +28,7 @@ dependencies:
   timezone: ^0.11.0
   record: ^6.0.0
   just_audio: ^0.9.46
+  home_widget: ^0.9.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

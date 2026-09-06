@@ -10,7 +10,7 @@ enum AvatarEvent {
   moodHappy,
   moodSad,
   moodDevastated,
-  moodOverwhelmed,
+  moodAngry,
   moodExcited,
   moodTired,
 }
@@ -29,7 +29,7 @@ enum AnimationState {
   moodHappy,
   moodSad,
   moodDevastated,
-  moodOverwhelmed,
+  moodAngry,
   moodExcited,
   moodTired,
   giving,

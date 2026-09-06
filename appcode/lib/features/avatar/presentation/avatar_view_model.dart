@@ -48,10 +48,8 @@ class AvatarViewModel extends _$AvatarViewModel {
       final prev = previous?.unwrapPrevious().asData?.value;
 
       if (status.mood != null && prev?.mood != status.mood) {
-        final moodStr = 'mood${status.mood}';
-        try {
-          onEvent(AvatarEvent.values.firstWhere((e) => e.name == moodStr));
-        } catch (_) {}
+        final event = _eventForMood(status.mood!);
+        if (event != null) onEvent(event);
       }
 
       if (status.talk != null &&
@@ -71,12 +69,8 @@ class AvatarViewModel extends _$AvatarViewModel {
 
     if (table != null && type != null) {
       if (table == 'moods') {
-        // Convert 'Happy' to 'moodHappy'
-        final moodStr = 'mood$type';
-        try {
-          final event = AvatarEvent.values.firstWhere((e) => e.name == moodStr);
-          onEvent(event);
-        } catch (_) {}
+        final event = _eventForMood(type);
+        if (event != null) onEvent(event);
       } else if (table == 'connection_signals') {
         if (type == 'goodNight') onEvent(AvatarEvent.goodNight);
         if (type == 'goodMorning') onEvent(AvatarEvent.goodMorning);
@@ -145,8 +139,8 @@ class AvatarViewModel extends _$AvatarViewModel {
       case AvatarEvent.moodDevastated:
         nextState = AnimationState.moodDevastated;
         break;
-      case AvatarEvent.moodOverwhelmed:
-        nextState = AnimationState.moodOverwhelmed;
+      case AvatarEvent.moodAngry:
+        nextState = AnimationState.moodAngry;
         break;
       case AvatarEvent.moodExcited:
         nextState = AnimationState.moodExcited;
@@ -170,4 +164,16 @@ class AvatarViewModel extends _$AvatarViewModel {
       });
     }
   }
+}
+
+AvatarEvent? _eventForMood(String mood) {
+  return switch (mood) {
+    'Happy' => AvatarEvent.moodHappy,
+    'Sad' => AvatarEvent.moodSad,
+    'Devastated' => AvatarEvent.moodDevastated,
+    'Angry' || 'Overwhelmed' => AvatarEvent.moodAngry,
+    'Excited' => AvatarEvent.moodExcited,
+    'Tired' => AvatarEvent.moodTired,
+    _ => null,
+  };
 }
