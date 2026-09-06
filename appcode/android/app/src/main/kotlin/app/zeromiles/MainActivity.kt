@@ -1,4 +1,4 @@
-package com.example.zer0mi1es
+package app.zeromiles
 
 import io.flutter.embedding.android.FlutterActivity
 

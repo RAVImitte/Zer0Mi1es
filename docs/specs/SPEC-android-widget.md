@@ -10,7 +10,7 @@ An Android home-screen widget shows partner name, mood, scene, sleep, and a pain
 
 ## Background
 
-`home_widget_sync.dart`, `PersonPainter`, `PartnerWidgetProvider` (`com.example.zer0mi1es.PartnerWidgetProvider`). `syncHomeWidget` no-ops on web and non-Android/iOS.
+`home_widget_sync.dart`, `PersonPainter`, `PartnerWidgetProvider` (`app.zeromiles.PartnerWidgetProvider`). `syncHomeWidget` no-ops on web and non-Android/iOS.
 
 ## Requirements
 

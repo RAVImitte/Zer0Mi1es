@@ -20,7 +20,7 @@ A home-screen widget should answer “how are they?” without leaking a call re
 
 It must **not** snapshot talk banners or love-drop flights.
 
-Provider: `com.example.zer0mi1es.PartnerWidgetProvider`. iOS widget is out of scope (later).
+Provider: `app.zeromiles.PartnerWidgetProvider`. iOS widget is out of scope (later).
 
 ## Consequences
 

@@ -11,7 +11,7 @@ class Zer0Mi1esApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Zer0Mi1es',
+      title: 'Zero Miles',
       theme: AppTheme.darkTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

@@ -15,7 +15,7 @@ import '../../outfit/presentation/providers/outfit_providers.dart';
 import '../presentation/providers/partner_scene_provider.dart';
 import '../presentation/providers/partner_status_provider.dart';
 
-const _androidWidget = 'com.example.zer0mi1es.PartnerWidgetProvider';
+const _androidWidget = 'app.zeromiles.PartnerWidgetProvider';
 
 Timer? _syncDebounce;
 
@@ -97,7 +97,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
 
   try {
     if (Platform.isIOS) {
-      await HomeWidget.setAppGroupId('group.com.example.zer0mi1es');
+      await HomeWidget.setAppGroupId('group.app.zeromiles');
     }
 
     final name = _firstName(ref.read(partnerNameProvider).value);
