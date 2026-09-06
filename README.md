@@ -60,7 +60,7 @@ cd appcode
 flutter run --dart-define-from-file=.env
 ```
 
-See `appcode/README.md` and `AGENTS.md` (use `npx supabase` for DB commands). Product docs: `D:\Chadukunta\zeromiles\docs\Fin docs\`.
+See `appcode/README.md` and `AGENTS.md` (use `npx supabase` for DB commands). Product docs: **[docs/](docs/)** (PRD, ADR, SPEC).
 
 ---
 *Built with Flutter (Android & iOS) and Supabase.*
