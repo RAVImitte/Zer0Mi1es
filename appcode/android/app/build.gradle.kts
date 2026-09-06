@@ -1,8 +1,17 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -30,11 +39,34 @@ android {
         versionName = flutter.versionName
     }
 
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs.create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storePassword = keystoreProperties.getProperty("storePassword")
+            val storeFilePath = keystoreProperties.getProperty("storeFile")
+            require(!storeFilePath.isNullOrBlank()) {
+                "storeFile is required in android/key.properties"
+            }
+            val store = File(storeFilePath)
+            // Relative paths are from the android/ directory (next to key.properties).
+            storeFile = if (store.isAbsolute) store else rootProject.file(storeFilePath)
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            // Leave unsigned when key.properties is missing so assembleRelease
+            // cannot silently ship a debug-signed artifact. Configure still succeeds.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
