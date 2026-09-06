@@ -69,7 +69,7 @@ class PuppetPose {
     );
   }
 
-  static PuppetPose forState(AnimationState state) {
+  static PuppetPose forState(AnimationState state, {bool leftSeat = true}) {
     switch (state) {
       case AnimationState.sleeping:
       case AnimationState.resting:
@@ -191,6 +191,69 @@ class PuppetPose {
       case AnimationState.idle:
       case AnimationState.sitting:
         return const PuppetPose();
+      case AnimationState.giving:
+        return leftSeat
+            ? const PuppetPose(
+                headTilt: 0.1,
+                armR: -1.05,
+                mouthSmile: 0.9,
+                mouthOpen: 0.22,
+                blush: 1,
+              )
+            : const PuppetPose(
+                headTilt: -0.1,
+                armL: 1.05,
+                mouthSmile: 0.9,
+                mouthOpen: 0.22,
+                blush: 1,
+              );
+      case AnimationState.receiving:
+        return const PuppetPose(
+          headTilt: -0.04,
+          armL: -0.55,
+          armR: 0.55,
+          mouthSmile: 1,
+          blush: 1,
+          heartEyes: 1,
+          squashX: 1.04,
+          squashY: 1.06,
+        );
+      case AnimationState.leanIn:
+        return leftSeat
+            ? const PuppetPose(
+                headTilt: 0.16,
+                armR: -0.95,
+                armL: 0.32,
+                mouthSmile: 1,
+                blush: 0.85,
+              )
+            : const PuppetPose(
+                headTilt: -0.16,
+                armL: 0.95,
+                armR: -0.32,
+                mouthSmile: 1,
+                blush: 0.85,
+              );
+      case AnimationState.sorry:
+        return leftSeat
+            ? const PuppetPose(
+                headTilt: 0.28,
+                headY: 0.01,
+                armL: 0.4,
+                armR: -0.15,
+                mouthSmile: 0.05,
+                blush: 0.55,
+                sweat: 0.7,
+              )
+            : const PuppetPose(
+                headTilt: -0.28,
+                headY: 0.01,
+                armR: -0.4,
+                armL: 0.15,
+                mouthSmile: 0.05,
+                blush: 0.55,
+                sweat: 0.7,
+              );
     }
   }
 }

@@ -14,6 +14,7 @@ class LayeredPersonAvatar extends StatefulWidget {
     required this.topColor,
     required this.bottomColor,
     this.isBunny = false,
+    this.leftSeat = true,
     this.size = 150,
   });
 
@@ -21,6 +22,7 @@ class LayeredPersonAvatar extends StatefulWidget {
   final Color topColor;
   final Color bottomColor;
   final bool isBunny;
+  final bool leftSeat;
   final double size;
 
   @override
@@ -46,7 +48,7 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
   @override
   void initState() {
     super.initState();
-    _pose = PuppetPose.forState(widget.state);
+    _pose = PuppetPose.forState(widget.state, leftSeat: widget.leftSeat);
     _ticker = createTicker(_onTick)..start();
   }
 
@@ -54,7 +56,8 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
   void didUpdateWidget(covariant LayeredPersonAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.state != widget.state &&
-        widget.state == AnimationState.reaction) {
+        (widget.state == AnimationState.reaction ||
+            widget.state == AnimationState.receiving)) {
       _squashPulse = 1;
     }
   }
@@ -87,7 +90,7 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
       _blink = 0;
     }
 
-    final target = PuppetPose.forState(widget.state);
+    final target = PuppetPose.forState(widget.state, leftSeat: widget.leftSeat);
     final k = 1 - math.exp(-clampedDt * 7.5);
     _pose = PuppetPose.lerp(_pose, target, k);
 

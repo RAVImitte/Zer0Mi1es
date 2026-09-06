@@ -10,6 +10,7 @@ class DynamicPersonAvatar extends StatelessWidget {
     required this.topColor,
     required this.bottomColor,
     this.isBunny = false,
+    this.leftSeat = true,
     this.size = 150.0,
   });
 
@@ -17,6 +18,7 @@ class DynamicPersonAvatar extends StatelessWidget {
   final Color topColor;
   final Color bottomColor;
   final bool isBunny;
+  final bool leftSeat;
   final double size;
 
   @override
@@ -26,6 +28,7 @@ class DynamicPersonAvatar extends StatelessWidget {
       topColor: topColor,
       bottomColor: bottomColor,
       isBunny: isBunny,
+      leftSeat: leftSeat,
       size: size,
     );
   }

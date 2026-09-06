@@ -4,19 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
+import '../../../couple/data/supabase_couple_repository.dart';
 import '../providers/partner_status_provider.dart';
 
-class TalkBanner extends ConsumerStatefulWidget {
+class TalkBanner extends ConsumerWidget {
   const TalkBanner({super.key});
 
   @override
-  ConsumerState<TalkBanner> createState() => _TalkBannerState();
-}
-
-class _TalkBannerState extends ConsumerState<TalkBanner> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(partnerStatusProvider);
     final status = async.unwrapPrevious().asData?.value;
     final talk = status?.talk;
@@ -25,64 +22,62 @@ class _TalkBannerState extends ConsumerState<TalkBanner> {
       return const SizedBox.shrink();
     }
 
-    // Recipient: unanswered ping from partner. Hide as soon as you reply.
+    final name = ref.watch(partnerNameProvider).value ?? 'They';
+
     if (!talk.fromMe && talk.status == 'pending') {
-      return _Card(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      return _Banner(
+        icon: _icon(talk.type),
+        title: _incomingTitle(name, talk.type),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              _incomingLabel(talk.type),
-              style: Theme.of(context).textTheme.titleMedium,
+            FilledButton(
+              onPressed: () => _ack(context, ref, talk, 'yes'),
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                minimumSize: const Size(0, 36),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Okay'),
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _AckChip(
-                  label: 'Okay',
-                  onTap: () => _ack(talk, 'yes'),
-                ),
-                _AckChip(
-                  label: 'In a bit',
-                  onTap: () => _ack(talk, 'soon'),
-                ),
-                _AckChip(
-                  label: 'Tonight',
-                  onTap: () => _ack(talk, 'tonight'),
-                ),
-                _AckChip(
-                  label: 'Not now',
-                  onTap: () => _ack(talk, 'not_now'),
-                ),
-              ],
+            IconButton(
+              tooltip: 'More options',
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _defer(context, ref, talk),
+              icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary),
             ),
           ],
         ),
       );
     }
 
-    // Sender: waiting until they answer. Do not show reply chips here.
     if (talk.fromMe && talk.status == 'pending') {
-      return _Card(
-        child: Text(
-          'Waiting for them to reply',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+      return _Banner(
+        icon: _icon(talk.type),
+        title: 'Waiting for $name',
+        trailing: IconButton(
+          tooltip: 'Hide',
+          visualDensity: VisualDensity.compact,
+          onPressed: () =>
+              ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
+          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
 
-    // Sender: they answered. Stays until the ping expires.
     if (talk.fromMe && talk.status != 'pending') {
-      return _Card(
-        child: Text(
-          _outgoingLabel(talk.status),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+      return _Banner(
+        icon: Icons.check_rounded,
+        title: _outgoingTitle(name, talk.status),
+        trailing: IconButton(
+          tooltip: 'Hide',
+          visualDensity: VisualDensity.compact,
+          onPressed: () =>
+              ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
+          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
@@ -90,16 +85,61 @@ class _TalkBannerState extends ConsumerState<TalkBanner> {
     return const SizedBox.shrink();
   }
 
-  Future<void> _ack(TalkSignal talk, String status) async {
+  Future<void> _defer(BuildContext context, WidgetRef ref, TalkSignal talk) {
+    return showAppSheet<void>(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('When can you?', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              ListTile(
+                title: const Text('In a bit'),
+                subtitle: const Text('They’ll see you’ll be free soon'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _ack(context, ref, talk, 'soon');
+                },
+              ),
+              ListTile(
+                title: const Text('Tonight'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _ack(context, ref, talk, 'tonight');
+                },
+              ),
+              ListTile(
+                title: const Text('Not now'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _ack(context, ref, talk, 'not_now');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _ack(
+    BuildContext context,
+    WidgetRef ref,
+    TalkSignal talk,
+    String status,
+  ) async {
     HapticFeedback.lightImpact();
     ref.read(dismissedTalkIdsProvider.notifier).add(talk.id);
     try {
       await ref
           .read(connectionRepositoryProvider)
           .acknowledgeSignal(talk.id, status);
-    } catch (e) {
+    } catch (_) {
       ref.read(dismissedTalkIdsProvider.notifier).remove(talk.id);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not send that reply')),
         );
@@ -107,63 +147,71 @@ class _TalkBannerState extends ConsumerState<TalkBanner> {
     }
   }
 
-  String _incomingLabel(String type) {
+  IconData _icon(String type) {
     return switch (type) {
-      'call' => 'They want a call',
-      'video_call' => 'They want video',
-      _ => 'They want to text',
+      'call' => Icons.call_rounded,
+      'video_call' => Icons.videocam_rounded,
+      _ => Icons.chat_bubble_rounded,
     };
   }
 
-  String _outgoingLabel(String status) {
+  String _incomingTitle(String name, String type) {
+    return switch (type) {
+      'call' => '$name wants to call',
+      'video_call' => '$name wants to video chat',
+      _ => '$name wants to text',
+    };
+  }
+
+  String _outgoingTitle(String name, String status) {
     return switch (status) {
-      'yes' => 'They said okay',
-      'soon' || 'give_me_10' => 'They’ll be there in a bit',
-      'tonight' => 'They said tonight',
-      'not_now' || 'cant_today' => 'They can’t right now',
-      _ => 'They replied',
+      'yes' => '$name said okay',
+      'soon' || 'give_me_10' => '$name will be there in a bit',
+      'tonight' => '$name said tonight',
+      'not_now' || 'cant_today' => '$name can’t right now',
+      _ => '$name replied',
     };
   }
 }
 
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
+class _Banner extends StatelessWidget {
+  const _Banner({
+    required this.icon,
+    required this.title,
+    required this.trailing,
+  });
 
-  final Widget child;
+  final IconData icon;
+  final String title;
+  final Widget trailing;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.hairline),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _AckChip extends StatelessWidget {
-  const _AckChip({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.background,
-      borderRadius: BorderRadius.circular(99),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(99),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(label, style: Theme.of(context).textTheme.labelSmall),
+          padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: AppColors.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+              trailing,
+            ],
+          ),
         ),
       ),
     );
