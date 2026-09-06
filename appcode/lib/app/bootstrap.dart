@@ -14,8 +14,15 @@ Future<void> recoverExistingSession(GoTrueClient auth) async {
   if (auth.currentSession == null) return;
   try {
     await auth.refreshSession();
+  } on AuthRetryableFetchException {
+    // Network/5xx: SDK already kept the persisted session.
+    return;
   } on AuthException {
-    await auth.signOut();
+    try {
+      await auth.signOut();
+    } catch (_) {
+      // Local session is already cleared; don't block runApp.
+    }
   }
 }
 

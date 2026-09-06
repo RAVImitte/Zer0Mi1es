@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../data/supabase_auth_repository.dart';
 import 'auth_view_model.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -24,9 +25,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _submit() {
+    if (ref.read(passwordRecoveryProvider) ||
+        ref.read(authStateProvider).value?.event ==
+            AuthChangeEvent.passwordRecovery) {
+      _saveNewPassword();
+      return;
+    }
+
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    
+
     if (email.isEmpty || password.isEmpty) return;
 
     if (_isLogin) {
@@ -36,9 +44,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _saveNewPassword() async {
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a new password.')),
+      );
+      return;
+    }
+    await ref.read(authViewModelProvider.notifier).updatePassword(password);
+  }
+
   Future<void> _forgotPassword() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty) return;
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Enter your email to reset your password.')),
+      );
+      return;
+    }
 
     await ref.read(authViewModelProvider.notifier).resetPassword(email);
     if (!mounted) return;
@@ -55,6 +80,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
     final isLoading = authState.isLoading;
+    final recovering = ref.watch(passwordRecoveryProvider) ||
+        ref.watch(authStateProvider).value?.event ==
+            AuthChangeEvent.passwordRecovery;
 
     // Listen for errors
     ref.listen(authViewModelProvider, (previous, next) {
@@ -96,20 +124,24 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'A private room for two',
+                recovering ? 'Choose a new password' : 'A private room for two',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
+              if (!recovering) ...[
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+              ],
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(
+                  labelText: recovering ? 'New password' : 'Password',
+                ),
                 obscureText: true,
               ),
               const SizedBox(height: 24),
@@ -122,9 +154,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2),
                       )
-                    : Text(_isLogin ? 'Sign in' : 'Create account'),
+                    : Text(
+                        recovering
+                            ? 'Save password'
+                            : (_isLogin ? 'Sign in' : 'Create account'),
+                      ),
               ),
-              if (_isLogin)
+              if (!recovering && _isLogin)
                 TextButton(
                   onPressed: isLoading ? null : _forgotPassword,
                   child: const Text(
@@ -132,17 +168,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
-              TextButton(
-                onPressed: isLoading ? null : () {
-                  setState(() {
-                    _isLogin = !_isLogin;
-                  });
-                },
-                child: Text(
-                  _isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login',
-                  style: const TextStyle(color: AppColors.textSecondary),
+              if (!recovering)
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                          });
+                        },
+                  child: Text(
+                    _isLogin
+                        ? 'Need an account? Sign Up'
+                        : 'Already have an account? Login',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

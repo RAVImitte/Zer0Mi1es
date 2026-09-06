@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -31,7 +32,13 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword(String email) async {
+    // Email link must open this app so PKCE can complete password recovery.
     await _client.auth.resetPasswordForEmail(email);
+  }
+
+  @override
+  Future<void> updatePassword(String password) async {
+    await _client.auth.updateUser(UserAttributes(password: password));
   }
 
   @override
@@ -67,6 +74,33 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client.rpc('delete_my_account');
     await signOut();
   }
+}
+
+class PasswordRecovery extends Notifier<bool> {
+  @override
+  bool build() {
+    ref.listen(authStateProvider, (_, next) {
+      final event = next.value?.event;
+      if (event == AuthChangeEvent.passwordRecovery) {
+        state = true;
+      } else if (event == AuthChangeEvent.signedOut) {
+        state = false;
+      }
+    });
+    return ref.read(authStateProvider).value?.event ==
+        AuthChangeEvent.passwordRecovery;
+  }
+
+  void complete() => state = false;
+}
+
+final passwordRecoveryProvider =
+    NotifierProvider<PasswordRecovery, bool>(PasswordRecovery.new);
+
+bool isPasswordRecovering(Ref ref) {
+  return ref.read(passwordRecoveryProvider) ||
+      ref.read(authStateProvider).value?.event ==
+          AuthChangeEvent.passwordRecovery;
 }
 
 @riverpod
@@ -111,7 +145,8 @@ Stream<String> registrationStatus(Ref ref) async* {
   await for (final rows
       in client.from('profiles').stream(primaryKey: ['id']).eq('id', uid)) {
     if (rows.isEmpty) {
-      prefs.setString(CacheKeys.registrationStatus, RegistrationStatus.signedUp);
+      prefs.setString(
+          CacheKeys.registrationStatus, RegistrationStatus.signedUp);
       yield RegistrationStatus.signedUp;
     } else {
       final status = rows.first['registration_status'] as String? ??

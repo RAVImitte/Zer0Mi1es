@@ -43,11 +43,17 @@ GoRouter router(Ref ref) {
         return state.matchedLocation == AppRoutes.auth ? null : AppRoutes.auth;
       }
 
+      if (isPasswordRecovering(ref)) {
+        return state.matchedLocation == AppRoutes.auth ? null : AppRoutes.auth;
+      }
+
       final registrationStatusStream = ref.read(registrationStatusProvider);
-      final isStatusLoading =
-          registrationStatusStream.isLoading && !registrationStatusStream.hasValue;
+      final isStatusLoading = registrationStatusStream.isLoading &&
+          !registrationStatusStream.hasValue;
       if (isStatusLoading) {
-        return state.matchedLocation == AppRoutes.splash ? null : AppRoutes.splash;
+        return state.matchedLocation == AppRoutes.splash
+            ? null
+            : AppRoutes.splash;
       }
 
       final status =

@@ -1,8 +1,19 @@
+import { decode as decodeBase64Url } from "https://deno.land/std@0.168.0/encoding/base64url.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { JWT } from 'npm:google-auth-library@9'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
+
+const ALLOWED_TABLES = new Set([
+  'love_drops',
+  'connection_signals',
+  'voice_drops',
+  'daily_answers',
+  'daily_photos',
+  'daily_outfits',
+  'moods',
+])
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders })
@@ -14,9 +25,8 @@ function jwtSub(authHeader: string): string | null {
   const parts = match[1].split('.')
   if (parts.length < 2) return null
   try {
-    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
-    const payload = JSON.parse(atob(padded))
+    const json = new TextDecoder().decode(decodeBase64Url(parts[1]))
+    const payload = JSON.parse(json)
     return typeof payload.sub === 'string' && payload.sub.length > 0
       ? payload.sub
       : null
@@ -26,13 +36,14 @@ function jwtSub(authHeader: string): string | null {
 }
 
 function claimedIdsMatchSub(record: Record<string, unknown>, sub: string): boolean {
+  let sawClaim = false
   for (const key of ['sender_id', 'user_id'] as const) {
     const value = record[key]
-    if (typeof value === 'string' && value.length > 0 && value !== sub) {
-      return false
-    }
+    if (typeof value !== 'string' || value.length === 0) continue
+    if (value !== sub) return false
+    sawClaim = true
   }
-  return true
+  return sawClaim
 }
 
 serve(async (req) => {
@@ -59,6 +70,10 @@ serve(async (req) => {
     const payload = await req.json()
     const table = typeof payload?.table === 'string' ? payload.table : ''
     console.log('push-notification table:', table || 'unknown')
+
+    if (!ALLOWED_TABLES.has(table)) {
+      return jsonResponse({ error: 'Unknown table' }, 400)
+    }
 
     const record = payload.record ?? payload
     if (!record || typeof record !== 'object') {
@@ -164,10 +179,13 @@ serve(async (req) => {
       receiverId = record.couple_id;
       title = `${senderName} got dressed for the day! 👕`;
       body = `Check out their outfit and match their vibe! ✨`;
+    } else if (payload.table === 'moods') {
+      receiverId = record.couple_id
+      const mood = record.mood
+      title = `${senderName} updated their mood`
+      body = mood ? `${senderName} is feeling ${mood}.` : 'Check in on your partner.'
     } else {
-      receiverId = payload.receiver_id
-      title = payload.title || title
-      body = payload.body || body
+      return jsonResponse({ error: 'Unknown table' }, 400)
     }
 
     if (!receiverId) {
@@ -176,7 +194,7 @@ serve(async (req) => {
 
     // Get the FCM token for the receiver
     let actualReceiverId = receiverId
-    if (['love_drops', 'connection_signals', 'daily_answers', 'daily_photos', 'daily_outfits', 'voice_drops'].includes(payload.table)) {
+    if (ALLOWED_TABLES.has(payload.table)) {
       const { data: couple, error: coupleErr } = await supabase.from('couples').select('bear_id, bunny_id').eq('id', receiverId).single()
       if (coupleErr) console.error('Couple lookup error')
 

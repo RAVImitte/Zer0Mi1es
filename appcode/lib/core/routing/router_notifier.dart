@@ -14,6 +14,11 @@ class RouterNotifier extends ChangeNotifier {
     );
 
     _ref.listen(
+      passwordRecoveryProvider,
+      (_, __) => notifyListeners(),
+    );
+
+    _ref.listen(
       registrationStatusProvider,
       (_, __) => notifyListeners(),
     );
