@@ -96,7 +96,8 @@ class SupabaseQuestionRepository implements QuestionRepository {
           ));
         }
       } catch (e, stack) {
-        FirebaseCrashlytics.instance.recordError(e, stack);
+        FirebaseCrashlytics.instance
+            .recordError(e, stack, reason: 'daily question');
         if (!controller.isClosed) controller.add(DailyQuestionState.waiting());
       }
     }

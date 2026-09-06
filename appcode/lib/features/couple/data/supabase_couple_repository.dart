@@ -41,7 +41,8 @@ class SupabaseCoupleRepository extends CoupleRepository {
         prefs.setString(CacheKeys.activeCoupleId, coupleId);
         yield coupleId;
       } catch (e, stack) {
-        FirebaseCrashlytics.instance.recordError(e, stack);
+        FirebaseCrashlytics.instance
+            .recordError(e, stack, reason: 'active couple');
         prefs.remove(CacheKeys.activeCoupleId);
         yield null;
       }
@@ -114,7 +115,7 @@ Future<String?> _fetchAndCachePartnerName(
     }
     return name;
   } catch (e, stack) {
-    FirebaseCrashlytics.instance.recordError(e, stack);
+    FirebaseCrashlytics.instance.recordError(e, stack, reason: 'partner name');
     return prefs.getString(CacheKeys.partnerName) ?? 'Partner';
   }
 }

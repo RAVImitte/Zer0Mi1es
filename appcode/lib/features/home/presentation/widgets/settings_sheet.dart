@@ -46,13 +46,20 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
                 await _confirmDeleteAccount(context, ref);
               },
             ),
-            if (kDebugMode)
+            if (kDebugMode) ...[
               ListTile(
                 leading: const Icon(Icons.bug_report_outlined,
                     color: AppColors.textSecondary),
                 title: const Text('Send test crash'),
+                onTap: () => throw Exception('Zer0Mi1es debug test crash'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.bug_report_outlined,
+                    color: AppColors.textSecondary),
+                title: const Text('Send native test crash'),
                 onTap: () => FirebaseCrashlytics.instance.crash(),
               ),
+            ],
           ],
         ),
       );

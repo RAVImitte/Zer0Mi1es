@@ -49,6 +49,10 @@ Future<void> bootstrap() async {
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
   };
   PlatformDispatcher.instance.onError = (error, stack) {
+    FlutterError.presentError(
+      FlutterErrorDetails(exception: error, stack: stack),
+    );
+    debugPrint('Uncaught platform error: $error');
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };

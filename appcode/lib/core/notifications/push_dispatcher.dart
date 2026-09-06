@@ -16,7 +16,7 @@ class PushDispatcher {
         'record': record,
       });
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'push notify');
     }
   }
 }

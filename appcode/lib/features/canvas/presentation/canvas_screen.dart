@@ -86,7 +86,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
         });
       }
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'canvas load');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not load canvas')),

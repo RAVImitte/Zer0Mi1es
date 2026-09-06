@@ -34,22 +34,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final notificationsOn =
-          await ref.read(pushNotificationServiceProvider).initialize();
-      if (!notificationsOn && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Notifications are off. You will not get partner alerts.',
+      try {
+        final notificationsOn =
+            await ref.read(pushNotificationServiceProvider).initialize();
+        if (!notificationsOn && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Notifications are off. You will not get partner alerts.',
+              ),
             ),
-          ),
-        );
+          );
+        }
+      } catch (e, stack) {
+        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'push init');
       }
       try {
         final name = await FlutterTimezone.getLocalTimezone();
         await ref.read(authRepositoryProvider).syncTimezone(name);
       } catch (e, stack) {
-        FirebaseCrashlytics.instance.recordError(e, stack);
+        FirebaseCrashlytics.instance
+            .recordError(e, stack, reason: 'timezone sync');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Could not sync timezone')),

@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -52,18 +53,22 @@ class PushNotificationService {
       return false;
     }
 
-    final token = await _fcm.getToken();
-    if (token != null) {
-      await _saveTokenToSupabase(token);
-    }
-    _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notification = message.notification;
-      if (notification != null) {
-        _showLocalNotification(notification);
+    try {
+      final token = await _fcm.getToken();
+      if (token != null) {
+        await _saveTokenToSupabase(token);
       }
-    });
+      _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        final notification = message.notification;
+        if (notification != null) {
+          _showLocalNotification(notification);
+        }
+      });
+    } catch (e, stack) {
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'push token');
+    }
     return true;
   }
 
