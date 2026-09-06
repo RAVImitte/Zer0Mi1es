@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/notifications/push_dispatcher.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/utils/talk_expiry.dart';
 import '../../avatar/domain/avatar_event.dart';
 import '../domain/connection_repository.dart';
 import '../domain/love_drop_message.dart';
@@ -56,10 +57,17 @@ class SupabaseConnectionRepository implements ConnectionRepository {
   Future<void> sendSignal(String coupleId, String signalType) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
+    final isTalk =
+        signalType == 'text' || signalType == 'call' || signalType == 'video_call';
     await _client.from('connection_signals').insert({
       'couple_id': coupleId,
       'user_id': uid,
       'signal_type': signalType,
+      if (isTalk)
+        'expires_at': DateTime.now()
+            .toUtc()
+            .add(const Duration(hours: 12))
+            .toIso8601String(),
     });
 
     await _push.notify(table: 'connection_signals', record: {
@@ -67,6 +75,49 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       'sender_id': uid,
       'user_id': uid,
       'type': signalType,
+    });
+  }
+
+  @override
+  Future<void> acknowledgeSignal(String signalId, String status) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return;
+    var iana = 'UTC';
+    final profile = await _client
+        .from('profiles')
+        .select('timezone')
+        .eq('id', uid)
+        .maybeSingle();
+    final tzName = profile?['timezone'] as String?;
+    if (tzName != null && tzName.isNotEmpty) iana = tzName;
+
+    final row = await _client
+        .from('connection_signals')
+        .update({
+          'status': status,
+          'acknowledged_at': DateTime.now().toUtc().toIso8601String(),
+          'acknowledged_by': uid,
+          'expires_at': talkReplyExpiry(status, iana: iana).toIso8601String(),
+        })
+        .eq('id', signalId)
+        .select()
+        .maybeSingle();
+    if (row == null) {
+      throw StateError('Acknowledge did not apply');
+    }
+    final coupleId = row['couple_id'] as String;
+    final talkChannel = _client.channel('talk:$coupleId');
+    talkChannel.subscribe();
+    await talkChannel.sendBroadcastMessage(event: 'ack', payload: {
+      'id': signalId,
+      'status': status,
+      'by': uid,
+    });
+    await _push.notify(table: 'connection_signals', record: {
+      'couple_id': coupleId,
+      'user_id': uid,
+      'status': status,
+      'signal_type': row['signal_type'],
     });
   }
 

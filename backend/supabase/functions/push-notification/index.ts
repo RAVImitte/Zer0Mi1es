@@ -22,13 +22,20 @@ serve(async (req) => {
     const payload = await req.json()
     console.log('Webhook payload:', payload)
 
-    const record = payload.record
+    const record = payload.record ?? payload
+    if (!record || typeof record !== 'object') {
+      return new Response(JSON.stringify({ error: 'Missing record' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
     let receiverId = null
     let title = 'Zer0Mi1es'
     let body = 'You have a new notification.'
 
     let senderId = null;
-    if (payload.table === 'love_drops') senderId = record.sender_id;
+    if (payload.table === 'love_drops' || payload.table === 'voice_drops') senderId = record.sender_id || record.user_id;
     else if (['connection_signals', 'moods', 'daily_answers', 'daily_photos', 'daily_outfits'].includes(payload.table)) {
       senderId = record.user_id;
     }
@@ -64,8 +71,15 @@ serve(async (req) => {
     } else if (payload.table === 'connection_signals') {
       receiverId = record.couple_id // We need to find the partner
       const signalType = record.type || record.signal_type || 'signal';
+      const ack = record.status;
 
-      if (signalType === 'text') {
+      if (ack && ack !== 'pending') {
+        title = `${senderName} replied`
+        if (ack === 'yes') body = 'They said okay.';
+        else if (ack === 'soon' || ack === 'give_me_10') body = 'They’ll be there in a bit.';
+        else if (ack === 'tonight') body = 'They said tonight.';
+        else body = 'They can’t right now.';
+      } else if (signalType === 'text') {
         title = 'I Want to Talk 💬';
         body = `${senderName} wants you to text them.`;
       } else if (signalType === 'call') {
@@ -87,6 +101,10 @@ serve(async (req) => {
         title = 'Partner Signal';
         body = `${senderName} needs affection.`;
       }
+    } else if (payload.table === 'voice_drops') {
+      receiverId = record.couple_id
+      title = 'Voice drop 🎙️'
+      body = `${senderName} sent you a voice drop.`
     } else if (payload.table === 'daily_answers') {
       receiverId = record.couple_id;
       if (record.answer && record.answer.length > 0) {
@@ -119,7 +137,7 @@ serve(async (req) => {
 
     // Get the FCM token for the receiver
     let actualReceiverId = receiverId
-    if (['love_drops', 'connection_signals', 'daily_answers', 'daily_photos', 'daily_outfits'].includes(payload.table)) {
+    if (['love_drops', 'connection_signals', 'daily_answers', 'daily_photos', 'daily_outfits', 'voice_drops'].includes(payload.table)) {
       const { data: couple, error: coupleErr } = await supabase.from('couples').select('bear_id, bunny_id').eq('id', receiverId).single()
       if (coupleErr) console.error('Couple lookup error:', coupleErr)
 

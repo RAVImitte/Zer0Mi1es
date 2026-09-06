@@ -7,4 +7,5 @@ abstract final class AppRoutes {
   static const dailyQuestion = '/daily_question';
   static const outfit = '/outfit';
   static const dailyPhoto = '/daily_photo';
+  static const canvas = '/canvas';
 }

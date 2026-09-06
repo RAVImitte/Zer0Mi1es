@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
-import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../auth/presentation/auth_view_model.dart';
+import '../../../core/utils/partner_scene.dart';
+import '../../../core/widgets/affection_toast.dart';
+import '../../auth/data/supabase_auth_repository.dart';
 import '../../connection/domain/love_drop_message.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../../notifications/data/push_notification_service.dart';
-import '../../outfit/data/supabase_outfit_repository.dart';
 import 'providers/home_providers.dart';
+import 'providers/partner_scene_provider.dart';
 import 'widgets/connection_actions.dart';
 import 'widgets/daily_status.dart';
 import 'widgets/partner_presence.dart';
+import 'widgets/settings_sheet.dart';
+import 'widgets/talk_banner.dart';
+import '../../voice_drop/presentation/voice_play_chip.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -25,124 +29,109 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Check if outfit is selected for today, if not push to outfit screen
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final activeCoupleId = ref.read(activeCoupleIdProvider).value;
-      if (activeCoupleId != null) {
-        final outfitRepo = ref.read(outfitRepositoryProvider);
-        final hasOutfit = await outfitRepo.hasOutfitForToday(activeCoupleId);
-        if (!hasOutfit && mounted) {
-          context.push(AppRoutes.outfit);
-        }
-      }
-      
-      // Request permissions and save FCM token for push notifications
       ref.read(pushNotificationServiceProvider).initialize();
+      try {
+        final name = await FlutterTimezone.getLocalTimezone();
+        await ref.read(authRepositoryProvider).syncTimezone(name);
+      } catch (_) {}
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen for custom love drops
-    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
+    final activeCoupleId =
+        ref.watch(activeCoupleIdProvider.select((v) => v.value));
+    final partnerName = ref.watch(partnerNameProvider).value ?? 'Partner';
+    final isPaired = activeCoupleId != null;
+    final scene = ref.watch(partnerSceneProvider).value ?? PartnerScene.day;
+
     if (activeCoupleId != null) {
       ref.listen<AsyncValue<LoveDropMessage>>(
         loveDropsProvider(activeCoupleId),
         (previous, next) {
           if (next.hasValue && next.value != null && mounted) {
             final drop = next.value!;
-            final partnerName = ref.read(partnerNameProvider).value ?? 'Your partner';
-            
-            String text = '$partnerName sent a ${drop.type}!';
-            if (drop.message != null && drop.message!.isNotEmpty) {
-               text = '"${drop.type}" $partnerName says: "${drop.message}"';
-            }
-            
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                backgroundColor: Colors.pinkAccent,
-                duration: const Duration(seconds: 4),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
+            showAffectionToast(
+              context,
+              emoji: _emojiForDrop(drop.type),
+              label: drop.message?.isNotEmpty == true
+                  ? drop.message!
+                  : '$partnerName sent a ${drop.type}',
             );
           }
         },
       );
     }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Zer0Mi1es', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-        actions: [
-          GestureDetector(
-            onLongPress: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Delete Account'),
-                    content: const Text('Are you sure you want to completely delete your account? This will permanently delete your couple and all associated data.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          ref.read(authViewModelProvider.notifier).deleteAccount();
-                        },
-                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: IconButton(
-              icon: const Icon(Icons.logout, color: AppColors.secondary),
-              onPressed: () {
-                ref.read(authViewModelProvider.notifier).signOut();
-              },
-            ),
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: sceneWash(scene),
           ),
-        ],
-      ),
-      body: const SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Spacer(flex: 1),
-              
-              // 1. Partner Avatar & Pet
-              Expanded(
-                flex: 6,
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: PartnerPresence(),
-                  ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPaired ? partnerName : 'Zero Miles',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          if (isPaired)
+                            Text(
+                              sceneLabel(scene),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Settings',
+                      onPressed: () => showSettingsSheet(context, ref),
+                      icon: const Icon(Icons.settings_outlined,
+                          color: AppColors.textSecondary),
+                    ),
+                  ],
                 ),
-              ),
-              
-              Spacer(flex: 1),
-              
-              // 2. Daily Rituals Status
-              DailyStatus(),
-              
-              Spacer(flex: 1),
-              
-              // 3. Connection Actions
-              ConnectionActions(),
-              
-              Spacer(flex: 1),
+              const SizedBox(height: 8),
+              const TalkBanner(),
+              const VoicePlayChip(),
+              const Expanded(flex: 5, child: PartnerPresence()),
+              const SizedBox(height: 8),
+              const DailyStatus(),
+              const SizedBox(height: 20),
+              const ConnectionActions(),
+              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
+      ),
     );
+  }
+
+  String _emojiForDrop(String type) {
+    switch (type) {
+      case 'Kiss':
+        return '💋';
+      case 'Hug':
+        return '🤗';
+      case 'Sorry':
+        return '🥺';
+      default:
+        return type.length <= 2 ? type : '💖';
+    }
   }
 }

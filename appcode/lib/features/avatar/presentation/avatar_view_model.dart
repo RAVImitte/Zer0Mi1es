@@ -20,39 +20,47 @@ class AvatarViewModel extends _$AvatarViewModel {
   AnimationState build() {
     _initFromCache();
 
-    // Listen to real-time events from partner if we have a couple ID
-    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
-    if (activeCoupleId != null) {
-      final repo = ref.watch(connectionRepositoryProvider);
-      final subscription =
-          repo.watchPartnerEvents(activeCoupleId).listen((event) {
-        onEvent(event);
-      });
-      ref.onDispose(() => subscription.cancel());
+    StreamSubscription<AvatarEvent>? eventsSub;
+    ref.onDispose(() => eventsSub?.cancel());
 
-      ref.listen(partnerStatusProvider, (previous, next) {
-        if (next.hasValue && next.value != null) {
-          final status = next.value!;
-          
-          // Sync Mood
-          if (status.mood != null && (previous?.value?.mood != status.mood)) {
-            final moodStr = 'mood${status.mood}';
-            try {
-              final event = AvatarEvent.values.firstWhere((e) => e.name == moodStr);
-              onEvent(event);
-            } catch (_) {}
-          }
-          
-          // Sync Sleep/Wake
-          if (status.talkSignal != null && (previous?.value?.talkSignal != status.talkSignal)) {
-            if (status.talkSignal == 'goodNight') onEvent(AvatarEvent.goodNight);
-            else if (status.talkSignal == 'goodMorning') onEvent(AvatarEvent.goodMorning);
-          }
-        }
-      }, fireImmediately: true);
+    void bindCouple(String? coupleId) {
+      eventsSub?.cancel();
+      eventsSub = null;
+      if (coupleId == null) return;
+      eventsSub = ref
+          .read(connectionRepositoryProvider)
+          .watchPartnerEvents(coupleId)
+          .listen(onEvent);
     }
 
-    // Start idle
+    ref.listen<AsyncValue<String?>>(
+      activeCoupleIdProvider,
+      (previous, next) {
+        final id = next.value;
+        if (id != previous?.value) bindCouple(id);
+      },
+      fireImmediately: true,
+    );
+
+    ref.listen(partnerStatusProvider, (previous, next) {
+      final status = next.unwrapPrevious().asData?.value;
+      if (status == null) return;
+      final prev = previous?.unwrapPrevious().asData?.value;
+
+      if (status.mood != null && prev?.mood != status.mood) {
+        final moodStr = 'mood${status.mood}';
+        try {
+          onEvent(AvatarEvent.values.firstWhere((e) => e.name == moodStr));
+        } catch (_) {}
+      }
+
+      if (status.talk != null &&
+          !status.talk!.fromMe &&
+          prev?.talk?.id != status.talk!.id) {
+        onEvent(AvatarEvent.talk);
+      }
+    });
+
     return AnimationState.idle;
   }
 

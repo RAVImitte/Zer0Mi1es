@@ -13,5 +13,7 @@ abstract class AuthRepository {
 
   Future<void> setupProfile(String displayName);
 
+  Future<void> syncTimezone(String ianaName);
+
   Future<void> deleteAccount();
 }

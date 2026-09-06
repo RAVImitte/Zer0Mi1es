@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'couple_view_model.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../auth/presentation/auth_view_model.dart';
 
 class CoupleScreen extends ConsumerStatefulWidget {
   const CoupleScreen({super.key});
@@ -54,41 +53,7 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Connect with Partner', style: TextStyle(color: AppColors.primary)),
-        actions: [
-          GestureDetector(
-            onLongPress: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Delete Account'),
-                    content: const Text('Are you sure you want to completely delete your account? This will permanently delete your couple and all associated data.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          ref.read(authViewModelProvider.notifier).deleteAccount();
-                        },
-                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: IconButton(
-              icon: const Icon(Icons.logout, color: AppColors.secondary),
-              onPressed: () {
-                ref.read(authViewModelProvider.notifier).signOut();
-              },
-            ),
-          ),
-        ],
+        title: const Text('Partner'),
       ),
       body: SafeArea(
         child: CustomScrollView(
@@ -102,33 +67,37 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (state.generatedToken == null) ...[
-                      const Text(
-                        'Start a new journey together.',
-                        style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                      Text(
+                        'Share a code, or join theirs.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 48),
-                      
-                      // Join Existing
                       TextField(
                         controller: _tokenController,
                         decoration: const InputDecoration(
-                          labelText: 'Partner\'s Connection Code',
-                          border: OutlineInputBorder(),
+                          labelText: 'Their 6-character code',
                         ),
                         maxLength: 6,
                         textCapitalization: TextCapitalization.characters,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          letterSpacing: 8,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 22,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: state.isLoading ? null : _joinCouple,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: state.isLoading 
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Join Couple', style: TextStyle(color: Colors.white)),
+                        child: state.isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text('Join'),
                       ),
                       
                       const Padding(
@@ -148,17 +117,13 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                       // Create New
                       OutlinedButton(
                         onPressed: state.isLoading ? null : _createCouple,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: AppColors.primary),
-                        ),
-                        child: const Text('Create a Connection Code', style: TextStyle(color: AppColors.primary)),
+                        child: const Text('Create a code'),
                       ),
                     ] else ...[
                       // Token Generated State
-                      const Text(
-                        'Share this code with your partner',
-                        style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                      Text(
+                        'Share this code with them',
+                        style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -166,18 +131,17 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.hairline),
                         ),
                         child: Column(
                           children: [
                             Text(
                               state.generatedToken!,
-                              style: const TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 8,
-                                color: AppColors.primary,
-                              ),
+                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                    letterSpacing: 10,
+                                    color: AppColors.primary,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
@@ -188,8 +152,9 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                                   icon: const Icon(Icons.copy, color: AppColors.secondary),
                                   onPressed: () {
                                     Clipboard.setData(ClipboardData(text: state.generatedToken!));
+                                    HapticFeedback.lightImpact();
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Code copied to clipboard!')),
+                                      const SnackBar(content: Text('Copied')),
                                     );
                                   },
                                 ),

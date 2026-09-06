@@ -1,101 +1,106 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
+import '../../../../core/widgets/affection_toast.dart';
+import '../../../../core/widgets/app_sheet.dart';
+import '../../../voice_drop/presentation/voice_record_sheet.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../connection/domain/connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
-import '../providers/home_providers.dart';
+import '../providers/partner_status_provider.dart';
 
 class ConnectionActions extends ConsumerWidget {
   const ConnectionActions({super.key});
 
-  void _fireNetworkEvent(
-      WidgetRef ref,
-      BuildContext context,
-      Future<void> Function(ConnectionRepository repo, String coupleId)
-          action) async {
+  Future<bool> _run(
+    WidgetRef ref,
+    Future<void> Function(ConnectionRepository repo, String coupleId) action,
+  ) async {
     final coupleId = ref.read(activeCoupleIdProvider).value;
-    if (coupleId != null) {
-      final repo = ref.read(connectionRepositoryProvider);
-      try {
-        await action(repo, coupleId);
-        final partnerName = ref.read(partnerNameProvider).value ?? 'partner';
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Sent to $partnerName!'),
-                duration: const Duration(seconds: 1)),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to send: $e')),
-          );
-        }
-      }
+    if (coupleId == null) return false;
+    try {
+      await action(ref.read(connectionRepositoryProvider), coupleId);
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  void _showMoodBottomSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        final moods = [
-          'Happy',
-          'Sad',
-          'Devastated',
-          'Overwhelmed',
-          'Excited',
-          'Tired'
-        ];
-        final emojis = ['😊', '😢', '😭', '🤯', '🤩', '😴'];
+  void _requirePair(BuildContext context, bool isPaired, VoidCallback action) {
+    if (!isPaired) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pair with your partner first')),
+      );
+      return;
+    }
+    action();
+  }
 
+  Future<void> _sendDrop(
+    BuildContext context,
+    WidgetRef ref, {
+    required String type,
+    required String emoji,
+    String? message,
+  }) async {
+    HapticFeedback.mediumImpact();
+    final ok = await _run(
+      ref,
+      (repo, id) => repo.sendLoveDrop(id, type, message: message),
+    );
+    if (!context.mounted) return;
+    if (ok) {
+      showAffectionToast(context, emoji: emoji, label: 'Sent');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send')),
+      );
+    }
+  }
+
+  void _showMoodSheet(BuildContext context, WidgetRef ref) {
+    const moods = [
+      ('Happy', '😊'),
+      ('Sad', '😢'),
+      ('Devastated', '😭'),
+      ('Overwhelmed', '🤯'),
+      ('Excited', '🤩'),
+      ('Tired', '😴'),
+    ];
+    showAppSheet(
+      context: context,
+      builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('How are you feeling?',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
+              Text('How are you feeling?',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 20),
               Wrap(
-                spacing: 16,
-                runSpacing: 16,
+                spacing: 12,
+                runSpacing: 12,
                 alignment: WrapAlignment.center,
-                children: List.generate(moods.length, (index) {
-                  return InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _fireNetworkEvent(ref, context,
-                          (repo, id) => repo.updateMood(id, moods[index]));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(emojis[index],
-                              style: const TextStyle(fontSize: 32)),
-                          const SizedBox(height: 8),
-                          Text(moods[index],
-                              style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
+                children: [
+                  for (final mood in moods)
+                    _MoodChip(
+                      label: mood.$1,
+                      emoji: mood.$2,
+                      onTap: () {
+                        Navigator.pop(context);
+                        HapticFeedback.lightImpact();
+                        _run(ref, (repo, id) => repo.updateMood(id, mood.$1));
+                      },
                     ),
-                  );
-                }),
+                ],
               ),
-              const SizedBox(height: 24),
             ],
           ),
         );
@@ -103,45 +108,44 @@ class ConnectionActions extends ConsumerWidget {
     );
   }
 
-  void _showTalkBottomSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+  void _showTalkSheet(BuildContext context, WidgetRef ref) {
+    showAppSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('I want to...',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
+              Text('I want to…', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
               ListTile(
-                leading: const Icon(Icons.chat),
+                leading: const Icon(Icons.chat_bubble_outline,
+                    color: AppColors.primary),
                 title: const Text('Text'),
                 onTap: () {
                   Navigator.pop(context);
-                  _fireNetworkEvent(
-                      ref, context, (repo, id) => repo.sendSignal(id, 'text'));
+                  HapticFeedback.lightImpact();
+                  _run(ref, (repo, id) => repo.sendSignal(id, 'text'));
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.call),
+                leading: const Icon(Icons.call_outlined, color: AppColors.primary),
                 title: const Text('Call'),
                 onTap: () {
                   Navigator.pop(context);
-                  _fireNetworkEvent(
-                      ref, context, (repo, id) => repo.sendSignal(id, 'call'));
+                  HapticFeedback.lightImpact();
+                  _run(ref, (repo, id) => repo.sendSignal(id, 'call'));
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.video_call),
-                title: const Text('Video Call'),
+                leading:
+                    const Icon(Icons.videocam_outlined, color: AppColors.primary),
+                title: const Text('Video'),
                 onTap: () {
                   Navigator.pop(context);
-                  _fireNetworkEvent(ref, context,
-                      (repo, id) => repo.sendSignal(id, 'video_call'));
+                  HapticFeedback.lightImpact();
+                  _run(ref, (repo, id) => repo.sendSignal(id, 'video_call'));
                 },
               ),
             ],
@@ -151,254 +155,291 @@ class ConnectionActions extends ConsumerWidget {
     );
   }
 
-  void _showLoveDropBottomSheet(BuildContext context, WidgetRef ref) {
+  void _showNoteSheet(
+    BuildContext context,
+    WidgetRef ref, {
+    required String type,
+    required String emoji,
+  }) {
     final textController = TextEditingController();
-    final types = ['Kiss', 'Hug', 'Sorry', 'Custom'];
-    final defaultEmojis = ['😽', '🤗', '🥺', '✨'];
-    String selectedType = types[0];
-    String customEmoji = '✨';
+    String customEmoji = emoji;
+    String selected = type;
 
-    showModalBottomSheet(
+    showAppSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              left: 24,
-              right: 24,
-              top: 24,
-            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Send a Love Drop',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 24),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(types.length, (index) {
-                      final isSelected = selectedType == types[index];
-                      final isCustom = types[index] == 'Custom';
-                      final displayEmoji = isCustom ? customEmoji : defaultEmojis[index];
-                      
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: InkWell(
-                          onTap: () async {
-                            setState(() => selectedType = types[index]);
-                            if (isCustom) {
-                              // Open emoji picker
-                              final emoji = await showModalBottomSheet<String>(
-                                context: context,
-                                builder: (context) => SafeArea(
-                                  child: SizedBox(
-                                    height: 250,
-                                    child: EmojiPicker(
-                                      onEmojiSelected: (category, emoji) {
-                                        Navigator.pop(context, emoji.emoji);
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                              if (emoji != null && context.mounted) {
-                                setState(() => customEmoji = emoji);
-                              }
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : Colors.grey.shade300),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(displayEmoji,
-                                    style: const TextStyle(fontSize: 24)),
-                                const SizedBox(height: 4),
-                                Text(types[index],
-                                    style: const TextStyle(fontSize: 12)),
-                              ],
-                            ),
+                Text('Add a note',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: textController,
+                  maxLength: 80,
+                  decoration: const InputDecoration(
+                    hintText: 'Optional message',
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () async {
+                      final picked = await showAppSheet<String>(
+                        context: context,
+                        builder: (context) => SizedBox(
+                          height: 260,
+                          child: EmojiPicker(
+                            onEmojiSelected: (category, value) {
+                              Navigator.pop(context, value.emoji);
+                            },
                           ),
                         ),
                       );
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: textController,
-                  decoration: InputDecoration(
-                    hintText: 'Add an optional message...',
-                    filled: true,
-                    fillColor: Colors.grey.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      final msg = textController.text.trim();
-                      final actualType = selectedType == 'Custom' ? customEmoji : selectedType;
-                      _fireNetworkEvent(
-                          ref,
-                          context,
-                          (repo, id) => repo.sendLoveDrop(id, actualType,
-                              message: msg.isNotEmpty ? msg : null));
+                      if (picked != null) {
+                        setState(() {
+                          customEmoji = picked;
+                          selected = picked;
+                        });
+                      }
                     },
-                    child: const Text('Send'),
+                    child: Text('Emoji $customEmoji'),
                   ),
-                )
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    final msg = textController.text.trim();
+                    _sendDrop(
+                      context,
+                      ref,
+                      type: selected,
+                      emoji: customEmoji,
+                      message: msg.isEmpty ? null : msg,
+                    );
+                  },
+                  child: const Text('Send'),
+                ),
               ],
             ),
           );
         });
       },
-    );
+    ).whenComplete(textController.dispose);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAsleep = ref.watch(isAsleepProvider);
-    final activeCoupleId = ref.watch(activeCoupleIdProvider).value;
-    final isPaired = activeCoupleId != null;
+    final isAsleep = ref
+            .watch(partnerStatusProvider)
+            .unwrapPrevious()
+            .asData
+            ?.value
+            .iAmAsleep ??
+        false;
+    final isPaired = ref.watch(activeCoupleIdProvider).value != null;
+
+    Widget row(List<Widget> children) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: children.map((child) => Expanded(child: child)).toList(),
+      );
+    }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Connect',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+        row([
+          _ConnectIcon(
+            emoji: '😘',
+            tooltip: 'Kiss',
+            label: 'Kiss',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Kiss', emoji: '😘'),
+            ),
+            onLongPress: () => _requirePair(
+              context,
+              isPaired,
+              () => _showNoteSheet(context, ref, type: 'Kiss', emoji: '😘'),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                context: context,
-                icon: Icons.favorite,
-                label: 'Love Drop',
-                color: Colors.pinkAccent,
-                isPaired: isPaired,
-                onTap: () => _showLoveDropBottomSheet(context, ref),
-              ),
+          _ConnectIcon(
+            emoji: '🤗',
+            tooltip: 'Hug',
+            label: 'Hug',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Hug', emoji: '🤗'),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context: context,
-                icon: Icons.mood,
-                label: 'Mood Sync',
-                color: Colors.orangeAccent,
-                isPaired: isPaired,
-                onTap: () => _showMoodBottomSheet(context, ref),
-              ),
+            onLongPress: () => _requirePair(
+              context,
+              isPaired,
+              () => _showNoteSheet(context, ref, type: 'Hug', emoji: '🤗'),
             ),
-          ],
-        ),
+          ),
+          _ConnectIcon(
+            emoji: '🥺',
+            tooltip: 'Sorry',
+            label: 'Sorry',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(context, ref, type: 'Sorry', emoji: '🥺'),
+            ),
+          ),
+          _ConnectIcon(
+            icon: Icons.mood_outlined,
+            tooltip: 'Mood',
+            label: 'Mood',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _showMoodSheet(context, ref),
+            ),
+          ),
+        ]),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                context: context,
-                icon: Icons.record_voice_over,
-                label: 'I Want to Talk',
-                color: Colors.blueAccent,
-                isPaired: isPaired,
-                onTap: () => _showTalkBottomSheet(context, ref),
-              ),
+        row([
+          _ConnectIcon(
+            icon: Icons.call_outlined,
+            tooltip: 'Talk',
+            label: 'Talk',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _showTalkSheet(context, ref),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context: context,
-                icon: isAsleep ? Icons.wb_sunny : Icons.bedtime,
-                label: isAsleep ? 'Wake Up' : 'Sleep',
-                color: isAsleep ? Colors.orange : Colors.indigo,
-                isPaired: isPaired,
-                onTap: () {
-                  final signal = isAsleep ? 'goodMorning' : 'goodNight';
-                  _fireNetworkEvent(
-                      ref, context, (repo, id) => repo.sendSignal(id, signal));
-                  ref.read(isAsleepProvider.notifier).toggle();
-                },
-              ),
+          ),
+          _ConnectIcon(
+            icon: isAsleep ? Icons.wb_sunny_outlined : Icons.bedtime_outlined,
+            tooltip: isAsleep ? 'Wake' : 'Sleep',
+            label: isAsleep ? 'Wake' : 'Sleep',
+            onTap: () => _requirePair(context, isPaired, () {
+              HapticFeedback.lightImpact();
+              final signal = isAsleep ? 'goodMorning' : 'goodNight';
+              _run(ref, (repo, id) => repo.sendSignal(id, signal));
+            }),
+          ),
+          _ConnectIcon(
+            icon: Icons.mic_none,
+            tooltip: 'Voice',
+            label: 'Voice',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => showVoiceRecordSheet(context, ref),
             ),
-          ],
-        ),
+          ),
+          _ConnectIcon(
+            icon: Icons.brush_outlined,
+            tooltip: 'Canvas',
+            label: 'Canvas',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => context.push(AppRoutes.canvas),
+            ),
+          ),
+        ]),
       ],
     );
   }
+}
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isPaired,
-    required VoidCallback onTap,
-  }) {
+class _MoodChip extends StatelessWidget {
+  const _MoodChip({
+    required this.label,
+    required this.emoji,
+    required this.onTap,
+  });
+
+  final String label;
+  final String emoji;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(AppRadii.control),
       child: InkWell(
-        onTap: isPaired ? onTap : () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Pair with your partner first to unlock!'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.control),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: isPaired ? color : Colors.grey, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isPaired ? AppColors.textPrimary : Colors.grey,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 6),
+              Text(label, style: Theme.of(context).textTheme.labelSmall),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectIcon extends StatelessWidget {
+  const _ConnectIcon({
+    this.icon,
+    this.emoji,
+    required this.tooltip,
+    required this.label,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  final IconData? icon;
+  final String? emoji;
+  final String tooltip;
+  final String label;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.none,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          onLongPress: onLongPress,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 36,
+                  child: Center(
+                    child: emoji != null
+                        ? Text(
+                            emoji!,
+                            style: const TextStyle(fontSize: 28, height: 1.0),
+                          )
+                        : Icon(icon, color: AppColors.textPrimary, size: 26),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+              ],
+            ),
           ),
         ),
       ),
