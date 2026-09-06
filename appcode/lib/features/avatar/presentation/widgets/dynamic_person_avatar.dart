@@ -60,6 +60,7 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
     // 1. Determine states for the painter
     final bool isSleeping = widget.state == AnimationState.sleeping;
     final bool isLove = widget.state == AnimationState.reaction;
+    final bool isAngry = widget.state == AnimationState.moodAngry;
     final bool isHappy = widget.state == AnimationState.playing || widget.state == AnimationState.petting || widget.state == AnimationState.moodHappy || widget.state == AnimationState.moodExcited;
     final bool isSad = widget.state == AnimationState.moodSad || widget.state == AnimationState.moodDevastated || widget.state == AnimationState.moodTired;
 
@@ -77,6 +78,7 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
             isLove: isLove,
             isHappy: isHappy,
             isSad: isSad,
+            isAngry: isAngry,
             mouthOpenAmount: _talkController.value,
           ),
         );
@@ -147,12 +149,13 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
           .shake(hz: 8, duration: 1.seconds) // Shivering
           .tint(color: Colors.blueGrey.withOpacity(0.5), duration: 500.ms);
         break;
-      case AnimationState.moodOverwhelmed:
+      case AnimationState.moodAngry:
         animatedCharacter = character
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .rotate(begin: -0.15, end: 0.15, duration: 300.ms, curve: Curves.easeInOut) // Wild swinging
-          .scaleXY(begin: 0.9, end: 1.1, duration: 300.ms)
-          .tint(color: Colors.redAccent.withOpacity(0.2));
+          .moveY(begin: 0, end: 10, duration: 180.ms, curve: Curves.easeIn)
+          .scaleXY(begin: 1.04, end: 0.94, duration: 180.ms, curve: Curves.easeIn)
+          .shake(hz: 7, rotation: 0.035, duration: 180.ms)
+          .tint(color: const Color(0xFFF87171).withValues(alpha: 0.28), duration: 200.ms);
         break;
       case AnimationState.moodExcited:
         animatedCharacter = character
@@ -224,6 +227,17 @@ class _DynamicPersonAvatarState extends State<DynamicPersonAvatar> with SingleTi
             .moveY(begin: 0, end: 40, duration: 800.ms, curve: Curves.easeIn)
             .fadeOut(delay: 400.ms, duration: 400.ms),
           ),
+
+        if (isAngry)
+          Positioned(
+            top: widget.size * 0.02,
+            right: widget.size * 0.04,
+            child: const Text('💢', style: TextStyle(fontSize: 22))
+                .animate(onPlay: (controller) => controller.repeat())
+                .scaleXY(begin: 0.75, end: 1.2, duration: 420.ms, curve: Curves.easeOutBack)
+                .moveY(begin: 4, end: -10, duration: 420.ms)
+                .fadeOut(delay: 220.ms, duration: 200.ms),
+          ),
       ],
     );
   }
@@ -237,6 +251,7 @@ class PersonPainter extends CustomPainter {
   final bool isLove;
   final bool isHappy;
   final bool isSad;
+  final bool isAngry;
   final double mouthOpenAmount; // 0.0 to 1.0
 
   PersonPainter({
@@ -247,6 +262,7 @@ class PersonPainter extends CustomPainter {
     this.isLove = false,
     this.isHappy = false,
     this.isSad = false,
+    this.isAngry = false,
     this.mouthOpenAmount = 0.0,
   });
 
@@ -424,10 +440,48 @@ class PersonPainter extends CustomPainter {
       );
       paint.style = PaintingStyle.fill;
     } else {
-      // Draw normal eyes
-      final double eyeRadius = headRadius * 0.12;
+      // Draw normal eyes (slightly tighter when angry)
+      final double eyeRadius = headRadius * (isAngry ? 0.09 : 0.12);
       canvas.drawCircle(Offset(headCenter.dx - eyeXOffset, eyeY), eyeRadius, paint);
       canvas.drawCircle(Offset(headCenter.dx + eyeXOffset, eyeY), eyeRadius, paint);
+    }
+
+    if (isAngry && !isSleeping && !isLove) {
+      paint.style = PaintingStyle.stroke;
+      paint.strokeWidth = 3.0;
+      paint.strokeCap = StrokeCap.round;
+      paint.color = Colors.black;
+      final double browLift = headRadius * 0.28;
+      canvas.drawLine(
+        Offset(headCenter.dx - eyeXOffset - headRadius * 0.22, eyeY - browLift),
+        Offset(headCenter.dx - eyeXOffset + headRadius * 0.12, eyeY - headRadius * 0.08),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(headCenter.dx + eyeXOffset + headRadius * 0.22, eyeY - browLift),
+        Offset(headCenter.dx + eyeXOffset - headRadius * 0.12, eyeY - headRadius * 0.08),
+        paint,
+      );
+      paint.style = PaintingStyle.fill;
+
+      paint.color = const Color(0xFFF87171).withValues(alpha: 0.45);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(headCenter.dx - headRadius * 0.62, headCenter.dy + headRadius * 0.18),
+          width: headRadius * 0.28,
+          height: headRadius * 0.16,
+        ),
+        paint,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(headCenter.dx + headRadius * 0.62, headCenter.dy + headRadius * 0.18),
+          width: headRadius * 0.28,
+          height: headRadius * 0.16,
+        ),
+        paint,
+      );
+      paint.color = Colors.black;
     }
 
     // --- MOUTH ---
@@ -442,6 +496,27 @@ class PersonPainter extends CustomPainter {
         Rect.fromCenter(center: Offset(headCenter.dx, mouthY + mouthHeight/2), width: mouthWidth, height: mouthHeight),
         paint,
       );
+    } else if (isAngry) {
+      paint.style = PaintingStyle.stroke;
+      paint.strokeWidth = 3.0;
+      paint.strokeCap = StrokeCap.round;
+      final double mouthWidth = headRadius * 0.22;
+      canvas.drawLine(
+        Offset(headCenter.dx - mouthWidth, mouthY + headRadius * 0.04),
+        Offset(headCenter.dx + mouthWidth, mouthY + headRadius * 0.04),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(headCenter.dx - mouthWidth * 0.35, mouthY - headRadius * 0.02),
+        Offset(headCenter.dx - mouthWidth * 0.35, mouthY + headRadius * 0.1),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(headCenter.dx + mouthWidth * 0.35, mouthY - headRadius * 0.02),
+        Offset(headCenter.dx + mouthWidth * 0.35, mouthY + headRadius * 0.1),
+        paint,
+      );
+      paint.style = PaintingStyle.fill;
     } else {
       // Smile or Sad curve
       paint.style = PaintingStyle.stroke;
@@ -498,6 +573,7 @@ class PersonPainter extends CustomPainter {
            oldDelegate.isLove != isLove ||
            oldDelegate.isHappy != isHappy ||
            oldDelegate.isSad != isSad ||
+           oldDelegate.isAngry != isAngry ||
            oldDelegate.mouthOpenAmount != mouthOpenAmount;
   }
 }

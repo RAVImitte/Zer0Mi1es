@@ -164,8 +164,9 @@ class SupabaseConnectionRepository implements ConnectionRepository {
                 controller.add(AvatarEvent.moodSad);
               case 'Devastated':
                 controller.add(AvatarEvent.moodDevastated);
+              case 'Angry':
               case 'Overwhelmed':
-                controller.add(AvatarEvent.moodOverwhelmed);
+                controller.add(AvatarEvent.moodAngry);
               case 'Excited':
                 controller.add(AvatarEvent.moodExcited);
               case 'Tired':

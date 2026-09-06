@@ -31,7 +31,7 @@ String _moodLine(String? mood) {
     'Happy' => '😊 Happy',
     'Sad' => '😢 Sad',
     'Devastated' => '💔 Heavy',
-    'Overwhelmed' => '😮 Overwhelmed',
+    'Angry' || 'Overwhelmed' => '😠 Angry',
     'Excited' => '🤩 Excited',
     'Tired' => '😴 Tired',
     _ => '',
@@ -135,6 +135,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
     final isHappy = mood == 'Happy' || mood == 'Excited';
     final isSad =
         mood == 'Sad' || mood == 'Devastated' || mood == 'Tired';
+    final isAngry = mood == 'Angry' || mood == 'Overwhelmed';
 
     await HomeWidget.saveWidgetData<String>('widget_name', name);
     await HomeWidget.saveWidgetData<String>('widget_mood', _moodLine(mood));
@@ -157,6 +158,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
                 isSleeping: isSleeping,
                 isHappy: isHappy,
                 isSad: isSad,
+                isAngry: isAngry,
               ),
             ),
           ),

@@ -50,7 +50,7 @@ class PartnerPresence extends ConsumerWidget {
       AnimationState.moodHappy || AnimationState.moodExcited => const Color(0xFFFBBF24),
       AnimationState.moodSad || AnimationState.moodTired => AppColors.textSecondary,
       AnimationState.moodDevastated => const Color(0xFF64748B),
-      AnimationState.moodOverwhelmed => const Color(0xFFFB923C),
+      AnimationState.moodAngry => AppColors.danger,
       _ => AppColors.primary,
     };
   }
