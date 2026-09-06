@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0002-couple-private-rls.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0002 Couple-private data with Postgres RLS",
+  "summary": "Enable Postgres RLS on couple-owned tables so only the pair can read photos, moods, pings, and canvas.",
+  "scope": ["Postgres RLS", "couples", "pairing tokens", "storage buckets", "photo lock"],
+  "cross_refs": ["../specs/SPEC-auth-pairing.md", "../specs/SPEC-security.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

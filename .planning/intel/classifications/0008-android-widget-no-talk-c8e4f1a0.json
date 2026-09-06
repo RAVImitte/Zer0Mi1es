@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0008-android-widget-no-talk.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0008 Android widget is a presence snapshot, never talk or kisses",
+  "summary": "Android home widget snapshots partner presence only; it must not include talk banners or love-drop flights.",
+  "scope": ["Android widget", "home_widget_sync.dart", "PartnerWidgetProvider", "talk banners", "love-drop flights"],
+  "cross_refs": ["../specs/SPEC-android-widget.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

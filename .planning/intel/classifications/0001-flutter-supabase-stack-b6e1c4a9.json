@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0001-flutter-supabase-stack.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0001 Use Flutter, Supabase, Riverpod, and GoRouter",
+  "summary": "Use Flutter with Riverpod and GoRouter plus Supabase backend and FCM; no second stack or custom HTTP API.",
+  "scope": ["Flutter", "Supabase", "Riverpod", "GoRouter", "Firebase Cloud Messaging", "home_widget"],
+  "cross_refs": ["../prd/PRD-zero-miles.md", "0009-android-ios-only.md", "AGENTS.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

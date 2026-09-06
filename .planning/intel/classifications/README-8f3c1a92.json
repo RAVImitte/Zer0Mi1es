@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/archive/v1/README.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "V1 frozen packs",
+  "summary": "Archive note that original V1 PDF/DOCX packs are historical only and must not be ingested.",
+  "scope": ["V1 frozen packs", "PDF/DOCX", "pets", "single-avatar FSM", "phone auth"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

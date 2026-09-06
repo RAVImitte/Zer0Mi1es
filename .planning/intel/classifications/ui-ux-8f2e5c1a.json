@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/guides/ui-ux.md",
+  "type": "DOC",
+  "confidence": "medium",
+  "manifest_override": false,
+  "title": "UI / UX Guide - Zero Miles",
+  "summary": "Guide for Zero Miles UI/UX: dark palette, typography, give-to-get mechanics, V2 Home, components, and accessibility.",
+  "scope": ["Zero Miles UI", "color palette", "typography", "Daily Questions", "Photo Sharing", "Love Drops", "Home", "avatars", "accessibility"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": "Path is docs/guides (not adr/prd/spec). Prose design guide with tokens and UX principles; no Decision/Consequences, user stories, or API schemas."
+}

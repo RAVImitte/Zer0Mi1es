@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-voice-canvas.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Voice drops and shared canvas",
+  "summary": "Technical spec for Home voice notes (15s, 24h TTL) and persisted canvas strokes via Realtime jsonb.",
+  "scope": ["voice drops", "shared canvas", "Home", "voice bucket", "canvases.strokes"],
+  "cross_refs": ["../adr/0002-couple-private-rls.md", "../adr/0007-home-hub-no-tabs.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

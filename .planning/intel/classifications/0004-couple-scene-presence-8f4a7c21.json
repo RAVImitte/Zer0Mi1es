@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0004-couple-scene-presence.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0004 Couple scene instead of a single-avatar FSM",
+  "summary": "Presence uses coupleSceneProvider and LayeredPersonAvatar; do not reintroduce AvatarViewModel or watchPartnerEvents.",
+  "scope": ["coupleSceneProvider", "CoupleSceneViewModel", "LayeredPersonAvatar", "partnerStatusProvider", "loveDropsProvider"],
+  "cross_refs": ["0005-puppet-vs-widget-painter.md", "../specs/SPEC-home-presence.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

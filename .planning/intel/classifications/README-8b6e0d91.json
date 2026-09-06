@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/archive/legacy-guides/README.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Legacy guides",
+  "summary": "Archive note that legacy guides are superseded by the PRD and ADRs and should not be ingested.",
+  "scope": ["legacy guides", "archive"],
+  "cross_refs": ["docs/prd/PRD-zero-miles.md", "docs/adr/"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

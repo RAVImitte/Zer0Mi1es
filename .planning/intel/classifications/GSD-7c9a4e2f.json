@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/gsd/GSD.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "GSD on Zero Miles",
+  "summary": "Playbook for running GSD on the Zero Miles repo, worktrees, onboard, and operator workflow.",
+  "scope": ["GSD", "Zero Miles", "worktrees", "onboard", ".planning"],
+  "cross_refs": ["docs/gsd/GSD.md", "GSD.md", "docs/releases/V2.md", "docs/prd/PRD-zero-miles.md", "AGENTS.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

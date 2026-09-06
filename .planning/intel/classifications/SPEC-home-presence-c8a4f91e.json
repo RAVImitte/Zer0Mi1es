@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-home-presence.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Home couple scene, moods, love drops, sleep",
+  "summary": "Technical spec for paired Home couple scene, moods, love drops, sleep, and sanctuary lighting.",
+  "scope": ["couple scene", "moods", "love drops", "sleep", "lighting", "LayeredPersonAvatar"],
+  "cross_refs": ["../adr/0004-couple-scene-presence.md", "../adr/0005-puppet-vs-widget-painter.md", "../adr/0010-angry-replaces-overwhelmed.md", "SPEC-talk-requests.md", "SPEC-android-widget.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

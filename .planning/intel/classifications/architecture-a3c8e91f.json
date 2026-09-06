@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/guides/architecture.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Architecture & Technical Guide - Zero Miles",
+  "summary": "Describes Zero Miles Flutter and Supabase architecture, frontend layout, RLS, FCM, and V2 couple-scene design.",
+  "scope": ["Flutter", "Supabase", "PostgreSQL", "Riverpod", "GoRouter", "FCM", "RLS", "couple scene"],
+  "cross_refs": ["appcode/lib", "appcode/pubspec.yaml", "backend/supabase/migrations/"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

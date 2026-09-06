@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0010-angry-replaces-overwhelmed.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0010 Angry replaces Overwhelmed",
+  "summary": "Replace Overwhelmed with Angry on the mood sheet, persist Angry, and map old Overwhelmed rows to Angry.",
+  "scope": ["mood sheet", "AnimationState.moodAngry", "moods.mood", "Overwhelmed"],
+  "cross_refs": ["../specs/SPEC-home-presence.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

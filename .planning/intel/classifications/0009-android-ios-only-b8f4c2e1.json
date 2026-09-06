@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0009-android-ios-only.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0009 Android and iOS only",
+  "summary": "Ship Android and iOS from appcode/; do not add Windows, Web, or desktop as product targets.",
+  "scope": ["Android", "iOS", "appcode/", "syncHomeWidget", "Flutter"],
+  "cross_refs": ["0001-flutter-supabase-stack.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

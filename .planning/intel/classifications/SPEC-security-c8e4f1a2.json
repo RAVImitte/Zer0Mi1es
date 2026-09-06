@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-security.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Security and privacy",
+  "summary": "Technical constraints for couple-only RLS, hashed pairing tokens, private storage, and JWT-authenticated push.",
+  "scope": ["RLS", "pairing tokens", "storage policies", "push-notification", "love_drops", "moods", "JWT"],
+  "cross_refs": ["../adr/0002-couple-private-rls.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

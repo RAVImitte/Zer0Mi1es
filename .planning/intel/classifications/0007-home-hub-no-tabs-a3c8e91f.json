@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0007-home-hub-no-tabs.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0007 Home is the hub (no bottom tabs)",
+  "summary": "Home is the hub with no bottom tabs; rituals and settings hang off Home routes.",
+  "scope": ["Home", "bottom navigation", "routes", "pairing", "Settings"],
+  "cross_refs": ["../prd/PRD-zero-miles.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

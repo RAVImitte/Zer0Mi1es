@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/releases/V2.md",
+  "type": "DOC",
+  "confidence": "medium",
+  "manifest_override": false,
+  "title": "Zero Miles V2",
+  "summary": "Release notes for shipped V2: couple scene, talk banner, moods, Android widget, voice, canvas, sanctuary Home.",
+  "scope": ["couple scene", "talk banner", "moods", "Android widget", "voice drops", "canvas", "sanctuary Home", "Flutter"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": "Path docs/releases/ is not adr/prd/spec. Changelog of shipped work; no Decision/Consequences, user stories, or API contracts. Classified DOC."
+}

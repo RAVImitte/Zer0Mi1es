@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-talk-requests.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Talk requests",
+  "summary": "Specifies talk pings as a one-line Home banner with named copy, ack replies, and reply-based expiry.",
+  "scope": ["talk requests", "Home banner", "talk expiry", "push", "acknowledge"],
+  "cross_refs": ["../adr/0006-talk-banner-expiry.md", "../adr/0008-android-widget-no-talk.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

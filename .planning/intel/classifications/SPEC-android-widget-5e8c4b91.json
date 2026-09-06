@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-android-widget.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Android partner presence widget",
+  "summary": "Android home-screen widget fields, sleep, outfit, forbidden talk/kisses, and lifecycle for partner presence.",
+  "scope": ["Android widget", "partner presence", "PersonPainter", "PartnerWidgetProvider", "home_widget_sync"],
+  "cross_refs": ["../adr/0008-android-widget-no-talk.md", "../adr/0005-puppet-vs-widget-painter.md", "../adr/0009-android-ios-only.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

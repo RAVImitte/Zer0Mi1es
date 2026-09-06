@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/README.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Zero Miles docs",
+  "summary": "Index of living app documentation layout, GSD ingest paths, and ADR over SPEC over PRD precedence.",
+  "scope": ["docs", "PRD", "ADR", "specs", "guides", "GSD ingest", "releases", "archive"],
+  "cross_refs": ["prd/PRD-zero-miles.md", "adr/", "specs/", "guides/architecture.md", "guides/ui-ux.md", "releases/V2.md", "gsd/GSD.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

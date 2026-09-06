@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0006-talk-banner-expiry.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0006 Compact talk banner and reply-based expiry",
+  "summary": "Chose a compact Home talk banner with overflow replies and time-based pending and reply expiry.",
+  "scope": ["talk banner", "talk requests", "reply expiry", "Home", "acknowledgeSignal"],
+  "cross_refs": ["../specs/SPEC-talk-requests.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

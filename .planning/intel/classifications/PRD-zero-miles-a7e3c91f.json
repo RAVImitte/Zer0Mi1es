@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/prd/PRD-zero-miles.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "PRD — Zero Miles",
+  "summary": "Product requirements for the two-person Zero Miles couple app: pairing, daily rituals, Home presence, and V2 acceptance criteria.",
+  "scope": ["Zero Miles", "couple pairing", "daily question", "daily photo", "Home", "Android widget", "moods", "Flutter", "Supabase"],
+  "cross_refs": ["../adr/0001-flutter-supabase-stack.md", "../adr/0002-couple-private-rls.md", "../releases/V2.md", "../specs/SPEC-home-presence.md", "../adr/0007-home-hub-no-tabs.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

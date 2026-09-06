@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0003-feature-first-layout.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0003 Feature-first Flutter layout",
+  "summary": "Organize Flutter code under feature folders with data, domain, and presentation, plus shared core.",
+  "scope": ["Flutter layout", "features", "appcode/lib/features", "appcode/lib/core"],
+  "cross_refs": ["0001-flutter-supabase-stack.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

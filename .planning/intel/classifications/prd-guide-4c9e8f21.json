@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/archive/legacy-guides/prd_guide.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Product Requirements Document (PRD) - Zero Miles",
+  "summary": "Product requirements for Zero Miles, a private long-distance couple app covering pairing, daily connection, photos, moods, and V2 features.",
+  "scope": ["Zero Miles", "authentication", "couple pairing", "daily questions", "OOTD photos", "moods", "Love Drops", "Flutter", "Supabase", "Android widget"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

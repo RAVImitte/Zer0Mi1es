@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-auth-pairing.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Auth, profile, and couple pairing",
+  "summary": "Technical spec for email auth, profile setup, timezone sync, 6-character couple pairing, seats, and account deletion.",
+  "scope": ["email auth", "profile setup", "timezone", "pairing code", "couples", "bear/bunny seats", "delete account"],
+  "cross_refs": ["../adr/0001-flutter-supabase-stack.md", "../adr/0002-couple-private-rls.md", "ADR-0007"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

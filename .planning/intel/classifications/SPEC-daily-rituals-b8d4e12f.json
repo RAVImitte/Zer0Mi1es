@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/specs/SPEC-daily-rituals.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "SPEC — Daily question, photo, and outfit",
+  "summary": "As-built spec for daily question, photo lock, and outfit colors with give-to-get unlock and RLS.",
+  "scope": ["daily_connections", "daily_photos", "daily_outfits", "DailyStatus", "generate_daily_questions", "RLS", "Home"],
+  "cross_refs": ["../adr/0002-couple-private-rls.md", "../adr/0007-home-hub-no-tabs.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

@@ -1,0 +1,13 @@
+{
+  "source_path": "/mnt/d/Chadukunta/zeromiles/Zer0Mi1es/docs/adr/0005-puppet-vs-widget-painter.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ADR-0005 Layered puppet in-app, PersonPainter only for the widget",
+  "summary": "Use LayeredPersonAvatar and PuppetPose in-app; keep PersonPainter only for Android widget snapshots.",
+  "scope": ["LayeredPersonAvatar", "PuppetPose", "PersonPainter", "Android widget", "DynamicPersonAvatar"],
+  "cross_refs": ["0008-android-widget-no-talk.md"],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}
