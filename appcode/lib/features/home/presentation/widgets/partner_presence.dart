@@ -170,7 +170,9 @@ class _Seat extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
+      child: GestureDetector(
+        onTap: isMe ? () => context.push(AppRoutes.outfit) : null,
+        child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Expanded(
@@ -213,6 +215,7 @@ class _Seat extends ConsumerWidget {
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
+        ),
       ),
     );
   }
