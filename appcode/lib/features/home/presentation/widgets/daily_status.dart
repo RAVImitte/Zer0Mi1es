@@ -25,6 +25,7 @@ class DailyStatus extends ConsumerWidget {
       children: [
         _RitualDot(
           icon: Icons.checkroom_outlined,
+          label: 'Outfit',
           done: hasOutfit,
           pulse: isPaired && !hasOutfit,
           onTap: () => _open(context, isPaired, AppRoutes.outfit),
@@ -32,13 +33,17 @@ class DailyStatus extends ConsumerWidget {
         const SizedBox(width: 20),
         _RitualDot(
           icon: Icons.photo_camera_outlined,
+          label: 'Photo',
           done: hasPhoto,
+          pulse: isPaired && !hasPhoto,
           onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
         ),
         const SizedBox(width: 20),
         _RitualDot(
           icon: Icons.quiz_outlined,
+          label: 'Question',
           done: hasQuestion,
+          pulse: isPaired && !hasQuestion,
           onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
         ),
       ],
@@ -60,12 +65,14 @@ class DailyStatus extends ConsumerWidget {
 class _RitualDot extends StatelessWidget {
   const _RitualDot({
     required this.icon,
+    required this.label,
     required this.done,
     required this.onTap,
     this.pulse = false,
   });
 
   final IconData icon;
+  final String label;
   final bool done;
   final bool pulse;
   final VoidCallback onTap;
@@ -102,6 +109,18 @@ class _RitualDot extends StatelessWidget {
             curve: AppMotion.curve,
           );
     }
-    return dot;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        dot,
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: done ? AppColors.primary : AppColors.textSecondary,
+              ),
+        ),
+      ],
+    );
   }
 }

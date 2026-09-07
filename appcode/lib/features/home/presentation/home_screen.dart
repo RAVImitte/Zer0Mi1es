@@ -110,11 +110,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             isPaired ? partnerName : 'Zero Miles',
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
-                          if (isPaired)
-                            Text(
-                              sceneLabel(scene),
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
+                          Text(
+                            isPaired
+                                ? sceneLine(scene)
+                                : 'A private room for two',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
                         ],
                       ),
                     ),
