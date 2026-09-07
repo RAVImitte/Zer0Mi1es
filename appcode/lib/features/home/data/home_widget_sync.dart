@@ -17,6 +17,19 @@ import '../presentation/providers/partner_status_provider.dart';
 
 const _androidWidget = 'app.zeromiles.PartnerWidgetProvider';
 
+const homeWidgetNameKey = 'widget_name';
+const homeWidgetMoodKey = 'widget_mood';
+const homeWidgetSceneKey = 'widget_scene';
+const homeWidgetAvatarKey = 'widget_avatar';
+
+/// Keys [syncHomeWidget] persists. Talk, kisses, and signals stay off the widget.
+const Set<String> homeWidgetWrittenKeys = {
+  homeWidgetNameKey,
+  homeWidgetMoodKey,
+  homeWidgetSceneKey,
+  homeWidgetAvatarKey,
+};
+
 Timer? _syncDebounce;
 
 String _firstName(String? name) {
@@ -107,8 +120,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
         ref.read(partnerSceneProvider).unwrapPrevious().asData?.value ??
             PartnerScene.day;
     final coupleId = ref.read(activeCoupleIdProvider).value;
-    final isBunny =
-        ref.read(partnerRoleProvider).value == CoupleRole.bunny;
+    final isBunny = ref.read(partnerRoleProvider).value == CoupleRole.bunny;
     final isSleeping = status?.partnerAsleep ?? false;
 
     Color top = const Color(0xFF6366F1).withValues(alpha: 0.4);
@@ -125,13 +137,15 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
 
     final mood = status?.mood;
     final isHappy = mood == 'Happy' || mood == 'Excited';
-    final isSad =
-        mood == 'Sad' || mood == 'Devastated' || mood == 'Tired';
+    final isSad = mood == 'Sad' || mood == 'Devastated' || mood == 'Tired';
     final isAngry = mood == 'Angry' || mood == 'Overwhelmed';
 
-    await HomeWidget.saveWidgetData<String>('widget_name', name);
-    await HomeWidget.saveWidgetData<String>('widget_mood', _moodLine(mood));
-    await HomeWidget.saveWidgetData<String>('widget_scene', sceneLabel(scene));
+    await HomeWidget.saveWidgetData<String>(homeWidgetNameKey, name);
+    await HomeWidget.saveWidgetData<String>(homeWidgetMoodKey, _moodLine(mood));
+    await HomeWidget.saveWidgetData<String>(
+      homeWidgetSceneKey,
+      sceneLabel(scene),
+    );
 
     await HomeWidget.renderFlutterWidget(
       Directionality(
@@ -156,7 +170,7 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
           ),
         ),
       ),
-      key: 'widget_avatar',
+      key: homeWidgetAvatarKey,
       logicalSize: const Size(160, 160),
     );
 

@@ -1,5 +1,8 @@
 import 'dart:math';
 
+const pairingTokenAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const pairingTokenLength = 6;
+
 abstract class CoupleRepository {
   Stream<String?> get activeCoupleId;
 
@@ -8,10 +11,14 @@ abstract class CoupleRepository {
   Future<void> joinCouple(String rawToken);
 
   String generateRawToken() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rnd = Random.secure();
     return String.fromCharCodes(
-      Iterable.generate(6, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
+      Iterable.generate(
+        pairingTokenLength,
+        (_) => pairingTokenAlphabet.codeUnitAt(
+          rnd.nextInt(pairingTokenAlphabet.length),
+        ),
+      ),
     );
   }
 }

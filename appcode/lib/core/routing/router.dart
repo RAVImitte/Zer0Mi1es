@@ -11,8 +11,8 @@ import '../../features/daily_question/presentation/daily_question_screen.dart';
 import '../../features/canvas/presentation/canvas_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/outfit/presentation/outfit_screen.dart';
-import '../constants/app_constants.dart';
 import 'app_routes.dart';
+import 'auth_redirect.dart';
 import 'router_notifier.dart';
 
 part 'router.g.dart';
@@ -34,48 +34,19 @@ GoRouter router(Ref ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final startup = ref.read(appStartupProvider);
-      if (startup.isLoading) return AppRoutes.splash;
-
       final session = ref.read(authRepositoryProvider).currentSession;
-      final isAuth = session != null;
-
-      if (!isAuth) {
-        return state.matchedLocation == AppRoutes.auth ? null : AppRoutes.auth;
-      }
-
-      if (isPasswordRecovering(ref)) {
-        return state.matchedLocation == AppRoutes.auth ? null : AppRoutes.auth;
-      }
-
       final registrationStatusStream = ref.read(registrationStatusProvider);
       final isStatusLoading = registrationStatusStream.isLoading &&
           !registrationStatusStream.hasValue;
-      if (isStatusLoading) {
-        return state.matchedLocation == AppRoutes.splash
-            ? null
-            : AppRoutes.splash;
-      }
 
-      final status =
-          registrationStatusStream.value ?? RegistrationStatus.signedUp;
-
-      if (status == RegistrationStatus.signedUp) {
-        return state.matchedLocation == AppRoutes.profileSetup
-            ? null
-            : AppRoutes.profileSetup;
-      }
-
-      if (status == RegistrationStatus.nameEntered ||
-          status == RegistrationStatus.allDone) {
-        final isSetupRoute = state.matchedLocation == AppRoutes.splash ||
-            state.matchedLocation == AppRoutes.auth ||
-            state.matchedLocation == AppRoutes.profileSetup;
-        if (isSetupRoute) {
-          return AppRoutes.home;
-        }
-      }
-
-      return null;
+      return resolveRedirect(
+        hasSession: session != null,
+        matchedLocation: state.matchedLocation,
+        startupLoading: startup.isLoading,
+        passwordRecovering: isPasswordRecovering(ref),
+        statusLoading: isStatusLoading,
+        registrationStatus: registrationStatusStream.value,
+      );
     },
     routes: [
       GoRoute(

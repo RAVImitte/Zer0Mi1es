@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/utils/talk_copy.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
@@ -27,7 +28,7 @@ class TalkBanner extends ConsumerWidget {
     if (!talk.fromMe && talk.status == 'pending') {
       return _Banner(
         icon: _icon(talk.type),
-        title: _incomingTitle(name, talk.type),
+        title: incomingTalkTitle(name, talk.type),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -47,7 +48,8 @@ class TalkBanner extends ConsumerWidget {
               tooltip: 'More options',
               visualDensity: VisualDensity.compact,
               onPressed: () => _defer(context, ref, talk),
-              icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary),
+              icon:
+                  const Icon(Icons.more_horiz, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -63,7 +65,8 @@ class TalkBanner extends ConsumerWidget {
           visualDensity: VisualDensity.compact,
           onPressed: () =>
               ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+          icon:
+              const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
@@ -71,13 +74,14 @@ class TalkBanner extends ConsumerWidget {
     if (talk.fromMe && talk.status != 'pending') {
       return _Banner(
         icon: Icons.check_rounded,
-        title: _outgoingTitle(name, talk.status),
+        title: outgoingTalkTitle(name, talk.status),
         trailing: IconButton(
           tooltip: 'Hide',
           visualDensity: VisualDensity.compact,
           onPressed: () =>
               ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+          icon:
+              const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
@@ -94,7 +98,8 @@ class TalkBanner extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('When can you?', style: Theme.of(context).textTheme.titleLarge),
+              Text('When can you?',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ListTile(
                 title: const Text('In a bit'),
@@ -152,24 +157,6 @@ class TalkBanner extends ConsumerWidget {
       'call' => Icons.call_rounded,
       'video_call' => Icons.videocam_rounded,
       _ => Icons.chat_bubble_rounded,
-    };
-  }
-
-  String _incomingTitle(String name, String type) {
-    return switch (type) {
-      'call' => '$name wants to call',
-      'video_call' => '$name wants to video chat',
-      _ => '$name wants to text',
-    };
-  }
-
-  String _outgoingTitle(String name, String status) {
-    return switch (status) {
-      'yes' => '$name said okay',
-      'soon' || 'give_me_10' => '$name will be there in a bit',
-      'tonight' => '$name said tonight',
-      'not_now' || 'cant_today' => '$name can’t right now',
-      _ => '$name replied',
     };
   }
 }
