@@ -17,6 +17,13 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(
+                'This room',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.favorite_outline, color: AppColors.primary),
               title: const Text('Partner'),
