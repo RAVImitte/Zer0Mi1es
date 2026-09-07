@@ -20,7 +20,7 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
             ListTile(
               leading: const Icon(Icons.favorite_outline, color: AppColors.primary),
               title: const Text('Partner'),
-              subtitle: const Text('Pair or manage your connection'),
+              subtitle: const Text('Just the two of you'),
               onTap: () {
                 Navigator.pop(context);
                 context.push(AppRoutes.couple);
