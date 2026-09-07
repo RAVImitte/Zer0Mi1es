@@ -140,39 +140,47 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
     final isSad = mood == 'Sad' || mood == 'Devastated' || mood == 'Tired';
     final isAngry = mood == 'Angry' || mood == 'Overwhelmed';
 
-    await HomeWidget.saveWidgetData<String>(homeWidgetNameKey, name);
-    await HomeWidget.saveWidgetData<String>(homeWidgetMoodKey, _moodLine(mood));
-    await HomeWidget.saveWidgetData<String>(
-      homeWidgetSceneKey,
-      sceneLabel(scene),
-    );
+    final presenceValues = <String, String>{
+      homeWidgetNameKey: name,
+      homeWidgetMoodKey: _moodLine(mood),
+      homeWidgetSceneKey: sceneLabel(scene),
+    };
 
-    await HomeWidget.renderFlutterWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 160,
-          height: 160,
-          child: ColoredBox(
-            color: _sceneFill(scene),
-            child: CustomPaint(
-              size: const Size(160, 160),
-              painter: PersonPainter(
-                topColor: top,
-                bottomColor: bottom,
-                isBunny: isBunny,
-                isSleeping: isSleeping,
-                isHappy: isHappy,
-                isSad: isSad,
-                isAngry: isAngry,
+    for (final key in homeWidgetWrittenKeys) {
+      if (key == homeWidgetAvatarKey) {
+        await HomeWidget.renderFlutterWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 160,
+              height: 160,
+              child: ColoredBox(
+                color: _sceneFill(scene),
+                child: CustomPaint(
+                  size: const Size(160, 160),
+                  painter: PersonPainter(
+                    topColor: top,
+                    bottomColor: bottom,
+                    isBunny: isBunny,
+                    isSleeping: isSleeping,
+                    isHappy: isHappy,
+                    isSad: isSad,
+                    isAngry: isAngry,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-      key: homeWidgetAvatarKey,
-      logicalSize: const Size(160, 160),
-    );
+          key: key,
+          logicalSize: const Size(160, 160),
+        );
+        continue;
+      }
+      await HomeWidget.saveWidgetData<String>(
+        key,
+        presenceValues[key] ?? '',
+      );
+    }
 
     await HomeWidget.updateWidget(
       qualifiedAndroidName: _androidWidget,

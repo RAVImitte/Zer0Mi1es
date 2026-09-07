@@ -41,27 +41,39 @@ void main() {
     );
   });
 
-  test('tonight → next 6am in the given IANA zone', () {
+  test('tonight at 05:59 → today 6am in the given IANA zone', () {
     const iana = 'America/New_York';
     final location = tz.getLocation(iana);
-    final localNow = tz.TZDateTime.now(location);
-    var expected = tz.TZDateTime(
-      location,
-      localNow.year,
-      localNow.month,
-      localNow.day,
-      6,
-    );
-    if (!localNow.isBefore(expected)) {
-      expected = expected.add(const Duration(days: 1));
-    }
+    final now = tz.TZDateTime(location, 2026, 9, 7, 5, 59);
+    final expected = tz.TZDateTime(location, 2026, 9, 7, 6);
 
-    final expiry = talkReplyExpiry('tonight', iana: iana);
+    final expiry = talkReplyExpiry('tonight', iana: iana, now: now);
     final localExpiry = tz.TZDateTime.from(expiry, location);
 
     expect(localExpiry.hour, 6);
     expect(localExpiry.minute, 0);
     expect(localExpiry.second, 0);
+    expect(localExpiry.year, 2026);
+    expect(localExpiry.month, 9);
+    expect(localExpiry.day, 7);
+    expect(expiry, expected.toUtc());
+  });
+
+  test('tonight at 06:00 → tomorrow 6am in the given IANA zone', () {
+    const iana = 'America/New_York';
+    final location = tz.getLocation(iana);
+    final now = tz.TZDateTime(location, 2026, 9, 7, 6);
+    final expected = tz.TZDateTime(location, 2026, 9, 8, 6);
+
+    final expiry = talkReplyExpiry('tonight', iana: iana, now: now);
+    final localExpiry = tz.TZDateTime.from(expiry, location);
+
+    expect(localExpiry.hour, 6);
+    expect(localExpiry.minute, 0);
+    expect(localExpiry.second, 0);
+    expect(localExpiry.year, 2026);
+    expect(localExpiry.month, 9);
+    expect(localExpiry.day, 8);
     expect(expiry, expected.toUtc());
   });
 }

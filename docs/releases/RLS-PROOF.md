@@ -46,7 +46,8 @@ As B:
 
 ```bash
 export B_JWT=...
-TODAY=$(date -u +%F)
+# Local calendar date — same rule as app isoDate() (DateTime.now() local, not UTC).
+TODAY=$(date +%F)
 
 curl -s -H "apikey: $ANON" -H "Authorization: Bearer $B_JWT" \
   "$URL/rest/v1/daily_photos?couple_id=eq.$COUPLE_ID&date=eq.$TODAY"
