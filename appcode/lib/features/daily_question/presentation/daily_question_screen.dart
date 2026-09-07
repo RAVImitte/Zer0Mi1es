@@ -488,7 +488,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.background,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
@@ -558,7 +558,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.background,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
@@ -567,7 +567,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Submit My Answer', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              Text('Share yours', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               SizedBox(width: 8),
               Icon(Icons.arrow_forward, size: 16),
             ],
@@ -651,7 +651,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.background,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
@@ -660,7 +660,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Submit My Answer', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              Text('Share yours', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               SizedBox(width: 8),
               Icon(Icons.arrow_forward, size: 16),
             ],
