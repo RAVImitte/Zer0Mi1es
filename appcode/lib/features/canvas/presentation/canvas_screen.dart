@@ -177,7 +177,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('Canvas'),
+          title: const Text('Shared mural'),
           actions: [
             IconButton(
               tooltip: _erasing ? 'Draw' : 'Erase',
