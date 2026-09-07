@@ -368,7 +368,14 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                           children: [
                             Icon(Icons.lock, color: AppColors.textSecondary, size: 64),
                             SizedBox(height: 16),
-                            Text('Upload yours to unlock', style: TextStyle(color: AppColors.textSecondary, fontSize: 18), textAlign: TextAlign.center),
+                            Text(
+                              'Share yours to see theirs',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
