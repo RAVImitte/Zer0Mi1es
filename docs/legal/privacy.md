@@ -19,7 +19,7 @@ Zero Miles is a closed loop for two paired partners. There is no social graph, p
 | FCM token | Deliver push to this device | `profiles.fcm_token` |
 | Pairing codes | Bind exactly two people | Hashed tokens, 24-hour TTL |
 | Photos | Daily photo ritual | Private storage, couple-scoped |
-| Voice notes | Short voice drops (≤15s) | Private storage, 24-hour retention |
+| Voice notes | Short voice drops (≤15s) | Private storage; table rows hidden after 24 hours |
 | Moods, daily answers, outfits, canvas strokes, talk/sleep pings, love drops | Couple features | Postgres, couple-scoped via RLS |
 
 We do not collect a contacts list, location history, or advertising identifiers for ads.
@@ -39,11 +39,11 @@ Those processors see what they need to provide the service (for example, FCM see
 
 ## Retention
 
-- **Voice notes:** 24 hours, then they are not readable.
+- **Voice notes:** After 24 hours, voice drop **table rows** are hidden by RLS. Storage blobs in the `voice` bucket have no expiry check; a couple member who knows the object path can still read the file until an operator purge (follow-up).
 - **Pairing tokens:** 24 hours; only a hash is stored. The raw 6-character code is ephemeral.
 - **Account, profile, photos, moods, daily answers, and other couple rows:** until you delete the account (or the couple is removed as part of that deletion).
 - **FCM token:** until the token rotates or the account is deleted.
-- **On-device Android widget:** a local snapshot of partner name, mood, scene, and avatar. It does not render talk requests or kisses.
+- **On-device Android widget:** a local snapshot of partner name, mood, scene, and avatar. It does not render talk requests or kisses. Sign-out and account deletion do not currently clear that snapshot (follow-up).
 
 ## Security
 
@@ -56,7 +56,7 @@ When crash reports are collected, they must strip names, emails, photo URLs, and
 ## Your choices
 
 - **Sign out:** Settings → Sign out. The couple stays intact.
-- **Delete account:** Settings → Delete account, then type `DELETE`. This permanently deletes your account and the couple’s shared data on the server.
+- **Delete account:** Settings → Delete account, then type `DELETE`. This deletes your auth account and the couple row (Postgres cascade on couple tables). Storage objects in `photos` / `voice` / `canvas` become unreachable via RLS but are not purged by this RPC; blob purge is follow-up work.
 - **Push:** the OS permission sheet controls notification delivery. A token may still sit on the profile until it is replaced or the account is deleted.
 
 ## Children

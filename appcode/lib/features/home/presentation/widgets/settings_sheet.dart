@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_sheet.dart';
 import '../../../auth/presentation/auth_view_model.dart';
 
 Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
+  final messenger = ScaffoldMessenger.of(context);
   return showAppSheet(
     context: context,
     builder: (context) {
@@ -45,7 +46,7 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
               subtitle: const Text(SupportContact.email),
               onTap: () {
                 Navigator.pop(context);
-                _openSupportEmail(context);
+                _openSupportEmail(messenger);
               },
             ),
             ListTile(
@@ -132,20 +133,22 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
   }
 }
 
-Future<void> _openSupportEmail(BuildContext context) async {
+Future<void> _openSupportEmail(ScaffoldMessengerState messenger) async {
   final uri = Uri(scheme: 'mailto', path: SupportContact.email);
   try {
     final launched = await launchUrl(uri);
-    if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email ${SupportContact.email}')),
-      );
+    if (!launched) {
+      await _showSupportFallback(messenger);
     }
   } catch (_) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email ${SupportContact.email}')),
-      );
-    }
+    await _showSupportFallback(messenger);
   }
+}
+
+Future<void> _showSupportFallback(ScaffoldMessengerState messenger) async {
+  await Clipboard.setData(const ClipboardData(text: SupportContact.email));
+  if (!messenger.mounted) return;
+  messenger.showSnackBar(
+    const SnackBar(content: Text('Email ${SupportContact.email} copied')),
+  );
 }

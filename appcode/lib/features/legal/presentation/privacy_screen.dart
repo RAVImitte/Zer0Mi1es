@@ -25,7 +25,7 @@ class PrivacyScreen extends StatelessWidget {
           _Section(
             title: 'What we store',
             body:
-                'Display name and email for your account; photos; voice notes (24-hour retention); pairing codes (24 hours, stored hashed); moods; daily answers; and an FCM push token on your profile. We do not sell this data.',
+                'Display name and email for your account; photos; voice notes (table rows hidden after 24 hours; storage files may remain); pairing codes (24 hours, stored hashed); moods; daily answers; and an FCM push token on your profile. We do not sell this data.',
           ),
           _Section(
             title: 'In transit and processors',
@@ -40,7 +40,7 @@ class PrivacyScreen extends StatelessWidget {
           _Section(
             title: 'Delete your account',
             body:
-                'Settings → Delete account, then type DELETE. That permanently removes your account and the couple\'s shared data. Sign out does not delete the couple.',
+                'Settings → Delete account, then type DELETE. That deletes your auth account and the couple row (Postgres cascade). Storage objects become unreachable via RLS but are not purged. The on-device Android widget snapshot is not cleared. Sign out does not delete the couple.',
           ),
           _Section(
             title: 'Support',

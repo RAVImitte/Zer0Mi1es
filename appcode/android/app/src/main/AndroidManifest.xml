@@ -77,9 +77,14 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- Settings Support tile: url_launcher mailto (package visibility) -->
+        <!-- Settings Support tile: url_launcher mailto (package visibility).
+             url_launcher_android uses ACTION_VIEW; keep SENDTO for mail clients that only declare it. -->
         <intent>
             <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="mailto"/>
         </intent>
     </queries>

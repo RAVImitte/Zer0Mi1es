@@ -16,7 +16,7 @@ void main() {
     expect(find.text('Privacy'), findsOneWidget);
     expect(find.text('Two people only'), findsOneWidget);
     expect(find.textContaining('row-level security'), findsOneWidget);
-    expect(find.textContaining('24-hour'), findsWidgets);
+    expect(find.textContaining('24 hours'), findsWidgets);
     expect(find.textContaining('not sell'), findsOneWidget);
 
     await tester.scrollUntilVisible(find.text('Support'), 200);
