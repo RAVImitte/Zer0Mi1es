@@ -174,7 +174,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                 children: [
                   Expanded(
                     child: _buildLargePhotoCard(
-                      title: 'Partner\'s Moment',
+                      title: 'Theirs',
                       photo: partnerPhoto,
                       isMyPhoto: false,
                       isUnlocked: hasMyPhoto,
@@ -184,7 +184,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                   const SizedBox(height: 16),
                   Expanded(
                     child: _buildLargePhotoCard(
-                      title: 'Your Moment',
+                      title: 'Yours',
                       photo: myPhoto,
                       isMyPhoto: true,
                       isUnlocked: true,
@@ -239,8 +239,8 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
           child: Text(
-            title.toUpperCase(),
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            title,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.2),
           ),
         ),
         Expanded(
@@ -353,7 +353,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                               Icon(Icons.lock_outline, size: 48, color: AppColors.primary),
                               SizedBox(height: 12),
                               Text(
-                                'Hidden until you upload',
+                                'Share yours to see theirs',
                                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
                               ),
                             ],
