@@ -95,7 +95,7 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
         children: [
           Text('Voice drop', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          Text('Hold up to 15 seconds. Gone in 24 hours.',
+          Text('Hold up to 15 seconds. Gone in a day.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
@@ -109,7 +109,7 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
               radius: 36,
               backgroundColor:
                   _recording ? AppColors.affection : AppColors.primary,
-              child: const Icon(Icons.mic, color: Colors.white, size: 32),
+              child: const Icon(Icons.mic, color: AppColors.background, size: 32),
             ),
           ),
           const SizedBox(height: 12),
