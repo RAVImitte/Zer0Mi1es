@@ -114,6 +114,7 @@ class TalkBanner extends ConsumerWidget {
               ),
               ListTile(
                 title: const Text('Not now'),
+                subtitle: const Text('They’ll know you saw it'),
                 onTap: () {
                   Navigator.pop(context);
                   _ack(context, ref, talk, 'not_now');
