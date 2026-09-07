@@ -104,12 +104,12 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                         padding: EdgeInsets.symmetric(vertical: 32),
                         child: Row(
                           children: [
-                            Expanded(child: Divider(color: AppColors.surface)),
+                            Expanded(child: Divider(color: AppColors.hairline)),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('OR', style: TextStyle(color: AppColors.textSecondary)),
+                              child: Text('or', style: TextStyle(color: AppColors.textSecondary)),
                             ),
-                            Expanded(child: Divider(color: AppColors.surface)),
+                            Expanded(child: Divider(color: AppColors.hairline)),
                           ],
                         ),
                       ),
