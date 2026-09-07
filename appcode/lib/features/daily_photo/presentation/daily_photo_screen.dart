@@ -81,7 +81,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                 controller: _commentController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: const InputDecoration(
-                  hintText: 'Optional caption...',
+                  hintText: 'A line for them',
                   hintStyle: TextStyle(color: AppColors.textSecondary),
                   enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
                   focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accent)),
