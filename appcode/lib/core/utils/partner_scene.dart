@@ -22,10 +22,10 @@ String sceneLabel(PartnerScene scene) {
 
 String sceneLine(PartnerScene scene) {
   return switch (scene) {
-    PartnerScene.dawn => 'Still waking',
-    PartnerScene.day => 'Here with you',
-    PartnerScene.dusk => 'Winding down',
-    PartnerScene.night => 'Quiet hours',
+    PartnerScene.dawn => 'The house is still',
+    PartnerScene.day => 'Right here',
+    PartnerScene.dusk => 'The light is going',
+    PartnerScene.night => 'The room is quiet',
   };
 }
 
