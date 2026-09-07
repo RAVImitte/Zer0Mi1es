@@ -122,13 +122,13 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                     ] else ...[
                       // Token Generated State
                       Text(
-                        'Share this code with them',
+                        'Read this to them. It expires in a day.',
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
                       Container(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(20),
@@ -136,14 +136,7 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                         ),
                         child: Column(
                           children: [
-                            Text(
-                              state.generatedToken!,
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                    letterSpacing: 10,
-                                    color: AppColors.primary,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
+                            _CodeTiles(code: state.generatedToken!),
                             const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -173,7 +166,7 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                       ),
                       const Spacer(),
                       const Text(
-                        'Waiting for partner to join...',
+                        'Waiting on their side.',
                         style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
                         textAlign: TextAlign.center,
                       ),
@@ -188,6 +181,42 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CodeTiles extends StatelessWidget {
+  const _CodeTiles({required this.code});
+
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final chars = code.split('');
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < chars.length; i++) ...[
+          if (i > 0) const SizedBox(width: 6),
+          Container(
+            width: 40,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.elevated,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+            ),
+            child: Text(
+              chars[i],
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppColors.primary,
+                    letterSpacing: 0,
+                  ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
