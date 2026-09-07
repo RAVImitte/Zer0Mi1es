@@ -39,7 +39,7 @@ class TalkBanner extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 minimumSize: const Size(0, 36),
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.background,
               ),
               child: const Text('Okay'),
             ),
