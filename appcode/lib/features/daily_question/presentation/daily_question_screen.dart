@@ -203,14 +203,14 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
     IconData myBadge = Icons.check_circle;
     Color myBadgeColor = AppColors.secondary;
     IconData partnerBadge = Icons.hourglass_bottom;
-    Color partnerBadgeColor = Colors.orange;
+    Color partnerBadgeColor = AppColors.accent;
 
     if (state.status == QuestionStatus.readyToAnswer) {
       myBadge = Icons.hourglass_bottom;
-      myBadgeColor = Colors.orange;
+      myBadgeColor = AppColors.accent;
       if (!state.partnerHasAnswered) {
         partnerBadge = Icons.hourglass_bottom;
-        partnerBadgeColor = Colors.orange;
+        partnerBadgeColor = AppColors.accent;
       } else {
         partnerBadge = Icons.check_circle;
         partnerBadgeColor = AppColors.accent;
@@ -219,7 +219,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
       myBadge = Icons.check_circle;
       myBadgeColor = AppColors.secondary;
       partnerBadge = Icons.hourglass_bottom;
-      partnerBadgeColor = Colors.orange;
+      partnerBadgeColor = AppColors.accent;
     } else if (state.status == QuestionStatus.revealed) {
       myBadge = Icons.check_circle;
       myBadgeColor = AppColors.secondary;
@@ -326,7 +326,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.background, width: 2),
             ),
-            child: Icon(badgeIcon, size: 10, color: Colors.white),
+            child: Icon(badgeIcon, size: 10, color: AppColors.background),
           ),
         ),
       ],
