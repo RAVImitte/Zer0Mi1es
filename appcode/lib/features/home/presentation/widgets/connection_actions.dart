@@ -329,6 +329,31 @@ class ConnectionActions extends ConsumerWidget {
             ),
           ),
           _ConnectIcon(
+            emoji: '💭',
+            tooltip: 'Thinking of you',
+            label: 'Miss',
+            onTap: () => _requirePair(
+              context,
+              isPaired,
+              () => _sendDrop(
+                context,
+                ref,
+                type: 'Thinking',
+                emoji: '💭',
+              ),
+            ),
+            onLongPress: () => _requirePair(
+              context,
+              isPaired,
+              () => _showNoteSheet(
+                context,
+                ref,
+                type: 'Thinking',
+                emoji: '💭',
+              ),
+            ),
+          ),
+          _ConnectIcon(
             icon: Icons.mood_outlined,
             tooltip: 'Mood',
             label: 'Mood',

@@ -78,7 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               emoji: _emojiForDrop(drop.type),
               label: drop.message?.isNotEmpty == true
                   ? drop.message!
-                  : '$partnerName sent a ${drop.type}',
+                  : drop.type == 'Thinking'
+                      ? '$partnerName is thinking of you'
+                      : '$partnerName sent a ${drop.type}',
             );
           }
         },
@@ -152,6 +154,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         return '🤗';
       case 'Sorry':
         return '🥺';
+      case 'Thinking':
+        return '💭';
       default:
         return type.length <= 2 ? type : '💖';
     }
