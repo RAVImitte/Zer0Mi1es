@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +12,7 @@ import '../../../../core/utils/color_parser.dart';
 import '../../../avatar/domain/avatar_event.dart';
 import '../../../avatar/presentation/couple_scene_view_model.dart';
 import '../../../avatar/presentation/widgets/layered_person_avatar.dart';
+import '../../../connection/data/supabase_connection_repository.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 import '../../../outfit/presentation/providers/outfit_providers.dart';
 
@@ -172,6 +174,19 @@ class _Seat extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GestureDetector(
         onTap: isMe ? () => context.push(AppRoutes.outfit) : null,
+        onDoubleTap: (!isMe && coupleId != null)
+            ? () async {
+                HapticFeedback.mediumImpact();
+                try {
+                  await ref
+                      .read(connectionRepositoryProvider)
+                      .sendLoveDrop(coupleId!, 'Kiss');
+                  ref
+                      .read(coupleSceneProvider.notifier)
+                      .playDrop('Kiss', fromMe: true);
+                } catch (_) {}
+              }
+            : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
