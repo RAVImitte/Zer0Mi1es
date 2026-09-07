@@ -57,6 +57,8 @@ See [V2](../releases/V2.md) and [SPEC-home-presence](../specs/SPEC-home-presence
 
 ## Acceptance criteria
 
+Two-phone UAT copies these items 1:1 (still unchecked) in [PRODUCTION.md](../releases/PRODUCTION.md).
+
 - [ ] Unauthenticated users cannot reach Home; they land on auth.
 - [ ] A third account cannot join an already-paired couple.
 - [ ] Daily question: partner answers stay hidden until I submit mine.
