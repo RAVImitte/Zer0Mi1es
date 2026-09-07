@@ -101,7 +101,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
               Navigator.pop(context);
               _uploadPhoto(imageFile, coupleId, _commentController.text.trim());
             },
-            child: const Text('Upload', style: TextStyle(color: Colors.white)),
+            child: const Text('Upload', style: TextStyle(color: AppColors.background)),
           ),
         ],
       ),
@@ -154,7 +154,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Memories', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+        title: const Text('Today', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
@@ -198,15 +198,15 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.background,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 4,
+                          elevation: 0,
                         ),
                         icon: _isUploading 
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white)) 
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.background)) 
                           : const Icon(Icons.camera_alt, size: 28),
-                        label: Text(_isUploading ? 'Uploading...' : 'Take Today\'s Photo', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        label: Text(_isUploading ? 'Sharing…' : "Share today's photo", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         onPressed: _isUploading ? null : _takePhoto,
                       ),
                     ),
