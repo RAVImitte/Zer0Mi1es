@@ -74,7 +74,11 @@ Theme commits change global color; later UI commits sit on top of that palette.
 | ZM 38 | `c78562f` | talk: not now has a caption |
 | ZM 39 | `5f1d1c2` | home: hairline above the affection row |
 | ZM 40 | `d9f50f8` | home: sleep and wake toast good night or morning |
+| ZM 41 | `095bad5` | theme: rounder cards and sheets |
+| ZM 42 | `71a3bc7` | home: settings sheet titled this room |
+| ZM 43 | `b7901b6` | home: this-room menu hides behind more |
+| ZM 44 | `ccc8983` | home: quieter scene lines |
 
-Skipped (no UI): `bba603e` docs index, `676fd24` sceneLine tests.
+Skipped (no UI): `bba603e` docs index, `676fd24` sceneLine tests, `fcf5a81` shop table, `1340ca9` sideload tool.
 
 ZM 00–11 install first. ZM 12+ follow. Production **Zero Miles** (`app.zeromiles`) stays on the phone.

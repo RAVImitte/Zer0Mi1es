@@ -64,6 +64,10 @@ COMMITS = [
     ("38", "c78562f", "talk: not now has a caption"),
     ("39", "5f1d1c2", "home: hairline above the affection row"),
     ("40", "d9f50f8", "home: sleep and wake toast good night or morning"),
+    ("41", "095bad5", "theme: rounder cards and sheets"),
+    ("42", "71a3bc7", "home: settings sheet titled this room"),
+    ("43", "b7901b6", "home: this-room menu hides behind more"),
+    ("44", "ccc8983", "home: quieter scene lines"),
 ]
 
 
