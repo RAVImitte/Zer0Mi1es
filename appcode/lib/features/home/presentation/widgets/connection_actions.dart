@@ -331,7 +331,7 @@ class ConnectionActions extends ConsumerWidget {
           _ConnectIcon(
             emoji: '💭',
             tooltip: 'Thinking of you',
-            label: 'Miss',
+            label: 'Think',
             onTap: () => _requirePair(
               context,
               isPaired,
