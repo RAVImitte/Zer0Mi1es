@@ -122,9 +122,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Settings',
+                      tooltip: 'This room',
                       onPressed: () => showSettingsSheet(context, ref),
-                      icon: const Icon(Icons.settings_outlined,
+                      icon: const Icon(Icons.more_horiz,
                           color: AppColors.textSecondary),
                     ),
                   ],
