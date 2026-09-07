@@ -12,7 +12,6 @@ const ALLOWED_TABLES = new Set([
   'daily_answers',
   'daily_photos',
   'daily_outfits',
-  'moods',
 ])
 
 function jsonResponse(body: unknown, status = 200) {
@@ -90,7 +89,7 @@ serve(async (req) => {
 
     let senderId = null;
     if (payload.table === 'love_drops' || payload.table === 'voice_drops') senderId = record.sender_id || record.user_id;
-    else if (['connection_signals', 'moods', 'daily_answers', 'daily_photos', 'daily_outfits'].includes(payload.table)) {
+    else if (['connection_signals', 'daily_answers', 'daily_photos', 'daily_outfits'].includes(payload.table)) {
       senderId = record.user_id;
     }
 
@@ -179,11 +178,6 @@ serve(async (req) => {
       receiverId = record.couple_id;
       title = `${senderName} got dressed for the day! 👕`;
       body = `Check out their outfit and match their vibe! ✨`;
-    } else if (payload.table === 'moods') {
-      receiverId = record.couple_id
-      const mood = record.mood
-      title = `${senderName} updated their mood`
-      body = mood ? `${senderName} is feeling ${mood}.` : 'Check in on your partner.'
     } else {
       return jsonResponse({ error: 'Unknown table' }, 400)
     }
@@ -193,16 +187,14 @@ serve(async (req) => {
     }
 
     // Get the FCM token for the receiver
-    let actualReceiverId = receiverId
-    if (ALLOWED_TABLES.has(payload.table)) {
-      const { data: couple, error: coupleErr } = await supabase.from('couples').select('bear_id, bunny_id').eq('id', receiverId).single()
-      if (coupleErr) console.error('Couple lookup error')
+    const { data: couple, error: coupleErr } = await supabase.from('couples').select('bear_id, bunny_id').eq('id', receiverId).single()
+    if (coupleErr) console.error('Couple lookup error')
 
-      if (couple) {
-        const sid = record.sender_id || record.user_id;
-        actualReceiverId = (couple.bear_id === sid) ? couple.bunny_id : couple.bear_id
-      }
+    if (!couple || (sub !== couple.bear_id && sub !== couple.bunny_id)) {
+      return jsonResponse({ error: 'Forbidden' }, 403)
     }
+
+    const actualReceiverId = (couple.bear_id === sub) ? couple.bunny_id : couple.bear_id
 
     const { data: profile, error: profileErr } = await supabase.from('profiles').select('fcm_token').eq('id', actualReceiverId).single()
     if (profileErr) console.error('Profile lookup error')
@@ -253,7 +245,7 @@ serve(async (req) => {
           },
           data: {
             table: payload.table || '',
-            type: (payload.table === 'love_drops' || payload.table === 'connection_signals') ? (record.type || '') : (payload.table === 'moods' ? (record.mood || '') : ''),
+            type: (payload.table === 'love_drops' || payload.table === 'connection_signals') ? (record.type || '') : '',
           }
         }
       })

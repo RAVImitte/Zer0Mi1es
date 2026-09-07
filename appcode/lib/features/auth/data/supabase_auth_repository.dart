@@ -32,8 +32,11 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword(String email) async {
-    // Email link must open this app so PKCE can complete password recovery.
-    await _client.auth.resetPasswordForEmail(email);
+    // Hosted Supabase Auth must also allow this redirect URL (operator gate).
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'zeromiles://login-callback',
+    );
   }
 
   @override
@@ -83,7 +86,8 @@ class PasswordRecovery extends Notifier<bool> {
       final event = next.value?.event;
       if (event == AuthChangeEvent.passwordRecovery) {
         state = true;
-      } else if (event == AuthChangeEvent.signedOut) {
+      } else if (event == AuthChangeEvent.signedOut ||
+          event == AuthChangeEvent.userUpdated) {
         state = false;
       }
     });
@@ -98,9 +102,7 @@ final passwordRecoveryProvider =
     NotifierProvider<PasswordRecovery, bool>(PasswordRecovery.new);
 
 bool isPasswordRecovering(Ref ref) {
-  return ref.read(passwordRecoveryProvider) ||
-      ref.read(authStateProvider).value?.event ==
-          AuthChangeEvent.passwordRecovery;
+  return ref.read(passwordRecoveryProvider);
 }
 
 @riverpod

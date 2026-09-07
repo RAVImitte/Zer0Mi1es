@@ -25,9 +25,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _submit() {
-    if (ref.read(passwordRecoveryProvider) ||
-        ref.read(authStateProvider).value?.event ==
-            AuthChangeEvent.passwordRecovery) {
+    if (ref.read(passwordRecoveryProvider)) {
       _saveNewPassword();
       return;
     }
@@ -80,9 +78,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
     final isLoading = authState.isLoading;
-    final recovering = ref.watch(passwordRecoveryProvider) ||
-        ref.watch(authStateProvider).value?.event ==
-            AuthChangeEvent.passwordRecovery;
+    final recovering = ref.watch(passwordRecoveryProvider);
 
     // Listen for errors
     ref.listen(authViewModelProvider, (previous, next) {
@@ -160,6 +156,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             : (_isLogin ? 'Sign in' : 'Create account'),
                       ),
               ),
+              if (recovering)
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          ref.read(authViewModelProvider.notifier).signOut();
+                        },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               if (!recovering && _isLogin)
                 TextButton(
                   onPressed: isLoading ? null : _forgotPassword,

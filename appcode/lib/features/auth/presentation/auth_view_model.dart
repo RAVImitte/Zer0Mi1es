@@ -51,6 +51,7 @@ class AuthViewModel extends _$AuthViewModel {
       final repo = ref.read(authRepositoryProvider);
       await repo.signOut();
     });
+    ref.read(passwordRecoveryProvider.notifier).complete();
   }
 
   Future<void> deleteAccount() async {
