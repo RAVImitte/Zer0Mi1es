@@ -122,7 +122,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   });
                 },
                 child: Text(
-                  _isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login',
+                  _isLogin ? 'Need an account? Create one' : 'Already here? Sign in',
                   style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ),
