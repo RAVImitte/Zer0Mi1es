@@ -63,13 +63,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A1420), AppColors.background],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Text(
                 'Zero Miles',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
@@ -79,7 +87,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'A private room for two',
+                'Just the two of you.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -103,7 +111,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
+                            color: AppColors.background, strokeWidth: 2),
                       )
                     : Text(_isLogin ? 'Sign in' : 'Create account'),
               ),
@@ -120,6 +128,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
