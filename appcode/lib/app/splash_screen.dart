@@ -13,21 +13,26 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.favorite,
-              size: 80,
-              color: AppColors.primary,
+            Icon(
+              Icons.favorite_outline,
+              size: 40,
+              color: AppColors.primary.withValues(alpha: 0.85),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Text(
               'Zero Miles',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: AppColors.primary,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.textPrimary,
                   ),
             ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              color: AppColors.primary,
+            const SizedBox(height: 32),
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary,
+              ),
             ),
           ],
         ),
