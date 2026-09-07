@@ -190,7 +190,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (c) => AlertDialog(
-                    title: const Text('Clear the mural?'),
+                    title: const Text('Clear the shared mural?'),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.pop(c, false),
