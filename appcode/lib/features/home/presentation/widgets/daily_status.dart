@@ -25,7 +25,7 @@ class DailyStatus extends ConsumerWidget {
       children: [
         _RitualDot(
           icon: Icons.checkroom_outlined,
-          label: 'Outfit',
+          label: 'Wear',
           done: hasOutfit,
           pulse: isPaired && !hasOutfit,
           onTap: () => _open(context, isPaired, AppRoutes.outfit),
@@ -41,7 +41,7 @@ class DailyStatus extends ConsumerWidget {
         const SizedBox(width: 20),
         _RitualDot(
           icon: Icons.quiz_outlined,
-          label: 'Question',
+          label: 'Ask',
           done: hasQuestion,
           pulse: isPaired && !hasQuestion,
           onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
