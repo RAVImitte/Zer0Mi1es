@@ -68,6 +68,7 @@ COMMITS = [
     ("42", "71a3bc7", "home: settings sheet titled this room"),
     ("43", "b7901b6", "home: this-room menu hides behind more"),
     ("44", "ccc8983", "home: quieter scene lines"),
+    ("45", "2077100", "ritual: both-answered banner uses rose not green"),
 ]
 
 

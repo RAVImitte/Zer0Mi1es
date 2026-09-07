@@ -78,6 +78,7 @@ Theme commits change global color; later UI commits sit on top of that palette.
 | ZM 42 | `71a3bc7` | home: settings sheet titled this room |
 | ZM 43 | `b7901b6` | home: this-room menu hides behind more |
 | ZM 44 | `ccc8983` | home: quieter scene lines |
+| ZM 45 | `2077100` | ritual: both-answered banner uses rose not green |
 
 Skipped (no UI): `bba603e` docs index, `676fd24` sceneLine tests, `fcf5a81` shop table, `1340ca9` sideload tool.
 
