@@ -380,11 +380,19 @@ class ConnectionActions extends ConsumerWidget {
             icon: isAsleep ? Icons.wb_sunny_outlined : Icons.bedtime_outlined,
             tooltip: isAsleep ? 'Wake' : 'Sleep',
             label: isAsleep ? 'Wake' : 'Sleep',
-            onTap: () => _requirePair(context, isPaired, () {
+            onTap: () => _requirePair(context, isPaired, () async {
               HapticFeedback.lightImpact();
-              final signal = isAsleep ? 'goodMorning' : 'goodNight';
-              ref.read(coupleSceneProvider.notifier).setMyAsleep(!isAsleep);
-              _run(ref, (repo, id) => repo.sendSignal(id, signal));
+              final goingToSleep = !isAsleep;
+              final signal = goingToSleep ? 'goodNight' : 'goodMorning';
+              ref.read(coupleSceneProvider.notifier).setMyAsleep(goingToSleep);
+              await _run(ref, (repo, id) => repo.sendSignal(id, signal));
+              if (context.mounted) {
+                showAffectionToast(
+                  context,
+                  emoji: goingToSleep ? '🌙' : '☀️',
+                  label: goingToSleep ? 'Good night' : 'Good morning',
+                );
+              }
             }),
           ),
           _ConnectIcon(
