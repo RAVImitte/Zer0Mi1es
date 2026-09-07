@@ -110,7 +110,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.background,
           elevation: 0,
           minimumSize: const Size.fromHeight(52),
           textStyle: textTheme.labelLarge,

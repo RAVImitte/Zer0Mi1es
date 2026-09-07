@@ -20,25 +20,34 @@ String sceneLabel(PartnerScene scene) {
   };
 }
 
+String sceneLine(PartnerScene scene) {
+  return switch (scene) {
+    PartnerScene.dawn => 'Still waking',
+    PartnerScene.day => 'Here with you',
+    PartnerScene.dusk => 'Winding down',
+    PartnerScene.night => 'Quiet hours',
+  };
+}
+
 List<Color> sceneWash(PartnerScene scene) {
   return switch (scene) {
     PartnerScene.dawn => const [
-        Color(0xFF1B1324),
-        Color(0xFF4C2C3A),
+        Color(0xFF2A1A22),
+        Color(0xFF4A3038),
         AppColors.background,
       ],
     PartnerScene.day => const [
-        Color(0xFF152038),
+        Color(0xFF1A1824),
         AppColors.background,
       ],
     PartnerScene.dusk => const [
-        Color(0xFF1A1540),
-        Color(0xFF3B1F4A),
+        Color(0xFF241828),
+        Color(0xFF3A2438),
         AppColors.background,
       ],
     PartnerScene.night => const [
-        Color(0xFF070B16),
-        Color(0xFF0F172A),
+        Color(0xFF0C0A10),
+        AppColors.background,
       ],
   };
 }

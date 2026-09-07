@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/color_parser.dart';
 import '../../../core/utils/partner_scene.dart';
 import '../../avatar/presentation/widgets/person_painter.dart';
@@ -39,10 +40,10 @@ String _moodLine(String? mood) {
 
 Color _sceneFill(PartnerScene scene) {
   return switch (scene) {
-    PartnerScene.dawn => const Color(0xFF4C2C3A),
-    PartnerScene.day => const Color(0xFF152038),
-    PartnerScene.dusk => const Color(0xFF3B1F4A),
-    PartnerScene.night => const Color(0xFF070B16),
+    PartnerScene.dawn => const Color(0xFF4A3038),
+    PartnerScene.day => const Color(0xFF1A1824),
+    PartnerScene.dusk => const Color(0xFF3A2438),
+    PartnerScene.night => const Color(0xFF0C0A10),
   };
 }
 
@@ -111,8 +112,8 @@ Future<void> syncHomeWidget(WidgetRef ref) async {
         ref.read(partnerRoleProvider).value == CoupleRole.bunny;
     final isSleeping = status?.partnerAsleep ?? false;
 
-    Color top = const Color(0xFF6366F1).withValues(alpha: 0.4);
-    Color bottom = const Color(0xFF6366F1).withValues(alpha: 0.4);
+    Color top = AppColors.primary.withValues(alpha: 0.4);
+    Color bottom = AppColors.primary.withValues(alpha: 0.4);
     if (coupleId != null) {
       final outfit = ref.read(partnerOutfitProvider(coupleId)).value;
       if (outfit != null) {
