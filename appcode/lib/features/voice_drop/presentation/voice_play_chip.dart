@@ -81,7 +81,7 @@ class _PlayPillState extends ConsumerState<_PlayPill> {
               Icon(_playing ? Icons.stop : Icons.play_arrow,
                   color: AppColors.affection, size: 20),
               const SizedBox(width: 8),
-              Text('Voice drop', style: Theme.of(context).textTheme.labelLarge),
+              Text('They left a voice', style: Theme.of(context).textTheme.labelLarge),
             ],
           ),
         ),
