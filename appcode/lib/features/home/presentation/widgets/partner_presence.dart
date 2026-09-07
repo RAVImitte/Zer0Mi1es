@@ -173,48 +173,48 @@ class _Seat extends ConsumerWidget {
       child: GestureDetector(
         onTap: isMe ? () => context.push(AppRoutes.outfit) : null,
         child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: glow.withValues(alpha: 0.18),
-                      blurRadius: 28,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: LayeredPersonAvatar(
-                  state: state,
-                  topColor: top,
-                  bottomColor: bottom,
-                  isBunny: isBunny,
-                  leftSeat: leftSeat,
-                  size: size,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: glow.withValues(alpha: 0.18),
+                        blurRadius: 28,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: LayeredPersonAvatar(
+                    state: state,
+                    topColor: top,
+                    bottomColor: bottom,
+                    isBunny: isBunny,
+                    leftSeat: leftSeat,
+                    size: size,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            caption ?? 'Here',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              caption ?? 'With you',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
         ),
       ),
     );
