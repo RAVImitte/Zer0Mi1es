@@ -1,6 +1,6 @@
 class AppRadii {
-  static const double control = 12;
-  static const double card = 16;
-  static const double sheet = 20;
-  static const double bubble = 28;
+  static const double control = 16;
+  static const double card = 22;
+  static const double sheet = 28;
+  static const double bubble = 32;
 }
