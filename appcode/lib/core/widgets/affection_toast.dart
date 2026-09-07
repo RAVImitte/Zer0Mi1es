@@ -57,9 +57,12 @@ class _AffectionToastState extends State<_AffectionToast> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: Color.alphaBlend(
+                  AppColors.primary.withValues(alpha: 0.14),
+                  AppColors.surface,
+                ),
                 borderRadius: BorderRadius.circular(AppRadii.card),
-                border: Border.all(color: AppColors.hairline),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
