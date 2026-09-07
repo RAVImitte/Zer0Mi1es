@@ -106,6 +106,7 @@ class TalkBanner extends ConsumerWidget {
               ),
               ListTile(
                 title: const Text('Tonight'),
+                subtitle: const Text('After the day winds down'),
                 onTap: () {
                   Navigator.pop(context);
                   _ack(context, ref, talk, 'tonight');
