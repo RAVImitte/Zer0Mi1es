@@ -690,9 +690,9 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             Expanded(
               child: const Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 18),
+                  Icon(Icons.check_circle, color: AppColors.primary, size: 18),
                   SizedBox(width: 8),
-                  Flexible(child: Text('Your Answer Submitted', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16))),
+                  Flexible(child: Text('Shared', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16))),
                 ],
               ),
             ),
@@ -726,7 +726,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
                 child: const Icon(Icons.more_horiz, size: 16, color: AppColors.textSecondary),
               ),
               const SizedBox(width: 12),
-              Flexible(child: Text('${partnerName} hasn\'t responded yet...', style: const TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic), textAlign: TextAlign.center)),
+              Flexible(child: Text('Waiting on $partnerName', style: const TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic), textAlign: TextAlign.center)),
             ],
           ),
         ),
@@ -742,9 +742,9 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: Colors.green.withOpacity(0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.32)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -752,10 +752,10 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    const Text('🎉', style: TextStyle(fontSize: 16)),
+                    const Text('🌙', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     const Expanded(
-                      child: Text('Both Answered! Connection Unlocked', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
+                      child: Text('You both answered', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
