@@ -15,6 +15,8 @@ Backend project: `vkcoeudqeegnftkytiqd`.
 
 ## Build
 
+Prerequisites **before** this command (operator gates 1–2): Firebase rebind for `app.zeromiles` + replace `google-services.json` ([FIREBASE-REBIND.md](FIREBASE-REBIND.md)), and `appcode/android/key.properties` ([SIGNING.md](SIGNING.md)). `assembleRelease` fails until rebind (checked-in `google-services.json` is still `com.example.zer0mi1es`). Missing `key.properties` fails release packaging (`package*Release*`, `sign*ReleaseBundle`, `bundle*Release`). Do not upload a debug-signed artifact.
+
 From `appcode/`:
 
 ```bash
@@ -22,8 +24,6 @@ flutter build appbundle --release --obfuscate --split-debug-info=build/symbols \
   --dart-define=SUPABASE_URL=... \
   --dart-define=SUPABASE_ANON_KEY=...
 ```
-
-Requires `appcode/android/key.properties` (see [SIGNING.md](SIGNING.md)). Missing file fails release packaging (`package*Release*`, `sign*ReleaseBundle`, `bundle*Release`). Do not upload a debug-signed artifact.
 
 | Artifact | Path |
 |---|---|
@@ -49,7 +49,7 @@ On project `vkcoeudqeegnftkytiqd`, verify `generate_daily_questions` is schedule
 
 - [ ] Firebase Android app `app.zeromiles` + replace `google-services.json` ([FIREBASE-REBIND.md](FIREBASE-REBIND.md))
 - [ ] Upload keystore + Play App Signing ([SIGNING.md](SIGNING.md))
-- [ ] `npx supabase functions deploy push-notification --project-ref vkcoeudqeegnftkytiqd` so hosted `verify_jwt=true`
+- [ ] `cd backend/supabase && npx supabase functions deploy push-notification --project-ref vkcoeudqeegnftkytiqd` so hosted `verify_jwt=true`. Nested layout: config is `supabase/config.toml`; function source is `functions/push-notification/` (sibling of the nested `supabase/` dir, not inside it).
 - [ ] Add `zeromiles://login-callback` to hosted Auth redirect allow-list
 - [ ] Host `privacy.md` at an https URL; fill Play Data safety ([PLAY-DATA-SAFETY.md](PLAY-DATA-SAFETY.md))
 - [ ] Mailbox support@zeromiles.app
@@ -78,7 +78,7 @@ Also `[ ]` until a human operator proves them.
 - [ ] Delete account works; can recreate
 - [ ] Widget has no talk/kisses
 - [ ] Third account zero rows ([RLS-PROOF.md](RLS-PROOF.md))
-- [ ] Debug “Send test crash” appears in Crashlytics
+- [ ] Debug “Send test crash” appears in Crashlytics — the tile exists only on a debug install after rebind; the Play internal AAB will not show it
 - [ ] Kiss push received
 - [ ] Forgot password email + in-app set-new-password via `zeromiles://login-callback`
 - [ ] 24h soak: sleep, widget, push, daily cron question, photo lock
