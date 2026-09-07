@@ -161,7 +161,7 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
           Expanded(
             child: Row(
               children: [
-                const Text('Daily Connection', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                const Text("Today's question", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 const SizedBox(width: 6),
                 Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle)),
               ],
@@ -182,13 +182,13 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
             const Icon(Icons.hourglass_empty, size: 64, color: AppColors.primary),
             const SizedBox(height: 24),
             const Text(
-              "Today's question is not ready yet!",
+              "Today’s question isn’t here yet.",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             const Text(
-              "The daily question hasn't been generated.\nPlease ensure the cron job is running or you manually ran the generate function in Supabase.",
+              "Check back in a little while.",
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               textAlign: TextAlign.center,
             ),
