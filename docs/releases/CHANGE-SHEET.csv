@@ -1,0 +1,38 @@
+#,Area,Item,Before,After,Files,In git
+1,Identity,Android applicationId / namespace,com.example.zer0mi1es,app.zeromiles,appcode/android/app/build.gradle.kts,yes
+2,Identity,Kotlin package,com.example.zer0mi1es,app.zeromiles,MainActivity.kt; PartnerWidgetProvider.kt (moved),yes
+3,Identity,Widget provider + iOS app group,com.example.zer0mi1es.PartnerWidgetProvider / group.com.example.zer0mi1es,app.zeromiles.PartnerWidgetProvider / group.app.zeromiles,home_widget_sync.dart; ADR-0008; SPEC-android-widget,yes
+4,Identity,Display name,zer0mi1es / Zer0mi1es,Zero Miles,AndroidManifest label; iOS CFBundleDisplayName/CFBundleName; MaterialApp title,yes
+5,Identity,minSdk,Flutter default,24 explicit,build.gradle.kts,yes
+6,Identity,CAMERA permission,missing (camera path used),CAMERA added,AndroidManifest.xml,yes
+7,Identity,Firebase Android client,package_name com.example.zer0mi1es,unchanged on purpose (assemble fail-closes until rebind),google-services.json; docs/releases/FIREBASE-REBIND.md,runbook only
+8,Identity,iOS bundle id,com.example.zer0mi1es,unchanged (App Store track 2),project.pbxproj,yes (no change)
+9,Security,Push JWT,verify_jwt = false,verify_jwt = true,backend/supabase/supabase/config.toml,yes
+10,Security,Push function auth,open + CORS *,JWT required; sender=sub; couple membership; no CORS *,backend/supabase/functions/push-notification/index.ts,yes
+11,Security,Push logs,FCM token prefixes and payloads,table name / generic errors only,push-notification/index.ts,yes
+12,Security,Client push,functions.invoke with user JWT,unchanged (no service role in app),push_dispatcher.dart,yes
+13,Security,Supabase dart-defines,placeholder.supabase.co defaults,empty if missing; fatal boot screen,env.dart; bootstrap.dart; app.dart; test/env_test.dart,yes
+14,Security,Android backup,default allow,allowBackup=false,AndroidManifest.xml,yes
+15,Auth,Forgot password,missing,login-mode reset + in-app set-new-password,auth_repository; auth_view_model; auth_screen,yes
+16,Auth,Recovery deep link,none,zeromiles://login-callback,AndroidManifest; Info.plist; config.toml,yes
+17,Auth,Expired refresh / 429,wedged session,retryable keeps session; non-retryable signs out; 429 copy,bootstrap.dart; auth_screen.dart,yes
+18,Signing,Release keys,signingConfig = debug,key.properties release config; missing file fails bundleRelease,build.gradle.kts; key.properties.example; SIGNING.md,yes
+19,Signing,Minify,off,R8 minify + shrink + proguard-rules.pro,build.gradle.kts; proguard-rules.pro,yes
+20,Observability,Crash net,debugPrint / empty catch,Crashlytics + FlutterError + PlatformDispatcher + runZonedGuarded,pubspec.yaml; bootstrap.dart; Gradle plugin,yes
+21,Observability,User-visible errors,silent catch,snackbar + recordError (no PII),home; canvas; couple; question; push,yes
+22,Observability,Push permission denied,debugPrint only,Home snackbar,push_notification_service.dart; home_screen.dart,yes
+23,Observability,Test crash,none,kDebugMode Dart throw + native crash tiles,settings_sheet.dart,yes
+24,Quality,CI,no workflows,analyze + test on PR and main/production-release,.github/workflows/ci.yml,yes
+25,Quality,Tests,palette assertion only,env; router; talk; scene; widget keys; pairing token; privacy,appcode/test/*,yes
+26,Legal,Privacy / support,none,policy + support + Play Data safety + in-app Privacy/mailto,docs/legal; PLAY-DATA-SAFETY.md; privacy_screen.dart,yes
+27,Legal,Account deletion,already in Settings,kept (type DELETE),settings_sheet.dart,yes
+28,Release,Version,2.0.0+2,2.0.1+3,appcode/pubspec.yaml; docs/README.md,yes
+29,Release,Operator / UAT runbook,none,PRODUCTION.md (gates still unchecked),docs/releases/PRODUCTION.md,yes
+30,Operator,Firebase rebind,needed,not done in git,FIREBASE-REBIND.md,no
+31,Operator,Upload keystore + Play App Signing,needed,not committed,SIGNING.md,no
+32,Operator,Deploy push-notification JWT,config in git; hosted still old,cd backend/supabase && npx supabase functions deploy,PRODUCTION.md,no
+33,Operator,Auth redirect allow-list,needed,add zeromiles://login-callback,PRODUCTION.md,no
+34,Operator,Hosted privacy URL + Play Data safety form,needed,host privacy.md,PLAY-DATA-SAFETY.md,no
+35,Operator,support@zeromiles.app mailbox,needed,DNS/inbox,docs/legal/support.md,no
+36,Operator,Two-phone UAT,PRD boxes unchecked,run PRODUCTION.md UAT,PRODUCTION.md; PRD,no
+37,Operator,iOS App Store,example bundle id,track 2 after Android internal,PRODUCTION.md,no

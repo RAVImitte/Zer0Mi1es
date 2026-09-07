@@ -3,7 +3,7 @@
 **This folder is the only living documentation for the app.**  
 Git root: `Zer0Mi1es/` (branch `main`). Do not keep copies in sibling worktrees or in `D:\Chadukunta\zeromiles\docs\`.
 
-App version: **2.0.1+3** — operator runbook: [releases/PRODUCTION.md](releases/PRODUCTION.md)
+App version: **2.0.1+3** — operator runbook: [releases/PRODUCTION.md](releases/PRODUCTION.md) · change sheet: [releases/CHANGE-SHEET.md](releases/CHANGE-SHEET.md)
 
 ## Layout
 
@@ -30,6 +30,7 @@ docs/
 | [guides/ui-ux.md](guides/ui-ux.md) | Visual / Home UX |
 | [releases/V2.md](releases/V2.md) | What shipped in V2 |
 | [releases/PRODUCTION.md](releases/PRODUCTION.md) | 2.0.1+3 AAB, Play tracks, operator + UAT gates |
+| [releases/CHANGE-SHEET.md](releases/CHANGE-SHEET.md) | What landed on production-release (also [CSV](releases/CHANGE-SHEET.csv)) |
 | [legal/privacy.md](legal/privacy.md) | What we collect, couple RLS, deletion |
 | [legal/support.md](legal/support.md) | Support email and how to delete / sign out |
 | [releases/PLAY-DATA-SAFETY.md](releases/PLAY-DATA-SAFETY.md) | Play Console Data safety form |
