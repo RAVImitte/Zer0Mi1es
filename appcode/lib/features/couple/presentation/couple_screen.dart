@@ -95,7 +95,7 @@ class _CoupleScreenState extends ConsumerState<CoupleScreen> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2),
+                                    color: AppColors.background, strokeWidth: 2),
                               )
                             : const Text('Join'),
                       ),
