@@ -143,7 +143,7 @@ class _Seat extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Pair',
+              'Invite them',
               style: Theme.of(context)
                   .textTheme
                   .labelLarge
@@ -224,7 +224,7 @@ class _Seat extends ConsumerWidget {
       AnimationState.leanIn =>
         AppColors.affection,
       AnimationState.sorry => AppColors.textSecondary,
-      AnimationState.sleeping => const Color(0xFF4338CA),
+      AnimationState.sleeping => const Color(0xFF6B5B8C),
       AnimationState.moodHappy || AnimationState.moodExcited =>
         const Color(0xFFFBBF24),
       AnimationState.moodSad || AnimationState.moodTired =>
@@ -301,6 +301,7 @@ class _DropFlightState extends State<_DropFlight>
       'Kiss' => '💋',
       'Hug' => '💕',
       'Sorry' => '🥺',
+      'Thinking' => '💭',
       _ => type.length <= 2 ? type : '💖',
     };
   }
