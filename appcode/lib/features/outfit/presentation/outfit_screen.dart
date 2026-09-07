@@ -71,7 +71,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Outfit', style: TextStyle(color: AppColors.primary)),
+        title: const Text('Outfit', style: TextStyle(color: AppColors.primary)),
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
@@ -92,7 +92,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '$partnerName\'s avatar will update to match your outfit!',
+                '$partnerName will match.',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -101,13 +101,13 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               ),
               const SizedBox(height: 32),
               
-              const Text('Top Color', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              const Text('Top', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildColorSelector(true),
               
               const SizedBox(height: 32),
               
-              const Text('Bottom Color', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              const Text('Bottom', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildColorSelector(false),
               
