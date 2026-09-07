@@ -59,7 +59,7 @@ class ConnectionActions extends ConsumerWidget {
     if (!context.mounted) return;
     if (ok) {
       ref.read(coupleSceneProvider.notifier).playDrop(type, fromMe: true);
-      showAffectionToast(context, emoji: emoji, label: 'Sent');
+      showAffectionToast(context, emoji: emoji, label: 'On its way');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not send')),
@@ -92,7 +92,7 @@ class ConnectionActions extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'They will see this on their home.',
+                'They’ll see this on Home.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
