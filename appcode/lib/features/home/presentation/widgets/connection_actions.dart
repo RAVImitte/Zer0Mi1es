@@ -209,14 +209,14 @@ class ConnectionActions extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Add a note',
+                Text('A note with this',
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 TextField(
                   controller: textController,
                   maxLength: 80,
                   decoration: const InputDecoration(
-                    hintText: 'Optional message',
+                    hintText: 'A line for them',
                     counterText: '',
                   ),
                 ),
