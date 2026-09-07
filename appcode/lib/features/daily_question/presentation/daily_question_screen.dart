@@ -44,7 +44,9 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
       ref.invalidate(dailyQuestionStateProvider);
       setState(() => _isEditingGuess = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('They can see yours once they answer.')),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -64,7 +66,9 @@ class _DailyQuestionScreenState extends ConsumerState<DailyQuestionScreen> {
       await ref.read(questionRepositoryProvider).scheduleQuestionForTomorrow(coupleId, text);
       setState(() => _isEditingQuestion = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Custom question scheduled for tomorrow!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tomorrow’s question is set.')),
+        );
       }
     } catch (e) {
       if (mounted) {
