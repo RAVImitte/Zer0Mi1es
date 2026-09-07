@@ -17,15 +17,15 @@ class OutfitScreen extends ConsumerStatefulWidget {
 
 class _OutfitScreenState extends ConsumerState<OutfitScreen> {
   final Map<String, Color> _availableColors = {
-    'Black': const Color(0xFF1A1A1A),
-    'White': const Color(0xFFF5F5F5),
-    'Charcoal': const Color(0xFF36454F),
-    'Navy': const Color(0xFF000080),
-    'Denim': const Color(0xFF1560BD),
-    'Khaki': const Color(0xFFC3B091),
-    'Beige': const Color(0xFFF5F5DC),
-    'Olive': const Color(0xFF808000),
-    'Burgundy': const Color(0xFF800020),
+    'Ink': const Color(0xFF121018),
+    'Ivory': const Color(0xFFF4EEE8),
+    'Charcoal': const Color(0xFF2A2433),
+    'Dusty rose': const Color(0xFFD4A5C0),
+    'Blush': const Color(0xFFE07A8A),
+    'Candle': const Color(0xFFC9B896),
+    'Plum': const Color(0xFF6B5B8C),
+    'Navy': const Color(0xFF1A2744),
+    'Olive': const Color(0xFF5C6B4A),
   };
 
   Color? _selectedTop;
@@ -116,14 +116,14 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.background,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: (_selectedTop != null && _selectedBottom != null && !_isLoading) ? _saveOutfit : null,
                 child: _isLoading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Save Outfit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background))
+                  : const Text('Save outfit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
