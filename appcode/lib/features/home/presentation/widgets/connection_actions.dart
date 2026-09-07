@@ -151,7 +151,7 @@ class ConnectionActions extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('I want to…', style: Theme.of(context).textTheme.titleLarge),
+              Text('Reach them', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ListTile(
                 leading: const Icon(Icons.chat_bubble_outline,
