@@ -10,6 +10,7 @@ import '../../features/daily_photo/presentation/daily_photo_screen.dart';
 import '../../features/daily_question/presentation/daily_question_screen.dart';
 import '../../features/canvas/presentation/canvas_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/legal/presentation/privacy_screen.dart';
 import '../../features/outfit/presentation/outfit_screen.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
@@ -80,6 +81,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: AppRoutes.canvas,
         builder: (context, state) => const CanvasScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const PrivacyScreen(),
       ),
       GoRoute(
         path: AppRoutes.home,

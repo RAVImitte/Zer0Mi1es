@@ -8,4 +8,5 @@ abstract final class AppRoutes {
   static const outfit = '/outfit';
   static const dailyPhoto = '/daily_photo';
   static const canvas = '/canvas';
+  static const privacy = '/privacy';
 }

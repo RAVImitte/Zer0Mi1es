@@ -15,7 +15,8 @@ docs/
   specs/              as-built feature contracts (GSD ingest)
   guides/             narrative architecture + UI
   gsd/                how to run GSD on this repo
-  releases/           shipped milestone notes (V2, …)
+  legal/              privacy policy + support (host privacy.md before Play production)
+  releases/           shipped milestone notes (V2, …) and Play Data safety answers
   archive/v1/         frozen V1 PDF/DOCX — do not ingest
   archive/legacy-guides/  superseded markdown — do not ingest
 ```
@@ -28,6 +29,9 @@ docs/
 | [guides/architecture.md](guides/architecture.md) | Stack and folders |
 | [guides/ui-ux.md](guides/ui-ux.md) | Visual / Home UX |
 | [releases/V2.md](releases/V2.md) | What shipped in V2 |
+| [legal/privacy.md](legal/privacy.md) | What we collect, couple RLS, deletion |
+| [legal/support.md](legal/support.md) | Support email and how to delete / sign out |
+| [releases/PLAY-DATA-SAFETY.md](releases/PLAY-DATA-SAFETY.md) | Play Console Data safety form |
 | [gsd/GSD.md](gsd/GSD.md) | GSD operator playbook |
 
 Precedence if they disagree: **ADR > SPEC > PRD > guide**.

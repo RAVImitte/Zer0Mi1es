@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -26,6 +28,24 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
               onTap: () {
                 Navigator.pop(context);
                 context.push(AppRoutes.couple);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.shield_outlined, color: AppColors.textSecondary),
+              title: const Text('Privacy'),
+              subtitle: const Text('What we store and who can see it'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.privacy);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mail_outline, color: AppColors.textSecondary),
+              title: const Text('Support'),
+              subtitle: const Text(SupportContact.email),
+              onTap: () {
+                Navigator.pop(context);
+                _openSupportEmail(context);
               },
             ),
             ListTile(
@@ -109,5 +129,23 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
   controller.dispose();
   if (confirmed == true) {
     await ref.read(authViewModelProvider.notifier).deleteAccount();
+  }
+}
+
+Future<void> _openSupportEmail(BuildContext context) async {
+  final uri = Uri(scheme: 'mailto', path: SupportContact.email);
+  try {
+    final launched = await launchUrl(uri);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email ${SupportContact.email}')),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email ${SupportContact.email}')),
+      );
+    }
   }
 }

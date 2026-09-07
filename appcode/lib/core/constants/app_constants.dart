@@ -19,3 +19,7 @@ abstract final class CoupleRole {
   static const bear = 'bear';
   static const bunny = 'bunny';
 }
+
+abstract final class SupportContact {
+  static const email = 'support@zeromiles.app';
+}
