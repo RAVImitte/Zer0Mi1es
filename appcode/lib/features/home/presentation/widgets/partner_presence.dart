@@ -24,7 +24,7 @@ import 'love_note_cloud.dart';
 import 'room_wall_note.dart';
 import '../../../voice_drop/presentation/voice_play_chip.dart';
 
-const kHomeWallNoteSlot = 108.0;
+const kHomeWallNoteSlot = 92.0;
 
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key, this.seatsKey});
@@ -67,11 +67,11 @@ class PartnerPresence extends ConsumerWidget {
       builder: (context, constraints) {
         final seatW = constraints.maxWidth / 2;
         final windowW = seatW.clamp(96.0, 220.0);
-        final avatarSize = (windowW * 0.66).clamp(76.0, 140.0);
+        final avatarSize = (windowW * 0.74).clamp(84.0, 156.0);
         const captionH = 32.0;
         final leftover =
             math.max(0.0, constraints.maxHeight - kHomeWallNoteSlot);
-        final seatBlockH = math.min(leftover, windowW * 1.0 + captionH);
+        final seatBlockH = math.min(leftover, windowW * 1.12 + captionH);
 
         Widget seatRow() {
           return Row(
