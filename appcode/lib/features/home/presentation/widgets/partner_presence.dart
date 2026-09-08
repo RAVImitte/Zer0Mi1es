@@ -169,8 +169,8 @@ class _SafeFit extends StatelessWidget {
       builder: (context, box) {
         if (!box.maxWidth.isFinite ||
             !box.maxHeight.isFinite ||
-            box.maxWidth < 8 ||
-            box.maxHeight < 8) {
+            box.maxWidth <= 0 ||
+            box.maxHeight <= 0) {
           return const SizedBox.shrink();
         }
         return FittedBox(fit: BoxFit.scaleDown, child: child);
