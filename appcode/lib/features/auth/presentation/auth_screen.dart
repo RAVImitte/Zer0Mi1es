@@ -95,7 +95,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (next.hasError && !next.isLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(humanizeAuthError(next.error!)),
+            content: Text(
+              humanizeAuthError(next.error!, isSignIn: _isLogin),
+            ),
             backgroundColor: AppColors.danger,
           ),
         );

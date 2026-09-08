@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-String humanizeAuthError(Object error) {
+String humanizeAuthError(Object error, {bool isSignIn = false}) {
   if (error is AuthException) {
     final message = error.message.toLowerCase();
     if (message.contains('invalid login') ||
@@ -14,8 +14,15 @@ String humanizeAuthError(Object error) {
     if (message.contains('email not confirmed')) {
       return 'Check your email to confirm your account.';
     }
-    if (message.contains('password')) {
+    final looksLikeLength = message.contains('at least') ||
+        message.contains('too short') ||
+        message.contains('weak password') ||
+        message.contains('password should');
+    if (!isSignIn && looksLikeLength) {
       return 'Use at least 8 characters for your password.';
+    }
+    if (isSignIn && message.contains('password')) {
+      return 'Wrong email or password.';
     }
     return error.message;
   }
