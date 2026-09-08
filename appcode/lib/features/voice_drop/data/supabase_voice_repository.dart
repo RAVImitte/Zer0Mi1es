@@ -45,24 +45,26 @@ class VoiceDropRepository {
     return _client.storage.from('voice').createSignedUrl(path, 3600);
   }
 
-  Stream<VoiceDrop?> watchPartnerDrop(String coupleId) {
+  Stream<List<VoiceDrop>> watchPartnerDrops(String coupleId) {
     final uid = _client.auth.currentUser?.id;
-    if (uid == null) return Stream.value(null);
+    if (uid == null) return Stream.value(const []);
 
-    final controller = StreamController<VoiceDrop?>();
+    final controller = StreamController<List<VoiceDrop>>();
 
     Future<void> fetch() async {
-      final row = await _client
+      final rows = await _client
           .from('voice_drops')
           .select()
           .eq('couple_id', coupleId)
           .neq('sender_id', uid)
           .gt('expires_at', DateTime.now().toUtc().toIso8601String())
           .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+          .limit(12);
       if (!controller.isClosed) {
-        controller.add(row == null ? null : VoiceDrop.fromMap(row));
+        controller.add([
+          for (final row in rows)
+            VoiceDrop.fromMap(Map<String, dynamic>.from(row as Map)),
+        ]);
       }
     }
 
