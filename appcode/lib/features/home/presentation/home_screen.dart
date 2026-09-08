@@ -24,7 +24,6 @@ import 'widgets/home_coach_overlay.dart';
 import 'widgets/partner_presence.dart';
 import 'widgets/settings_sheet.dart';
 import 'widgets/talk_banner.dart';
-import '../../voice_drop/presentation/voice_play_chip.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -180,11 +179,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const AppOfflineBanner(),
                     const TalkBanner(),
-                    if (activeCoupleId != null)
-                      const SizedBox(
-                        height: kHomeVoiceLogSlot,
-                        child: VoicePlayChip(),
-                      ),
                     Expanded(
                       flex: 5,
                       child: PartnerPresence(seatsKey: _presenceKey),

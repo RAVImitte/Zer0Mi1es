@@ -176,7 +176,7 @@ class _StagePainter extends CustomPainter {
     // Bleed on the outer and top/bottom edges. Keep the inner edge
     // short so it does not draw a seam across the other face.
     final outer = size.width * 0.34;
-    final inner = size.width * 0.08;
+    final inner = size.width * 0.04;
     final padLeft = leftSeat ? outer : inner;
     final padRight = leftSeat ? inner : outer;
     final padTop = size.height * 0.28;

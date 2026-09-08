@@ -22,9 +22,9 @@ import '../providers/partner_status_provider.dart';
 import 'connection_actions.dart';
 import 'love_note_cloud.dart';
 import 'room_wall_note.dart';
+import '../../../voice_drop/presentation/voice_play_chip.dart';
 
-const kHomeWallNoteSlot = 88.0;
-const kHomeVoiceLogSlot = 92.0;
+const kHomeWallNoteSlot = 108.0;
 
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key, this.seatsKey});
@@ -131,13 +131,24 @@ class PartnerPresence extends ConsumerWidget {
                     ),
                   ),
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: SizedBox(
-                        key: seatsKey,
-                        height: seatBlockH,
-                        child: seatRow(),
-                      ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: SizedBox(
+                            key: seatsKey,
+                            height: seatBlockH,
+                            child: seatRow(),
+                          ),
+                        ),
+                        const Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: VoicePlayChip(),
+                        ),
+                      ],
                     ),
                   ),
                 ],

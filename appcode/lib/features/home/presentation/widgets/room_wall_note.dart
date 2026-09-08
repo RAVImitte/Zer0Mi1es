@@ -51,7 +51,7 @@ class RoomWallNote extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           CustomPaint(
-            size: const Size(2, 18),
+            size: const Size(2, 14),
             painter: _TwinePainter(),
           ),
           Transform.rotate(
@@ -67,7 +67,7 @@ class RoomWallNote extends ConsumerWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -85,7 +85,7 @@ class RoomWallNote extends ConsumerWidget {
                           const SizedBox(height: 8),
                           Text(
                             body,
-                            maxLines: 3,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             style: Theme.of(context)
