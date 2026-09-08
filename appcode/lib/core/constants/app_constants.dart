@@ -8,6 +8,9 @@ abstract final class CacheKeys {
   static const registrationStatus = 'registration_status_cache';
   static const activeCoupleId = 'active_couple_id_cache';
   static const partnerName = 'partner_name';
+  static const myRole = 'my_role_cache';
+  static const dismissedVoiceIds = 'dismissed_voice_ids';
+  static String loveNotes(String coupleId) => 'love_notes_$coupleId';
 }
 
 abstract final class NotificationConstants {

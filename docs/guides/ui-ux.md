@@ -9,20 +9,22 @@ Zero Miles is designed to be a **private sanctuary**. The interface must feel in
 The color scheme is designed to evoke warmth and modernity against a deep slate background.
 
 ### Background Colors
-- **Background:** `Slate 900` (#0F172A) - Used for the main app background.
-- **Surface:** `Slate 800` (#1E293B) - Used for cards, dialogs, and elevated components.
+- **Background:** Warm near-black (#141014) — the room.
+- **Surface:** Frosted umber (#231C21) — cards, dialogs, sheets.
+- **Elevated:** (#2C242A)
 
 ### Brand / Accent Colors
-- **Primary:** `Indigo` (#6366F1) - Used for primary buttons, active states, and primary highlights.
-- **Secondary:** `Pink` (#EC4899) - Used for romantic accents, love drops, and special notifications.
-- **Accent:** `Purple` (#8B5CF6) - Used for secondary highlights and gradients.
+- **Primary:** Honey rose (#E8A090) — primary buttons and highlights.
+- **Secondary / Affection:** Deep rose (#E25C7A) — love drops.
+- **Accent / Waiting:** Soft gold (#E0B56A).
 
 ### Text Colors
-- **Primary Text:** `Slate 50` (#F8FAFC) - High contrast for readability on dark backgrounds.
-- **Secondary Text:** `Slate 400` (#94A3B8) - Used for subtitles, hints, and less prominent information.
+- **Primary Text:** Warm cream (#F6F0E8)
+- **Secondary Text:** (#B5A8A0)
 
 ## 3. Typography
-- **Primary Font:** `Inter`
+- **Primary Font:** `Inter` (body and labels)
+- **Display Font:** `Fraunces` (wordmark and ritual titles)
 - **Characteristics:** Clean, highly legible sans-serif.
 - **Hierarchy:**
   - **Headings (H1/H2):** Bold, used for screen titles and daily questions.
@@ -47,7 +49,7 @@ Features like *Daily Questions* and *Photo Sharing* require the user to input th
 - **Love Drops:** Haptic + toast, and an emoji that **flies** from the sender’s seat to the receiver’s.
 - **Talk banner:** One compact row above the couple scene. Never wrap chips over the avatars. Incoming: “{name} wants to call” + Okay + ⋯. Sender: “Waiting for {name}”, then their reply.
 - **Mood sheet:** 2-column tiles (Happy, Excited, Tired, Sad, Angry, Devastated).
-- **No bottom tab bar.** Canvas and voice are Home actions. Sanctuary lighting follows time of day.
+- **No bottom tab bar.** Canvas and voice are Home actions. Each seat has a living window for that person’s local time.
 
 ## 5. UI Components Guidelines
 - **Buttons:** Rounded corners (e.g., `BorderRadius.circular(12)`), filled with Primary or Secondary color based on context.

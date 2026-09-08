@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../connection/data/supabase_connection_repository.dart';
@@ -32,7 +36,12 @@ class TalkBanner extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             FilledButton(
-              onPressed: () => _ack(context, ref, talk, 'yes'),
+              onPressed: () async {
+                await _ack(context, ref, talk, 'yes');
+                if (context.mounted) {
+                  await _followThrough(context, talk.type);
+                }
+              },
               style: FilledButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -47,7 +56,7 @@ class TalkBanner extends ConsumerWidget {
               tooltip: 'More options',
               visualDensity: VisualDensity.compact,
               onPressed: () => _defer(context, ref, talk),
-              icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary),
+              icon: Icon(AppIcons.more, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -59,25 +68,25 @@ class TalkBanner extends ConsumerWidget {
         icon: _icon(talk.type),
         title: 'Waiting for $name',
         trailing: IconButton(
-          tooltip: 'Hide',
+          tooltip: 'Hide for now',
           visualDensity: VisualDensity.compact,
           onPressed: () =>
               ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+          icon: Icon(AppIcons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
 
     if (talk.fromMe && talk.status != 'pending') {
       return _Banner(
-        icon: Icons.check_rounded,
+        icon: AppIcons.check,
         title: _outgoingTitle(name, talk.status),
         trailing: IconButton(
-          tooltip: 'Hide',
+          tooltip: 'Hide for now',
           visualDensity: VisualDensity.compact,
           onPressed: () =>
               ref.read(dismissedTalkIdsProvider.notifier).add(talk.id),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+          icon: Icon(AppIcons.close, color: AppColors.textSecondary, size: 20),
         ),
       );
     }
@@ -106,6 +115,7 @@ class TalkBanner extends ConsumerWidget {
               ),
               ListTile(
                 title: const Text('Tonight'),
+                subtitle: const Text('Until 6am their time'),
                 onTap: () {
                   Navigator.pop(context);
                   _ack(context, ref, talk, 'tonight');
@@ -147,11 +157,62 @@ class TalkBanner extends ConsumerWidget {
     }
   }
 
+  Future<void> _followThrough(BuildContext context, String type) async {
+    await showAppSheet<void>(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Open a real channel',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Icon(AppIcons.chat, color: AppColors.primary),
+                title: const Text('Messages'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await launchUrl(Uri.parse('sms:'));
+                },
+              ),
+              if (type != 'text')
+                ListTile(
+                  leading: Icon(AppIcons.call, color: AppColors.primary),
+                  title: const Text('Phone'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await launchUrl(Uri.parse('tel:'));
+                  },
+                ),
+              if (type == 'video_call')
+                ListTile(
+                  leading: Icon(AppIcons.video, color: AppColors.primary),
+                  title: Text(Platform.isIOS ? 'FaceTime' : 'Video app'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (Platform.isIOS) {
+                      await launchUrl(Uri.parse('facetime:'));
+                    }
+                  },
+                ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Not now'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   IconData _icon(String type) {
     return switch (type) {
-      'call' => Icons.call_rounded,
-      'video_call' => Icons.videocam_rounded,
-      _ => Icons.chat_bubble_rounded,
+      'call' => AppIcons.call,
+      'video_call' => AppIcons.video,
+      _ => AppIcons.chat,
     };
   }
 

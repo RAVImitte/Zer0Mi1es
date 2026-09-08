@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,22 +22,54 @@ class SupabaseConnectionRepository implements ConnectionRepository {
   final PushDispatcher _push;
 
   @override
-  Future<void> sendLoveDrop(String coupleId, String type, {String? message}) async {
+  Future<void> sendLoveDrop(
+    String coupleId,
+    String type, {
+    String? message,
+    String? emoji,
+  }) async {
     final uid = _client.auth.currentUser?.id;
-    if (uid == null) return;
-    await _client.from('love_drops').insert({
+    if (uid == null) {
+      throw StateError('Not signed in');
+    }
+    final note = message?.trim();
+    final row = <String, dynamic>{
       'couple_id': coupleId,
       'sender_id': uid,
       'type': type,
-      if (message != null) 'message': message,
-    });
+      if (note != null && note.isNotEmpty) 'message': note,
+      if (type == 'Note' && emoji != null && emoji.isNotEmpty) 'emoji': emoji,
+    };
+
+    try {
+      await _client.from('love_drops').insert(row);
+    } catch (e) {
+      debugPrint('love_drops insert failed: $e');
+      final retry = Map<String, dynamic>.from(row)..remove('emoji');
+      try {
+        await _client.from('love_drops').insert(retry);
+      } catch (e2) {
+        debugPrint('love_drops insert retry failed: $e2');
+        if (type == 'Note' && note != null && note.isNotEmpty) {
+          await _client.from('love_drops').insert({
+            'couple_id': coupleId,
+            'sender_id': uid,
+            'type': 'Note',
+            'message': note,
+          });
+        } else {
+          rethrow;
+        }
+      }
+    }
 
     await _push.notify(table: 'love_drops', record: {
       'couple_id': coupleId,
       'sender_id': uid,
       'user_id': uid,
       'type': type,
-      if (message != null) 'message': message,
+      if (note != null && note.isNotEmpty) 'message': note,
+      if (type == 'Note' && emoji != null && emoji.isNotEmpty) 'emoji': emoji,
     });
   }
 
@@ -143,6 +176,8 @@ class SupabaseConnectionRepository implements ConnectionRepository {
               controller.add(LoveDropMessage(
                 payload.newRecord['type'] as String,
                 payload.newRecord['message'] as String?,
+                emoji: payload.newRecord['emoji'] as String?,
+                senderId: payload.newRecord['sender_id'] as String?,
               ));
             }
           },
@@ -156,4 +191,87 @@ class SupabaseConnectionRepository implements ConnectionRepository {
 
     return controller.stream;
   }
+
+  @override
+  Future<List<LatestLoveNote>> fetchLatestNotes(String coupleId) async {
+    final rows = await _loveDropRows(coupleId);
+    debugPrint('fetchLatestNotes couple=$coupleId rows=${rows.length}');
+    return _latestNotesFromRows(rows);
+  }
+
+  Future<List<dynamic>> _loveDropRows(String coupleId) async {
+    Future<List<dynamic>> select(String cols) {
+      return _client
+          .from('love_drops')
+          .select(cols)
+          .eq('couple_id', coupleId)
+          .order('created_at', ascending: false)
+          .limit(80);
+    }
+
+    try {
+      return await select('sender_id, message, emoji, type, created_at');
+    } catch (e) {
+      debugPrint('fetchLatestNotes select failed: $e');
+      try {
+        return await select('sender_id, message, type, created_at');
+      } catch (e2) {
+        debugPrint('fetchLatestNotes fallback failed: $e2');
+        return await select('sender_id, message, created_at');
+      }
+    }
+  }
+}
+
+class _NoteRow {
+  const _NoteRow(this.sender, this.message, this.emoji, this.type, this.at);
+  final String sender;
+  final String message;
+  final String? emoji;
+  final String type;
+  final DateTime at;
+}
+
+List<LatestLoveNote> _latestNotesFromRows(List<dynamic> rows) {
+  const affection = {'Kiss', 'Hug', 'Sorry'};
+  final parsed = <_NoteRow>[];
+  for (final raw in rows) {
+    final row = Map<String, dynamic>.from(raw as Map);
+    final sender = row['sender_id'] as String?;
+    final message = (row['message'] as String?)?.trim();
+    if (sender == null || message == null || message.isEmpty) continue;
+    parsed.add(_NoteRow(
+      sender,
+      message,
+      row['emoji'] as String?,
+      row['type'] as String? ?? '',
+      DateTime.tryParse('${row['created_at'] ?? ''}') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+    ));
+  }
+  parsed.sort((a, b) => b.at.compareTo(a.at));
+
+  bool noteLike(_NoteRow row) =>
+      row.type == 'Note' ||
+      (row.type.isNotEmpty && !affection.contains(row.type));
+
+  final seen = <String>{};
+  final notes = <LatestLoveNote>[];
+  void take(bool Function(_NoteRow row) ok) {
+    for (final row in parsed) {
+      if (!ok(row) || !seen.add(row.sender)) continue;
+      if (DateTime.now().isAfter(row.at.add(kLoveNoteTtl))) continue;
+      notes.add(LatestLoveNote(
+        senderId: row.sender,
+        message: row.message,
+        emoji: row.emoji,
+        createdAt: row.at,
+      ));
+      if (notes.length >= 2) return;
+    }
+  }
+
+  take(noteLike);
+  if (notes.length < 2) take((_) => true);
+  return notes;
 }

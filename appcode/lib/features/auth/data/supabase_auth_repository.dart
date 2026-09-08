@@ -30,8 +30,15 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> resetPassword(String email) async {
+    await _client.auth.resetPasswordForEmail(email);
+  }
+
+  @override
   Future<void> signOut() async {
     await _client.auth.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(CacheKeys.myRole);
   }
 
   @override
@@ -45,6 +52,16 @@ class SupabaseAuthRepository implements AuthRepository {
       'registration_status': RegistrationStatus.nameEntered,
       'updated_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  @override
+  Future<void> updateDisplayName(String displayName) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) throw Exception('Not authenticated');
+    await _client.from('profiles').update({
+      'display_name': displayName,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', uid);
   }
 
   @override

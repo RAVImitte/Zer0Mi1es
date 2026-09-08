@@ -29,6 +29,10 @@ dependencies:
   record: ^6.0.0
   just_audio: ^0.9.46
   home_widget: ^0.9.4
+  phosphoricons_flutter: ^1.0.0
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+  connectivity_plus: ^6.1.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -47,6 +51,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon.jpg
+    - assets/scenes/
   fonts:
     - family: Inter
       fonts:
@@ -57,4 +62,10 @@ flutter:
         - asset: assets/fonts/Inter-SemiBold.ttf
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Bold.ttf
           weight: 700

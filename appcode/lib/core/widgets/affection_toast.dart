@@ -10,13 +10,19 @@ void showAffectionToast(
   required String emoji,
   required String label,
 }) {
-  final overlay = Overlay.of(context, rootOverlay: true);
+  if (!context.mounted) return;
+  final overlay = Overlay.maybeOf(context, rootOverlay: true);
+  if (overlay == null) return;
   late OverlayEntry entry;
   entry = OverlayEntry(
     builder: (context) => _AffectionToast(
       emoji: emoji,
       label: label,
-      onFinished: () => entry.remove(),
+      onFinished: () {
+        try {
+          entry.remove();
+        } catch (_) {}
+      },
     ),
   );
   overlay.insert(entry);

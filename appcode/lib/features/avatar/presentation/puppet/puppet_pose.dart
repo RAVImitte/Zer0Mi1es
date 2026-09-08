@@ -74,8 +74,8 @@ class PuppetPose {
       case AnimationState.sleeping:
         return const PuppetPose(
           headTilt: 0.2,
-          headY: 0.012,
-          bodySquash: 0.96,
+          headY: 0.01,
+          bodySquash: 0.99,
           armL: 0.35,
           armR: -0.35,
           eyeOpen: 0,
@@ -84,16 +84,16 @@ class PuppetPose {
         );
       case AnimationState.moodHappy:
         return const PuppetPose(
-          headY: -0.01,
+          headY: -0.012,
           armL: -0.35,
           armR: 0.35,
           mouthSmile: 1,
           blush: 0.7,
-          squashY: 1.04,
+          squashY: 1.015,
         );
       case AnimationState.moodExcited:
         return const PuppetPose(
-          headY: -0.02,
+          headY: -0.018,
           armL: -0.85,
           armR: 0.85,
           mouthSmile: 1,
@@ -101,13 +101,13 @@ class PuppetPose {
           blush: 0.9,
           sparkle: 1,
           browWorry: 0.35,
-          squashY: 1.12,
+          squashY: 1.03,
         );
       case AnimationState.moodSad:
         return const PuppetPose(
           headTilt: 0.16,
-          headY: 0.014,
-          bodySquash: 0.97,
+          headY: 0.012,
+          bodySquash: 0.99,
           armL: 0.4,
           armR: -0.4,
           eyeOpen: 0.72,
@@ -118,8 +118,8 @@ class PuppetPose {
       case AnimationState.moodDevastated:
         return const PuppetPose(
           headTilt: 0.18,
-          headY: 0.016,
-          bodySquash: 0.95,
+          headY: 0.014,
+          bodySquash: 0.985,
           armL: 0.45,
           armR: -0.45,
           eyeOpen: 1,
@@ -133,8 +133,8 @@ class PuppetPose {
       case AnimationState.moodAngry:
         return const PuppetPose(
           headTilt: -0.05,
-          headY: 0.008,
-          bodySquash: 0.96,
+          headY: 0.006,
+          bodySquash: 0.99,
           armL: 0.45,
           armR: -0.45,
           eyeOpen: 1,
@@ -142,14 +142,14 @@ class PuppetPose {
           browDown: 1,
           mouthSmile: -0.3,
           blush: 0.9,
-          squashX: 1.06,
-          squashY: 0.94,
+          squashX: 1.025,
+          squashY: 0.985,
         );
       case AnimationState.moodTired:
         return const PuppetPose(
           headTilt: 0.12,
           headY: 0.008,
-          bodySquash: 0.97,
+          bodySquash: 0.99,
           eyeOpen: 1,
           eyeScaleY: 1,
           lidDrop: 0.52,
@@ -183,8 +183,8 @@ class PuppetPose {
           mouthSmile: 1,
           blush: 1,
           heartEyes: 1,
-          squashX: 1.04,
-          squashY: 1.06,
+          squashX: 1.02,
+          squashY: 1.02,
         );
       case AnimationState.leanIn:
         return leftSeat
