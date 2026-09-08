@@ -8,6 +8,7 @@ installs sit side-by-side on the phone.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -15,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STAGE_ROOT = Path("/mnt/d/Chadukunta/zeromiles/_zm-stage")
-HOT = STAGE_ROOT / "hot"
+HOT = STAGE_ROOT / "batch2"
 OUT = ROOT / "build" / "sleep-apks"
 FLUTTER = r"C:\Users\ravim\Downloads\flutter\bin\flutter.bat"
 ADB_WIN = r"C:\Users\ravim\AppData\Local\Android\Sdk\platform-tools\adb.exe"
@@ -120,52 +121,69 @@ def patch_identity(app_dir: Path, num: str, label: str, app_id: str) -> None:
     )
 
 
-def _stash_caches(app_dir: Path) -> list[tuple[Path, Path]]:
-    saved: list[tuple[Path, Path]] = []
-    keepers = [
-        app_dir / "build",
-        app_dir / ".dart_tool",
-        app_dir / "android" / ".gradle",
-        app_dir / "android" / "app" / "build",
-    ]
-    for src in keepers:
-        if not src.exists():
-            continue
-        tmp = STAGE_ROOT / f"keep-{src.name}-{src.parent.name}"
-        if tmp.exists():
-            shutil.rmtree(tmp, ignore_errors=True)
-        tmp.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(src), str(tmp))
-        saved.append((src, tmp))
-    return saved
+SKIP_COPY_DIRS = {"build", ".dart_tool", ".gradle"}
+
+
+def _unlock(path: Path) -> None:
+    if not path.exists():
+        return
+    try:
+        path.chmod(0o666)
+    except OSError:
+        pass
+    subprocess.run(
+        ["cmd.exe", "/c", f"attrib -R {win_path(path)}"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _copy_sources(src: Path, dest: Path) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in SKIP_COPY_DIRS]
+        rel = Path(root).relative_to(src)
+        target_dir = dest / rel
+        target_dir.mkdir(parents=True, exist_ok=True)
+        for name in files:
+            s = Path(root) / name
+            t = target_dir / name
+            _unlock(t)
+            shutil.copy2(s, t)
 
 
 def extract_sha(sha: str, dest: Path) -> None:
-    app_dir = dest / "appcode"
-    saved = _stash_caches(app_dir) if dest.exists() else []
-    if dest.exists():
-        shutil.rmtree(dest, ignore_errors=True)
-    dest.mkdir(parents=True, exist_ok=True)
+    incoming = STAGE_ROOT / "_incoming"
+    shutil.rmtree(incoming, ignore_errors=True)
+    incoming.mkdir(parents=True, exist_ok=True)
     archive = subprocess.Popen(
         ["git", "-C", str(ROOT), "archive", sha],
         stdout=subprocess.PIPE,
     )
-    subprocess.run(["tar", "-x", "-C", str(dest)], stdin=archive.stdout, check=True)
+    subprocess.run(["tar", "-x", "-C", str(incoming)], stdin=archive.stdout, check=True)
     archive.wait()
-    for src, tmp in saved:
-        src.parent.mkdir(parents=True, exist_ok=True)
-        if src.exists():
-            shutil.rmtree(src, ignore_errors=True)
-        shutil.move(str(tmp), str(src))
+    dest.mkdir(parents=True, exist_ok=True)
+    gs = dest / "appcode" / "android" / "app" / "google-services.json"
+    _unlock(gs)
+    _copy_sources(incoming, dest)
+    shutil.rmtree(incoming, ignore_errors=True)
 
 
 def main() -> int:
+    start = "00"
+    args = sys.argv[1:]
+    if len(args) >= 2 and args[0] == "--from":
+        start = args[1]
+
     OUT.mkdir(parents=True, exist_ok=True)
     STAGE_ROOT.mkdir(parents=True, exist_ok=True)
     env_src = ROOT / "appcode" / ".env"
 
     mapping = []
     for num, sha, title in COMMITS:
+        if num < start:
+            continue
         label = f"ZM {num}"
         app_id = f"com.example.zer0mi1es.zm{num}"
         print(f"\n=== {label} {sha} {title} ===", flush=True)
@@ -198,8 +216,15 @@ def main() -> int:
         )
         mapping.append(f"{label}\t{app_id}\t{sha}\t{title}")
 
-    (OUT / "INDEX.txt").write_text("\n".join(mapping) + "\n", encoding="utf-8")
-    print("\nInstalled:\n" + "\n".join(mapping), flush=True)
+    full = []
+    for num, sha, title in COMMITS:
+        apk = OUT / f"ZM-{num}.apk"
+        if apk.exists():
+            full.append(
+                f"ZM {num}\tcom.example.zer0mi1es.zm{num}\t{sha}\t{title}"
+            )
+    (OUT / "INDEX.txt").write_text("\n".join(full) + "\n", encoding="utf-8")
+    print("\nInstalled:\n" + "\n".join(full), flush=True)
     return 0
 
 

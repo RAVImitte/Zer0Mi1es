@@ -1,7 +1,19 @@
 # sleepRun overnight shop
 
-Unattended experiment line. **Not** Play / production-release.  
-Branch: `sleepRun` from `main` (`a4b8add`). Worktree: `Zer0Mi1es-sleepRun`.
+Unattended experiment line. **Not** Play / `production-release`.  
+Dedicated to Grok. New session: type **`/sleepRun`**.  
+Branch: `sleepRun` from `main` (`a4b8add`). Worktree: `/mnt/d/Chadukunta/zeromiles/Zer0Mi1es-sleepRun`.
+
+## Last progress (2026-09-08)
+
+Paused. Pickup command: `/sleepRun`.
+
+- Tip: `git -C /mnt/d/Chadukunta/zeromiles/Zer0Mi1es-sleepRun log -1 --oneline`
+- Next shoppable APK: **ZM 46**
+- Phone: ZM 00–45 installed as unique apps (`ZM NN` / `com.example.zer0mi1es.zmNN`). Production **Zero Miles** (`app.zeromiles`) unchanged
+- Iteration grain: club related UI/copy into one commit + one APK. New gestures/features/theme stay their own iteration
+- No backend changes in this line
+- Do not touch `production-release` or Play identity
 
 Phone apps are **separate installs**. Launcher name is `ZM NN`. Android package is `com.example.zer0mi1es.zmNN` so they do not overwrite each other or Play `app.zeromiles`.
 
