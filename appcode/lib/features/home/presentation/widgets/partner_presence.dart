@@ -123,10 +123,7 @@ class PartnerPresence extends ConsumerWidget {
                   const Expanded(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(8, 0, 8, 4),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: RoomWallNote(),
-                      ),
+                      child: _SafeFit(child: RoomWallNote()),
                     ),
                   ),
                   SizedBox(
@@ -158,6 +155,28 @@ String _firstName(String name) {
   final trimmed = name.trim();
   if (trimmed.isEmpty) return 'Partner';
   return trimmed.split(RegExp(r'\s+')).first;
+}
+
+/// FittedBox with a zero-size parent builds an infinite scale matrix.
+class _SafeFit extends StatelessWidget {
+  const _SafeFit({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (!box.maxWidth.isFinite ||
+            !box.maxHeight.isFinite ||
+            box.maxWidth < 8 ||
+            box.maxHeight < 8) {
+          return const SizedBox.shrink();
+        }
+        return FittedBox(fit: BoxFit.scaleDown, child: child);
+      },
+    );
+  }
 }
 
 class _Seat extends ConsumerWidget {
@@ -309,14 +328,11 @@ class _Seat extends ConsumerWidget {
                         left: width * 0.46,
                         right: 2,
                         bottom: 6 + avatarSize * 0.92,
-                        child: OverflowBox(
-                          alignment: Alignment.bottomLeft,
-                          maxHeight: 160,
-                          child: LoveNoteCloud(
-                            key: ValueKey('${bubble.text}|${bubble.emoji}'),
-                            note: bubble,
-                            onPopped: onPopNote ?? () {},
-                          ),
+                        child: LoveNoteCloud(
+                          key: ValueKey('${bubble.text}|${bubble.emoji}'),
+                          note: bubble,
+                          maxWidth: math.max(76.0, width * 0.54 - 2),
+                          onPopped: onPopNote ?? () {},
                         ),
                       ),
                     if (bubble != null && bubble.hidden)

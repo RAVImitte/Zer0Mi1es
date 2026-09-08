@@ -225,7 +225,10 @@ class _HomeCoachOverlayState extends State<HomeCoachOverlay>
       size.height - math.max(_screenPad, mq.padding.bottom + 8),
     );
 
-    final width = math.min(_cardMaxWidth, safe.width);
+    final width = math.min(_cardMaxWidth, math.max(0.0, safe.width));
+    if (width < 32 || size.width < 32 || size.height < 32) {
+      return const SizedBox.shrink();
+    }
     final spaceAbove = hole.top - safe.top;
     final spaceBelow = safe.bottom - hole.bottom;
     const minComfort = 148.0;
@@ -233,14 +236,18 @@ class _HomeCoachOverlayState extends State<HomeCoachOverlay>
         spaceAbove < minComfort && spaceBelow > spaceAbove;
 
     var left = hole.center.dx - width / 2;
-    left = left.clamp(safe.left, safe.right - width);
+    final lo = safe.left;
+    final hi = safe.right - width;
+    left = lo <= hi ? left.clamp(lo, hi) : lo;
 
     final maxHeight = placeBelow
-        ? math.max(0.0, safe.bottom - (hole.bottom + _gap))
-        : math.max(0.0, hole.top - _gap - safe.top);
+        ? math.max(1.0, safe.bottom - (hole.bottom + _gap))
+        : math.max(1.0, hole.top - _gap - safe.top);
 
     var caretDx = hole.center.dx - left;
-    caretDx = caretDx.clamp(28.0, width - 28.0);
+    final caretLo = 28.0;
+    final caretHi = math.max(caretLo, width - 28.0);
+    caretDx = caretDx.clamp(caretLo, caretHi);
 
     final card = _CoachCard(
       step: widget.step,
@@ -283,13 +290,11 @@ class _HomeCoachOverlayState extends State<HomeCoachOverlay>
         child: KeyedSubtree(
           key: ValueKey<int>(widget.step),
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: math.max(maxHeight, 96)),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment:
-                  placeBelow ? Alignment.topCenter : Alignment.bottomCenter,
-              child: SizedBox(width: width, child: card),
+            constraints: BoxConstraints(
+              maxWidth: width,
+              maxHeight: math.max(maxHeight, 96),
             ),
+            child: card,
           ),
         ),
       ),

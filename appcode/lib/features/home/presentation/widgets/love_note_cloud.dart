@@ -14,10 +14,12 @@ class LoveNoteCloud extends StatefulWidget {
     super.key,
     required this.note,
     required this.onPopped,
+    this.maxWidth = 160,
   });
 
   final SeatNote note;
   final VoidCallback onPopped;
+  final double maxWidth;
 
   @override
   State<LoveNoteCloud> createState() => _LoveNoteCloudState();
@@ -53,108 +55,97 @@ class _LoveNoteCloudState extends State<LoveNoteCloud>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final maxW =
-            (box.maxWidth.isFinite && box.maxWidth >= 48) ? box.maxWidth : 160.0;
-        final maxH = box.maxHeight.isFinite
-            ? math.max(box.maxHeight, 80.0)
-            : 140.0;
-
-        const padX = 18.0;
-        const padY = 14.0;
-        const trailH = 24.0;
-        const diag = 16.0;
-        final textMaxW = (maxW - padX * 2 - diag).clamp(40.0, 160.0);
-        final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: const Color(0xFF3A2A22),
-              height: 1.25,
-              fontWeight: FontWeight.w600,
-            );
-
-        final span = TextSpan(
-          children: [
-            if (widget.note.emoji != null && widget.note.emoji!.isNotEmpty)
-              TextSpan(text: '${widget.note.emoji} '),
-            TextSpan(text: widget.note.text),
-          ],
-          style: style,
+    final maxW = widget.maxWidth.clamp(76.0, 200.0);
+    const padX = 18.0;
+    const padY = 14.0;
+    const trailH = 24.0;
+    const diag = 16.0;
+    final textMaxW = (maxW - padX * 2 - diag).clamp(40.0, 160.0);
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: const Color(0xFF3A2A22),
+          height: 1.25,
+          fontWeight: FontWeight.w600,
         );
-        final tp = TextPainter(
-          text: span,
-          textAlign: TextAlign.center,
-          maxLines: kLoveNoteMaxLines,
-          ellipsis: '…',
-          textDirection: TextDirection.ltr,
-        )..layout(maxWidth: textMaxW);
 
-        final heightCap = maxH.isFinite ? math.max(36.0, maxH - trailH) : 96.0;
-        final cloudW =
-            (tp.width + padX * 2).clamp(76.0, math.max(76.0, maxW - diag)).toDouble();
-        final cloudH =
-            (tp.height + padY * 2).clamp(36.0, heightCap).toDouble();
+    final span = TextSpan(
+      children: [
+        if (widget.note.emoji != null && widget.note.emoji!.isNotEmpty)
+          TextSpan(text: '${widget.note.emoji} '),
+        TextSpan(text: widget.note.text),
+      ],
+      style: style,
+    );
+    final tp = TextPainter(
+      text: span,
+      textAlign: TextAlign.center,
+      maxLines: kLoveNoteMaxLines,
+      ellipsis: '…',
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: textMaxW);
 
-        return Semantics(
-          button: true,
-          label: 'Pop note',
-          child: GestureDetector(
-            onTap: _burst,
-            child: AnimatedBuilder(
-              animation: _pop,
-              builder: (context, child) {
-                final v = _pop.value;
-                final scale =
-                    (1.0 + 0.1 * v - 1.2 * v * v).clamp(0.0, 1.12).toDouble();
-                final opacity = (1 - v).clamp(0.0, 1.0).toDouble();
-                return Opacity(
-                  opacity: opacity,
-                  child: Transform.scale(
-                    scale: scale,
-                    child: child,
-                  ),
-                );
-              },
-              child: SizedBox(
-                width: cloudW + diag,
-                height: cloudH + trailH,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      width: cloudW,
-                      height: cloudH,
-                      child: CustomPaint(
-                        painter: _VolumeCloudPainter(),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                          child: Text.rich(
-                            span,
-                            maxLines: kLoveNoteMaxLines,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+    final cloudW =
+        (tp.width + padX * 2).clamp(76.0, math.max(76.0, maxW - diag)).toDouble();
+    final cloudH = (tp.height + padY * 2).clamp(36.0, 120.0).toDouble();
+
+    return Semantics(
+      button: true,
+      label: 'Pop note',
+      child: GestureDetector(
+        onTap: _burst,
+        child: AnimatedBuilder(
+          animation: _pop,
+          builder: (context, child) {
+            final v = _pop.value;
+            final scale =
+                (1.0 + 0.1 * v - 1.2 * v * v).clamp(0.05, 1.12).toDouble();
+            final opacity = (1 - v).clamp(0.0, 1.0).toDouble();
+            return Opacity(
+              opacity: opacity,
+              child: Transform.scale(
+                scale: scale,
+                child: child,
+              ),
+            );
+          },
+          child: SizedBox(
+            width: cloudW + diag,
+            height: cloudH + trailH,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  width: cloudW,
+                  height: cloudH,
+                  child: CustomPaint(
+                    painter: _VolumeCloudPainter(),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                      child: Text.rich(
+                        span,
+                        maxLines: kLoveNoteMaxLines,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    Positioned(
-                      left: diag * 0.42,
-                      bottom: 8,
-                      child: const _Puff(diameter: 9),
-                    ),
-                    Positioned(
-                      left: 0,
-                      bottom: 0,
-                      child: const _Puff(diameter: 5.5),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: diag * 0.42,
+                  bottom: 8,
+                  child: const _Puff(diameter: 9),
+                ),
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  child: const _Puff(diameter: 5.5),
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

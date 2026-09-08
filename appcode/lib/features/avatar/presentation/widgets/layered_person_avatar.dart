@@ -251,6 +251,7 @@ class _PuppetPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    if (w <= 0 || h <= 0 || !w.isFinite || !h.isFinite) return;
     final stroke = (w * 0.028).clamp(1.6, 4.2);
 
     // Squash from the feet so hops and stomps don't pancake the figure.
