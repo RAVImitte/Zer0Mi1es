@@ -15,19 +15,33 @@ import '../../home/presentation/providers/partner_status_provider.dart';
 import '../domain/avatar_event.dart';
 
 class SeatNote {
-  const SeatNote(this.text, {this.emoji, this.hidden = false});
+  const SeatNote(
+    this.text, {
+    this.emoji,
+    this.hidden = false,
+    required this.createdAt,
+  });
 
   final String text;
   final String? emoji;
   final bool hidden;
+  final DateTime createdAt;
 
-  SeatNote hide() => SeatNote(text, emoji: emoji, hidden: true);
+  bool get isExpired => DateTime.now().isAfter(createdAt.add(kLoveNoteTtl));
 
-  SeatNote reveal() => SeatNote(text, emoji: emoji);
+  SeatNote hide() =>
+      SeatNote(text, emoji: emoji, hidden: true, createdAt: createdAt);
+
+  SeatNote reveal() => SeatNote(text, emoji: emoji, createdAt: createdAt);
 
   SeatNote copyHiddenFrom(SeatNote? other) {
     if (other == null || other.text != text) return this;
-    return SeatNote(text, emoji: emoji, hidden: other.hidden);
+    return SeatNote(
+      text,
+      emoji: emoji,
+      hidden: other.hidden,
+      createdAt: createdAt,
+    );
   }
 
   @override
@@ -35,10 +49,11 @@ class SeatNote {
       other is SeatNote &&
       text == other.text &&
       emoji == other.emoji &&
-      hidden == other.hidden;
+      hidden == other.hidden &&
+      createdAt == other.createdAt;
 
   @override
-  int get hashCode => Object.hash(text, emoji, hidden);
+  int get hashCode => Object.hash(text, emoji, hidden, createdAt);
 }
 
 class CoupleDrop {
@@ -106,6 +121,7 @@ class CoupleSceneState {
 
 class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
   Timer? _dropTimer;
+  Timer? _noteExpiryTimer;
   String? _optimisticMyMood;
   bool? _optimisticAsleep;
   SeatNote? _myNote;
@@ -117,7 +133,10 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
 
   @override
   CoupleSceneState build() {
-    ref.onDispose(() => _dropTimer?.cancel());
+    ref.onDispose(() {
+      _dropTimer?.cancel();
+      _noteExpiryTimer?.cancel();
+    });
 
     ref.listen(partnerStatusProvider, (previous, next) {
       final mine = next.unwrapPrevious().asData?.value.myMood;
@@ -204,7 +223,7 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
     }
 
     if (hasNote) {
-      final seat = SeatNote(note, emoji: emoji);
+      final seat = SeatNote(note, emoji: emoji, createdAt: DateTime.now());
       if (fromMe) {
         _myNote = seat;
         _touchedMine = true;
@@ -213,6 +232,7 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
         _touchedTheirs = true;
       }
       unawaited(_writeCache());
+      _scheduleNoteExpiry();
     }
 
     final bases = _sceneFromStatus();
@@ -272,13 +292,20 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
         }
       }
       if (lastError != null && notes.isEmpty) {
+        _dropExpiredNotes();
+        _scheduleNoteExpiry();
+        _syncFromStatus();
         _hydratedFor = null;
         return;
       }
 
       final uid = ref.read(supabaseClientProvider).auth.currentUser?.id;
       for (final note in notes) {
-        final incoming = SeatNote(note.message, emoji: note.emoji);
+        final incoming = SeatNote(
+          note.message,
+          emoji: note.emoji,
+          createdAt: note.createdAt,
+        );
         if (note.senderId == uid) {
           if (!_touchedMine) {
             _myNote = incoming.copyHiddenFrom(_myNote);
@@ -297,6 +324,8 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
       } else {
         _hydratedFor = null;
       }
+      _dropExpiredNotes();
+      _scheduleNoteExpiry();
       _syncFromStatus();
     } catch (e, st) {
       debugPrint('hydrate notes failed: $e\n$st');
@@ -337,15 +366,59 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
   }
 
   static Map<String, dynamic>? _seatToCache(SeatNote? note) {
-    if (note == null) return null;
-    return {'text': note.text, 'emoji': note.emoji};
+    if (note == null || note.isExpired) return null;
+    return {
+      'text': note.text,
+      'emoji': note.emoji,
+      'at': note.createdAt.toIso8601String(),
+    };
   }
 
   static SeatNote? _seatFromCache(Object? raw) {
     if (raw is! Map) return null;
     final text = (raw['text'] as String?)?.trim() ?? '';
     if (text.isEmpty) return null;
-    return SeatNote(text, emoji: raw['emoji'] as String?);
+    final at = DateTime.tryParse('${raw['at'] ?? ''}');
+    if (at == null) return null;
+    final seat = SeatNote(text, emoji: raw['emoji'] as String?, createdAt: at);
+    if (seat.isExpired) return null;
+    return seat;
+  }
+
+  void _dropExpiredNotes() {
+    var changed = false;
+    if (_myNote != null && _myNote!.isExpired) {
+      _myNote = null;
+      _touchedMine = false;
+      changed = true;
+    }
+    if (_theirNote != null && _theirNote!.isExpired) {
+      _theirNote = null;
+      _touchedTheirs = false;
+      changed = true;
+    }
+    if (changed) unawaited(_writeCache());
+  }
+
+  void _scheduleNoteExpiry() {
+    _noteExpiryTimer?.cancel();
+    DateTime? next;
+    for (final note in [_myNote, _theirNote]) {
+      if (note == null || note.isExpired) continue;
+      final end = note.createdAt.add(kLoveNoteTtl);
+      if (next == null || end.isBefore(next)) next = end;
+    }
+    if (next == null) {
+      _dropExpiredNotes();
+      return;
+    }
+    var wait = next.difference(DateTime.now());
+    if (wait.isNegative) wait = Duration.zero;
+    _noteExpiryTimer = Timer(wait, () {
+      _dropExpiredNotes();
+      _syncFromStatus();
+      _scheduleNoteExpiry();
+    });
   }
 
   void dismissNote({required bool mine}) {
@@ -358,10 +431,16 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
   }
 
   void restoreNote({required bool mine}) {
+    final note = mine ? _myNote : _theirNote;
+    if (note == null || note.isExpired) {
+      _dropExpiredNotes();
+      _publishNotes();
+      return;
+    }
     if (mine) {
-      _myNote = _myNote?.reveal();
+      _myNote = note.reveal();
     } else {
-      _theirNote = _theirNote?.reveal();
+      _theirNote = note.reveal();
     }
     _publishNotes();
   }
@@ -392,9 +471,14 @@ class CoupleSceneViewModel extends Notifier<CoupleSceneState> {
       right: _baseRight(),
       leftMood: _captionFor(left: true),
       rightMood: _captionFor(left: false),
-      leftNote: iAmLeft ? _myNote : _theirNote,
-      rightNote: iAmLeft ? _theirNote : _myNote,
+      leftNote: _liveNote(iAmLeft ? _myNote : _theirNote),
+      rightNote: _liveNote(iAmLeft ? _theirNote : _myNote),
     );
+  }
+
+  SeatNote? _liveNote(SeatNote? note) {
+    if (note == null || note.isExpired) return null;
+    return note;
   }
 
   AnimationState _baseLeft() => _stateFor(left: true);

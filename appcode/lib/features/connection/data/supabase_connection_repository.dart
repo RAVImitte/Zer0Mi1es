@@ -260,10 +260,12 @@ List<LatestLoveNote> _latestNotesFromRows(List<dynamic> rows) {
   void take(bool Function(_NoteRow row) ok) {
     for (final row in parsed) {
       if (!ok(row) || !seen.add(row.sender)) continue;
+      if (DateTime.now().isAfter(row.at.add(kLoveNoteTtl))) continue;
       notes.add(LatestLoveNote(
         senderId: row.sender,
         message: row.message,
         emoji: row.emoji,
+        createdAt: row.at,
       ));
       if (notes.length >= 2) return;
     }
