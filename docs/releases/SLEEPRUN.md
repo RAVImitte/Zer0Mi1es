@@ -3,7 +3,23 @@
 Unattended experiment line. **Not** Play / production-release.  
 Branch: `sleepRun` from `main` (`a4b8add`). Worktree: `Zer0Mi1es-sleepRun`.
 
-Each commit is one idea. In the morning, cherry-pick what you like:
+Phone apps are **separate installs**. Launcher name is `ZM NN`. Android package is `com.example.zer0mi1es.zmNN` so they do not overwrite each other or Play `app.zeromiles`.
+
+## How to continue (plan)
+
+Do **not** commit and sideload every small UI or text tweak. ZM 00–45 already did that; it is too fine to shop.
+
+Going forward, one **iteration** is:
+
+1. Group similar, interrelated improvements (same screen, same flow, or the same visual job).
+2. Land them as **one commit** with a detailed body: what changed, where to look, what stayed the same.
+3. Sideload **one** numbered APK for that commit. That APK is the shoppable unit.
+
+**Club together** (one commit, one APK): copy, labels, button ink, captions, empty-state wording, and chrome on the same surface — e.g. talk-sheet titles plus Tonight/Not now captions; question header plus waiting copy plus share-button ink; photo titles plus lock overlay plus caption hint.
+
+**Keep separate** (own iteration): a new gesture or feature, a global theme/palette/radii change, a new Home control, or anything that needs its own yes/no. Do not bury a behavior change inside a copy pass.
+
+Commit subject can stay short (`talk: quieter reply sheet`). The body must list the related tweaks so morning shopping does not need `git show` archaeology.
 
 ```
 git cherry-pick <sha>
@@ -11,16 +27,14 @@ git cherry-pick <sha>
 
 or `git show <sha>` then take files.
 
-Phone apps are **separate installs**. Launcher name is `ZM NN`. Android package is `com.example.zer0mi1es.zmNN` so they do not overwrite each other or Play `app.zeromiles`.
-
 ## How to shop
 
 1. Open the numbered app on the Galaxy (`ZM 00`, `ZM 01`, …).
-2. Match the number to the commit below.
+2. Match the number to the commit below. From the next iteration on, one app is one clustered slice, not one string change.
 3. `git cherry-pick <sha>` for keepers.
 4. Skip docs-only and test-only commits (no APK).
 
-Theme commits change global color; later UI commits sit on top of that palette.
+Theme commits change global color; later UI commits sit on top of that palette. The table below is the first-night grain (one tweak per APK). Do not add more rows at that grain.
 
 ## Constraints I kept
 
@@ -82,4 +96,4 @@ Theme commits change global color; later UI commits sit on top of that palette.
 
 Skipped (no UI): `bba603e` docs index, `676fd24` sceneLine tests, `fcf5a81` shop table, `1340ca9` sideload tool.
 
-ZM 00–11 install first. ZM 12+ follow. Production **Zero Miles** (`app.zeromiles`) stays on the phone.
+ZM 00–45 are already on the phone as separate apps. Next APKs start at **ZM 46** and follow the clustered-iteration rule above. Production **Zero Miles** (`app.zeromiles`) stays on the phone.
