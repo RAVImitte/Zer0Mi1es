@@ -1,4 +1,3 @@
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +10,7 @@ import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/widgets/affection_toast.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import 'love_note_cloud.dart';
 import '../../../voice_drop/presentation/voice_record_sheet.dart';
 import '../../../avatar/domain/avatar_event.dart';
 import '../../../avatar/presentation/couple_scene_view_model.dart';
@@ -69,29 +69,43 @@ Future<bool> _run(
   try {
     await action(ref.read(connectionRepositoryProvider), coupleId);
     return true;
-  } catch (_) {
+  } catch (e, st) {
+    debugPrint('connection action failed: $e\n$st');
     return false;
   }
 }
 
 Future<void> _sendDrop(
-  BuildContext context,
+  BuildContext hostContext,
   WidgetRef ref, {
   required String type,
   required String emoji,
   String? message,
 }) async {
   HapticFeedback.mediumImpact();
+  final messenger =
+      hostContext.mounted ? ScaffoldMessenger.maybeOf(hostContext) : null;
   final ok = await _run(
     ref,
-    (repo, id) => repo.sendLoveDrop(id, type, message: message),
+    (repo, id) => repo.sendLoveDrop(
+      id,
+      type,
+      message: message,
+      emoji: emoji,
+    ),
   );
-  if (!context.mounted) return;
   if (ok) {
-    ref.read(coupleSceneProvider.notifier).playDrop(type, fromMe: true);
-    showAffectionToast(context, emoji: emoji, label: 'Sent');
+    ref.read(coupleSceneProvider.notifier).playDrop(
+          type,
+          fromMe: true,
+          message: message,
+          emoji: emoji,
+        );
+    if (type != 'Note' && hostContext.mounted) {
+      showAffectionToast(hostContext, emoji: emoji, label: 'Sent');
+    }
   } else {
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger?.showSnackBar(
       const SnackBar(content: Text('Could not send')),
     );
   }
@@ -100,50 +114,47 @@ Future<void> _sendDrop(
 void showLoveSheet(BuildContext context, WidgetRef ref) {
   showAppSheet(
     context: context,
-    builder: (context) {
+    title: 'Send a little love',
+    subtitle: 'They’ll feel it on their side.',
+    builder: (sheetContext) {
+      Widget card(String emoji, String title, VoidCallback onTap) {
+        return Expanded(
+          child: _EmojiCard(emoji: emoji, title: title, onTap: onTap),
+        );
+      }
+
       return Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Send a little love',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            _LoveTile(
-              emoji: '😘',
-              title: 'Kiss',
-              onSend: () {
-                Navigator.pop(context);
-                _sendDrop(context, ref, type: 'Kiss', emoji: '😘');
-              },
-              onNote: () {
-                Navigator.pop(context);
-                _showNoteSheet(context, ref, type: 'Kiss', emoji: '😘');
-              },
+            Row(
+              children: [
+                card('😘', 'Kiss', () {
+                  Navigator.pop(sheetContext);
+                  _sendDrop(context, ref, type: 'Kiss', emoji: '😘');
+                }),
+                const SizedBox(width: 10),
+                card('🤗', 'Hug', () {
+                  Navigator.pop(sheetContext);
+                  _sendDrop(context, ref, type: 'Hug', emoji: '🤗');
+                }),
+              ],
             ),
-            _LoveTile(
-              emoji: '🤗',
-              title: 'Hug',
-              onSend: () {
-                Navigator.pop(context);
-                _sendDrop(context, ref, type: 'Hug', emoji: '🤗');
-              },
-              onNote: () {
-                Navigator.pop(context);
-                _showNoteSheet(context, ref, type: 'Hug', emoji: '🤗');
-              },
-            ),
-            _LoveTile(
-              emoji: '🥺',
-              title: 'Sorry',
-              onSend: () {
-                Navigator.pop(context);
-                _sendDrop(context, ref, type: 'Sorry', emoji: '🥺');
-              },
-              onNote: () {
-                Navigator.pop(context);
-                _showNoteSheet(context, ref, type: 'Sorry', emoji: '🥺');
-              },
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                card('🥺', 'Sorry', () {
+                  Navigator.pop(sheetContext);
+                  _sendDrop(context, ref, type: 'Sorry', emoji: '🥺');
+                }),
+                const SizedBox(width: 10),
+                card('💌', 'Note', () {
+                  Navigator.pop(sheetContext);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (context.mounted) _showNoteSheet(context, ref);
+                  });
+                }),
+              ],
             ),
           ],
         ),
@@ -164,25 +175,14 @@ void showMoodSheet(BuildContext context, WidgetRef ref) {
   final current = ref.read(partnerStatusProvider).value?.myMood;
   showAppSheet(
     context: context,
-    builder: (context) {
+    title: 'How are you feeling?',
+    subtitle: 'They’ll see this on you.',
+    builder: (sheetContext) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'How are you feeling?',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'They’ll see this on you.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
             for (var i = 0; i < moods.length; i += 2) ...[
               if (i > 0) const SizedBox(height: 10),
               Row(
@@ -192,7 +192,7 @@ void showMoodSheet(BuildContext context, WidgetRef ref) {
                       mood: moods[i],
                       selected: current == moods[i].label,
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pop(sheetContext);
                         if (current == moods[i].label) return;
                         HapticFeedback.lightImpact();
                         _run(
@@ -208,7 +208,7 @@ void showMoodSheet(BuildContext context, WidgetRef ref) {
                       mood: moods[i + 1],
                       selected: current == moods[i + 1].label,
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pop(sheetContext);
                         if (current == moods[i + 1].label) return;
                         HapticFeedback.lightImpact();
                         _run(
@@ -233,46 +233,39 @@ void showTalkSheet(BuildContext context, WidgetRef ref) {
   final name = ref.read(partnerNameProvider).value ?? 'them';
   showAppSheet(
     context: context,
+    title: 'I want to…',
+    subtitle: 'We’ll ping $name to meet you there.',
     builder: (sheetContext) {
+      void send(String type, String emoji) {
+        Navigator.pop(sheetContext);
+        HapticFeedback.lightImpact();
+        _run(ref, (repo, id) => repo.sendSignal(id, type));
+        showAffectionToast(context, emoji: emoji, label: 'We’ll let $name know');
+      }
+
       return Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('I want to…', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: Icon(AppIcons.chat, color: AppColors.primary),
-              title: const Text('Text'),
-              subtitle: const Text('Ask them to text'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                HapticFeedback.lightImpact();
-                _run(ref, (repo, id) => repo.sendSignal(id, 'text'));
-                showAffectionToast(context, emoji: '💬', label: 'We’ll let $name know');
-              },
+            _LineCard(
+              icon: AppIcons.chat,
+              title: 'Text',
+              caption: 'Ask them to message you',
+              onTap: () => send('text', '💬'),
             ),
-            ListTile(
-              leading: Icon(AppIcons.call, color: AppColors.primary),
-              title: const Text('Call'),
-              subtitle: const Text('Ask them to call'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                HapticFeedback.lightImpact();
-                _run(ref, (repo, id) => repo.sendSignal(id, 'call'));
-                showAffectionToast(context, emoji: '📞', label: 'We’ll let $name know');
-              },
+            const SizedBox(height: 10),
+            _LineCard(
+              icon: AppIcons.call,
+              title: 'Call',
+              caption: 'Ask them to ring you',
+              onTap: () => send('call', '📞'),
             ),
-            ListTile(
-              leading: Icon(AppIcons.video, color: AppColors.primary),
-              title: const Text('Video'),
-              subtitle: const Text('Ask them to video chat'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                HapticFeedback.lightImpact();
-                _run(ref, (repo, id) => repo.sendSignal(id, 'video_call'));
-                showAffectionToast(context, emoji: '🎥', label: 'We’ll let $name know');
-              },
+            const SizedBox(height: 10),
+            _LineCard(
+              icon: AppIcons.video,
+              title: 'Video',
+              caption: 'Ask them to video chat',
+              onTap: () => send('video_call', '🎥'),
             ),
           ],
         ),
@@ -290,40 +283,46 @@ void _showMoreSheet(BuildContext context, WidgetRef ref) {
 
   showAppSheet(
     context: context,
-    builder: (context) {
+    title: 'More',
+    subtitle: 'Quiet extras for the two of you.',
+    builder: (sheetContext) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('More', style: Theme.of(context).textTheme.titleLarge),
-            ListTile(
-              leading: Icon(
-                isAsleep ? AppIcons.wake : AppIcons.sleep,
-                color: AppColors.primary,
-              ),
-              title: Text(isAsleep ? 'Wake' : 'Sleep'),
+            _LineCard(
+              icon: isAsleep ? AppIcons.wake : AppIcons.sleep,
+              title: isAsleep ? 'Wake' : 'Sleep',
+              caption: isAsleep
+                  ? 'Let them know you’re up'
+                  : 'Dim your window for the night',
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 HapticFeedback.lightImpact();
                 final signal = isAsleep ? 'goodMorning' : 'goodNight';
                 ref.read(coupleSceneProvider.notifier).setMyAsleep(!isAsleep);
                 _run(ref, (repo, id) => repo.sendSignal(id, signal));
               },
             ),
-            ListTile(
-              leading: Icon(AppIcons.mic, color: AppColors.primary),
-              title: const Text('Voice'),
+            const SizedBox(height: 10),
+            _LineCard(
+              icon: AppIcons.mic,
+              title: 'Voice',
+              caption: 'Leave a short voice drop',
               onTap: () {
-                Navigator.pop(context);
-                showVoiceRecordSheet(context, ref);
+                Navigator.pop(sheetContext);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (context.mounted) showVoiceRecordSheet(context, ref);
+                });
               },
             ),
-            ListTile(
-              leading: Icon(AppIcons.canvas, color: AppColors.primary),
-              title: const Text('Canvas'),
+            const SizedBox(height: 10),
+            _LineCard(
+              icon: AppIcons.canvas,
+              title: 'Canvas',
+              caption: 'Doodle something together',
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 context.push(AppRoutes.canvas);
               },
             ),
@@ -334,75 +333,98 @@ void _showMoreSheet(BuildContext context, WidgetRef ref) {
   );
 }
 
-void _showNoteSheet(
-  BuildContext context,
-  WidgetRef ref, {
-  required String type,
-  required String emoji,
-}) {
+void _showNoteSheet(BuildContext hostContext, WidgetRef ref) {
   final textController = TextEditingController();
-  String customEmoji = emoji;
-  String selected = type;
+  var emoji = '💌';
+  const choices = [
+    '💌',
+    '❤️',
+    '🥰',
+    '😘',
+    '🌙',
+    '⭐',
+    '🌸',
+    '🤗',
+    '🥺',
+    '✨',
+    '💭',
+    '🐻',
+  ];
 
   showAppSheet(
-    context: context,
+    context: hostContext,
     isScrollControlled: true,
-    builder: (context) {
-      return StatefulBuilder(builder: (context, setState) {
+    title: 'Note',
+    subtitle: 'They’ll see this on you.',
+    builder: (sheetContext) {
+      return StatefulBuilder(builder: (_, setState) {
+        final canSend = textController.text.trim().isNotEmpty;
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Add a note', style: Theme.of(context).textTheme.titleLarge),
+              Text(emoji, style: const TextStyle(fontSize: 40, height: 1)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final choice in choices)
+                    GestureDetector(
+                      onTap: () => setState(() => emoji = choice),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: choice == emoji
+                              ? AppColors.primary.withValues(alpha: 0.22)
+                              : AppColors.elevated,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: choice == emoji
+                                ? AppColors.primary
+                                : AppColors.hairline,
+                          ),
+                        ),
+                        child: Text(choice, style: const TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: textController,
-                maxLength: 80,
+                maxLength: kLoveNoteMaxChars,
+                minLines: 2,
+                maxLines: kLoveNoteMaxLines,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  hintText: 'Optional message',
-                  counterText: '',
+                  hintText: 'A short thought for the cloud',
                 ),
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () async {
-                    final picked = await showAppSheet<String>(
-                      context: context,
-                      builder: (context) => SizedBox(
-                        height: 260,
-                        child: EmojiPicker(
-                          onEmojiSelected: (category, value) {
-                            Navigator.pop(context, value.emoji);
-                          },
-                        ),
-                      ),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        customEmoji = picked;
-                        selected = picked;
-                      });
-                    }
-                  },
-                  child: Text('Emoji $customEmoji'),
-                ),
-              ),
-              const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  final msg = textController.text.trim();
-                  _sendDrop(
-                    context,
-                    ref,
-                    type: selected,
-                    emoji: customEmoji,
-                    message: msg.isEmpty ? null : msg,
-                  );
-                },
+                onPressed: canSend
+                    ? () {
+                        final msg = textController.text.trim();
+                        final picked = emoji;
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        Navigator.pop(sheetContext);
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _sendDrop(
+                            hostContext,
+                            ref,
+                            type: 'Note',
+                            emoji: picked,
+                            message: msg,
+                          );
+                        });
+                      }
+                    : null,
                 child: const Text('Send'),
               ),
             ],
@@ -410,31 +432,107 @@ void _showNoteSheet(
         );
       });
     },
-  ).whenComplete(textController.dispose);
+  ).whenComplete(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      textController.dispose();
+    });
+  });
 }
 
-class _LoveTile extends StatelessWidget {
-  const _LoveTile({
+class _EmojiCard extends StatelessWidget {
+  const _EmojiCard({
     required this.emoji,
     required this.title,
-    required this.onSend,
-    required this.onNote,
+    required this.onTap,
   });
 
   final String emoji;
   final String title;
-  final VoidCallback onSend;
-  final VoidCallback onNote;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Text(emoji, style: const TextStyle(fontSize: 24)),
-      title: Text(title),
-      onTap: onSend,
-      trailing: TextButton(
-        onPressed: onNote,
-        child: const Text('Add a note'),
+    return Material(
+      color: AppColors.elevated,
+      borderRadius: BorderRadius.circular(AppRadii.card),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.22),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 34, height: 1)),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LineCard extends StatelessWidget {
+  const _LineCard({
+    required this.icon,
+    required this.title,
+    required this.caption,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String caption;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.elevated,
+      borderRadius: BorderRadius.circular(AppRadii.card),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 2),
+                    Text(
+                      caption,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -463,29 +561,38 @@ class _MoodTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Color.alphaBlend(
-        mood.tint.withValues(alpha: selected ? 0.28 : 0.16),
+        mood.tint.withValues(alpha: selected ? 0.32 : 0.14),
         AppColors.elevated,
       ),
       borderRadius: BorderRadius.circular(AppRadii.card),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.card),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadii.card),
             border: Border.all(
-              color: mood.tint.withValues(alpha: selected ? 0.8 : 0.32),
+              color: mood.tint.withValues(alpha: selected ? 0.9 : 0.28),
               width: selected ? 2 : 1,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: mood.tint.withValues(alpha: 0.28),
+                      blurRadius: 14,
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             children: [
               Text(mood.emoji, style: const TextStyle(fontSize: 28, height: 1)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 mood.label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: AppColors.textPrimary,
                     ),
               ),

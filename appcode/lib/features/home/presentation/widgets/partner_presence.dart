@@ -20,9 +20,14 @@ import '../../../outfit/presentation/providers/outfit_providers.dart';
 import '../providers/partner_scene_provider.dart';
 import '../providers/partner_status_provider.dart';
 import 'connection_actions.dart';
+import 'love_note_cloud.dart';
+import 'room_wall_note.dart';
 
 class PartnerPresence extends ConsumerWidget {
-  const PartnerPresence({super.key});
+  const PartnerPresence({super.key, this.seatsKey});
+
+  /// Spotlight target for the first-run coach — just the two seats, not the wall note.
+  final Key? seatsKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,52 +58,81 @@ class PartnerPresence extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final seatW = (constraints.maxWidth - 12) / 2;
-        final windowW = seatW.clamp(96.0, 200.0);
-        final windowH = windowW * 4 / 3;
-        final avatarSize = (windowW * 0.62).clamp(72.0, 140.0);
+        final seatW = (constraints.maxWidth - 8) / 2;
+        final windowW = seatW.clamp(96.0, 220.0);
+        final windowH = windowW * 1.18;
+        final avatarSize = (windowW * 0.74).clamp(84.0, 156.0);
+        const captionH = 36.0;
+        const noteMin = 96.0;
+        var seatBlockH = windowH + captionH;
+        if (seatBlockH + noteMin > constraints.maxHeight) {
+          seatBlockH = math.max(constraints.maxHeight - noteMin, 140);
+        }
+
+        Widget seatRow() {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: _Seat(
+                  leftSeat: true,
+                  isMe: iAmLeft,
+                  label: iAmLeft ? 'You' : _firstName(partnerName),
+                  state: scene.left,
+                  isBunny: false,
+                  coupleId: coupleId,
+                  size: avatarSize,
+                  unpairedEmpty: coupleId == null && !iAmLeft,
+                  windowScene: iAmLeft ? myScene : theirScene,
+                  sleeping: iAmLeft ? myAsleep : theirAsleep,
+                  mood: scene.leftMood,
+                  partnerName: partnerName,
+                  bubble: scene.leftNote,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _Seat(
+                  leftSeat: false,
+                  isMe: !iAmLeft,
+                  label: iAmLeft ? _firstName(partnerName) : 'You',
+                  state: scene.right,
+                  isBunny: true,
+                  coupleId: coupleId,
+                  size: avatarSize,
+                  unpairedEmpty: coupleId == null && iAmLeft,
+                  windowScene: iAmLeft ? theirScene : myScene,
+                  sleeping: iAmLeft ? theirAsleep : myAsleep,
+                  mood: scene.rightMood,
+                  partnerName: partnerName,
+                  bubble: scene.rightNote,
+                ),
+              ),
+            ],
+          );
+        }
 
         return SizedBox(
           width: constraints.maxWidth,
           height: constraints.maxHeight,
           child: Stack(
-            clipBehavior: Clip.hardEdge,
+            clipBehavior: Clip.none,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              Column(
                 children: [
-                  Expanded(
-                    child: _Seat(
-                      leftSeat: true,
-                      isMe: iAmLeft,
-                      label: iAmLeft ? 'You' : _firstName(partnerName),
-                      state: scene.left,
-                      isBunny: false,
-                      coupleId: coupleId,
-                      size: avatarSize,
-                      unpairedEmpty: coupleId == null && !iAmLeft,
-                      windowScene: iAmLeft ? myScene : theirScene,
-                      sleeping: iAmLeft ? myAsleep : theirAsleep,
-                      mood: scene.leftMood,
-                      partnerName: partnerName,
+                  const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(8, 0, 8, 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: RoomWallNote(),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _Seat(
-                      leftSeat: false,
-                      isMe: !iAmLeft,
-                      label: iAmLeft ? _firstName(partnerName) : 'You',
-                      state: scene.right,
-                      isBunny: true,
-                      coupleId: coupleId,
-                      size: avatarSize,
-                      unpairedEmpty: coupleId == null && iAmLeft,
-                      windowScene: iAmLeft ? theirScene : myScene,
-                      sleeping: iAmLeft ? theirAsleep : myAsleep,
-                      mood: scene.rightMood,
-                      partnerName: partnerName,
-                    ),
+                  SizedBox(
+                    key: seatsKey,
+                    height: seatBlockH,
+                    child: seatRow(),
                   ),
                 ],
               ),
@@ -140,6 +174,7 @@ class _Seat extends ConsumerWidget {
     required this.sleeping,
     required this.mood,
     required this.partnerName,
+    this.bubble,
   });
 
   final bool leftSeat;
@@ -154,6 +189,7 @@ class _Seat extends ConsumerWidget {
   final bool sleeping;
   final String? mood;
   final String partnerName;
+  final SeatNote? bubble;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -205,6 +241,14 @@ class _Seat extends ConsumerWidget {
     return _framedSeat(
       context: context,
       label: label,
+      bubble: bubble,
+      avatarSize: size,
+      onPopNote: bubble == null
+          ? null
+          : () => ref.read(coupleSceneProvider.notifier).dismissNote(mine: isMe),
+      onRestoreNote: bubble == null
+          ? null
+          : () => ref.read(coupleSceneProvider.notifier).restoreNote(mine: isMe),
       window: LivingWindow(
         scene: windowScene,
         sleeping: sleeping,
@@ -233,26 +277,58 @@ class _Seat extends ConsumerWidget {
     required BuildContext context,
     required String label,
     required Widget window,
+    SeatNote? bubble,
+    double avatarSize = 0,
+    VoidCallback? onPopNote,
+    VoidCallback? onRestoreNote,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxW = constraints.maxWidth;
         final maxH = math.max(constraints.maxHeight - 36, 80.0);
         var width = maxW;
-        var height = width * 4 / 3;
+        var height = width * 1.18;
         if (height > maxH) {
           height = maxH;
-          width = height * 3 / 4;
+          width = height / 1.18;
         }
         return Align(
-          alignment: const Alignment(0, 0.72),
+          alignment: Alignment.bottomCenter,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 width: width,
                 height: height,
-                child: window,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    window,
+                    if (bubble != null && !bubble.hidden)
+                      Positioned(
+                        left: width * 0.46,
+                        right: 2,
+                        bottom: 6 + avatarSize * 0.92,
+                        child: OverflowBox(
+                          alignment: Alignment.bottomLeft,
+                          maxHeight: 160,
+                          child: LoveNoteCloud(
+                            key: ValueKey('${bubble.text}|${bubble.emoji}'),
+                            note: bubble,
+                            onPopped: onPopNote ?? () {},
+                          ),
+                        ),
+                      ),
+                    if (bubble != null && bubble.hidden)
+                      Positioned(
+                        left: width * 0.52,
+                        bottom: 6 + avatarSize * 0.90,
+                        child: LoveNoteEmber(
+                          onRestore: onRestoreNote ?? () {},
+                        ),
+                      ),
+                  ],
+                ),
               ),
               WindowSillCaption(label: label),
             ],
@@ -351,7 +427,7 @@ class _DropFlightState extends State<_DropFlight>
         final start = widget.drop.senderIsLeft ? 0.22 : 0.78;
         final end = widget.drop.senderIsLeft ? 0.78 : 0.22;
         final x = start + (end - start) * t;
-        final y = 0.38 - 0.16 * math.sin(math.pi * t);
+        final y = 0.62 - 0.12 * math.sin(math.pi * t);
         final opacity = t < 0.12
             ? t / 0.12
             : (t > 0.85 ? (1 - t) / 0.15 : 1.0);
@@ -370,11 +446,15 @@ class _DropFlightState extends State<_DropFlight>
   }
 
   String _emojiFor(String type) {
+    final custom = widget.drop.emoji;
+    if (custom != null && custom.isNotEmpty) return custom;
     return switch (type) {
       'Kiss' => '💋',
       'Hug' => '💕',
       'Sorry' => '🥺',
-      _ => type.length <= 2 ? type : '💖',
+      'Note' => '💌',
+      _ => type.runes.length <= 2 ? type : '💖',
     };
   }
 }
+

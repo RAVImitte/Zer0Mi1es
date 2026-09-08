@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_radii.dart';
 
 import '../../../core/utils/color_parser.dart';
 import '../../../core/widgets/app_page.dart';
@@ -22,20 +23,36 @@ class OutfitScreen extends ConsumerStatefulWidget {
 }
 
 class _OutfitScreenState extends ConsumerState<OutfitScreen> {
-  final Map<String, Color> _availableColors = {
-    'Black': const Color(0xFF1A1A1A),
-    'White': const Color(0xFFF5F5F5),
-    'Charcoal': const Color(0xFF36454F),
-    'Navy': const Color(0xFF000080),
-    'Denim': const Color(0xFF1560BD),
-    'Khaki': const Color(0xFFC3B091),
-    'Beige': const Color(0xFFF5F5DC),
-    'Olive': const Color(0xFF808000),
-    'Burgundy': const Color(0xFF800020),
+  static const _tops = <String, Color>{
+    'White': Color(0xFFF3F0EA),
+    'Heather': Color(0xFFB2B4B8),
+    'Black': Color(0xFF222222),
+    'Navy': Color(0xFF2A3F5F),
+    'Sky': Color(0xFF8FB5D4),
+    'Cream': Color(0xFFE8D9C4),
+    'Olive': Color(0xFF6A704C),
+    'Burgundy': Color(0xFF7A3542),
+    'Blush': Color(0xFFD9A8A8),
+    'Brown': Color(0xFF6B4A36),
+    'Sage': Color(0xFF8A9A78),
   };
 
-  Color? _selectedTop;
-  Color? _selectedBottom;
+  static const _bottoms = <String, Color>{
+    'Denim': Color(0xFF3C5680),
+    'Light denim': Color(0xFF8AA4C4),
+    'Black': Color(0xFF222222),
+    'Khaki': Color(0xFFC2AE84),
+    'Charcoal': Color(0xFF4A4E56),
+    'Grey': Color(0xFF9A9B9F),
+    'Olive': Color(0xFF5C6448),
+    'Cream': Color(0xFFE8D9C4),
+    'Tan': Color(0xFFC4A574),
+    'Brown': Color(0xFF6B4A36),
+    'Navy': Color(0xFF2A3F5F),
+  };
+
+  Color? _selectedTop = _tops['White'];
+  Color? _selectedBottom = _bottoms['Denim'];
   bool _isLoading = false;
   bool _prefilled = false;
 
@@ -98,7 +115,7 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
     return AppPage(
       title: 'My outfit',
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -107,34 +124,37 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'They’ll see this on you.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Center(
-              child: LayeredPersonAvatar(
-                state: AnimationState.idle,
-                topColor: _selectedTop ?? AppColors.primary.withValues(alpha: 0.3),
-                bottomColor:
-                    _selectedBottom ?? AppColors.primary.withValues(alpha: 0.3),
-                isBunny: isBunny,
-                size: 140,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  border: Border.all(color: AppColors.hairline),
+                ),
+                child: LayeredPersonAvatar(
+                  state: AnimationState.idle,
+                  topColor: _selectedTop ?? _tops['White']!,
+                  bottomColor: _selectedBottom ?? _bottoms['Denim']!,
+                  isBunny: isBunny,
+                  size: 128,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
-            const Text('Top',
-                style: TextStyle(
-                    color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            Text('Top', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 10),
             _buildColorSelector(true),
-            const SizedBox(height: 24),
-            const Text('Bottom',
-                style: TextStyle(
-                    color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            Text('Bottom', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 10),
             _buildColorSelector(false),
             if (partnerOutfit != null) ...[
               const SizedBox(height: 20),
@@ -172,67 +192,82 @@ class _OutfitScreenState extends ConsumerState<OutfitScreen> {
   }
 
   Widget _buildColorSelector(bool isTop) {
+    final colors = isTop ? _tops : _bottoms;
     final selectedColor = isTop ? _selectedTop : _selectedBottom;
-    final isPresetSelected = _availableColors.values.contains(selectedColor);
+    final isPresetSelected = selectedColor != null &&
+        colors.values.contains(selectedColor);
     final isCustomSelected = selectedColor != null && !isPresetSelected;
+    final paletteColor = selectedColor ?? AppColors.elevated;
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        ..._availableColors.entries.map((entry) {
-          final isSelected = selectedColor == entry.value;
-          return _buildColorCircle(entry.value, isSelected, () {
-            setState(() {
-              if (isTop) {
-                _selectedTop = entry.value;
-              } else {
-                _selectedBottom = entry.value;
-              }
-            });
-          });
-        }),
-        GestureDetector(
-          onTap: () => _showColorPicker(isTop),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isCustomSelected ? selectedColor : AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isCustomSelected ? AppColors.primary : AppColors.hairline,
-                width: isCustomSelected ? 3 : 1,
-              ),
-            ),
-            child: Icon(AppIcons.palette, color: AppColors.primary, size: 20),
+    final tiles = <Widget>[
+      ...colors.entries.map((entry) {
+        return Tooltip(
+          message: entry.key,
+          child: _swatch(
+            color: entry.value,
+            selected: selectedColor == entry.value,
+            onTap: () {
+              setState(() {
+                if (isTop) {
+                  _selectedTop = entry.value;
+                } else {
+                  _selectedBottom = entry.value;
+                }
+              });
+            },
           ),
-        ),
-      ],
+        );
+      }),
+      _swatch(
+        color: isCustomSelected ? paletteColor : AppColors.elevated,
+        selected: isCustomSelected,
+        onTap: () => _showColorPicker(isTop),
+        child: Icon(AppIcons.palette, color: AppColors.primary, size: 16),
+      ),
+    ];
+
+    return GridView.count(
+      crossAxisCount: 6,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 1,
+      children: tiles,
     );
   }
 
-  Widget _buildColorCircle(Color color, bool isSelected, VoidCallback onTap) {
+  Widget _swatch({
+    required Color color,
+    required bool selected,
+    required VoidCallback onTap,
+    Widget? child,
+  }) {
+    final isLight = color.computeLuminance() > 0.62;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.hairline,
-            width: isSelected ? 3 : 1,
+            color: selected
+                ? AppColors.primary
+                : (isLight
+                    ? const Color(0x66F6F0E8)
+                    : AppColors.hairline),
+            width: selected ? 2.5 : 1,
           ),
         ),
+        child: child == null ? null : Center(child: child),
       ),
     );
   }
 
   void _showColorPicker(bool isTop) {
     Color pickerColor =
-        (isTop ? _selectedTop : _selectedBottom) ?? AppColors.primary;
+        (isTop ? _selectedTop : _selectedBottom) ??
+            (isTop ? _tops['White']! : _bottoms['Denim']!);
 
     showDialog(
       context: context,

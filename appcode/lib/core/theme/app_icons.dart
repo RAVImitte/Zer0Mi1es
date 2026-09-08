@@ -46,4 +46,5 @@ abstract final class AppIcons {
   static IconData get wifiSlash => PhosphorIconsRegular.wifiSlash;
   static IconData get hourglass => PhosphorIconsRegular.hourglass;
   static IconData get bell => PhosphorIconsRegular.bell;
+  static IconData get help => PhosphorIconsRegular.question;
 }

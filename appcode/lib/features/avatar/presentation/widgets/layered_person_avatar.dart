@@ -109,14 +109,16 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
         : 0.0;
 
     final pulse = math.sin(_squashPulse * math.pi);
-    final squashX = _pose.squashX *
-        (1 + 0.08 * pulse) *
-        (1 - 0.012 * breathe) *
-        (1 + 0.05 * angryStomp);
-    final squashY = _pose.squashY *
-        (1 - 0.07 * pulse) *
-        (1 + 0.018 * breathe) *
-        (1 - 0.06 * angryStomp);
+    final squashX = (_pose.squashX *
+            (1 + 0.035 * pulse) *
+            (1 - 0.008 * breathe) *
+            (1 + 0.018 * angryStomp))
+        .clamp(0.97, 1.05);
+    final squashY = (_pose.squashY *
+            (1 - 0.025 * pulse) *
+            (1 + 0.01 * breathe) *
+            (1 - 0.022 * angryStomp))
+        .clamp(0.97, 1.04);
 
     final blinkLid = 1 - _blink;
     final pose = PuppetPose(
@@ -156,14 +158,14 @@ class _LayeredPersonAvatarState extends State<LayeredPersonAvatar>
               bottomColor: widget.bottomColor,
               isBunny: widget.isBunny,
               devastated: widget.state == AnimationState.moodDevastated,
+              angry: widget.state == AnimationState.moodAngry,
+              t: _time,
             ),
           ),
           if (widget.state == AnimationState.sleeping)
             _ZzzOverlay(size: widget.size, t: _time),
           if (_pose.heartEyes > 0.4)
             _HeartOverlay(size: widget.size, t: _time),
-          if (widget.state == AnimationState.moodAngry)
-            _AngerOverlay(size: widget.size, t: _time),
         ],
       ),
     );
@@ -190,28 +192,6 @@ class _ZzzOverlay extends StatelessWidget {
             fontSize: size * 0.12,
             fontWeight: FontWeight.w800,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AngerOverlay extends StatelessWidget {
-  const _AngerOverlay({required this.size, required this.t});
-  final double size;
-  final double t;
-
-  @override
-  Widget build(BuildContext context) {
-    final phase = (t % 0.42) / 0.42;
-    return Positioned(
-      top: size * (0.02 - 0.06 * phase),
-      right: size * 0.04,
-      child: Opacity(
-        opacity: (1 - phase).clamp(0.0, 1.0),
-        child: Transform.scale(
-          scale: 0.75 + 0.45 * phase,
-          child: Text('💢', style: TextStyle(fontSize: size * 0.14)),
         ),
       ),
     );
@@ -250,6 +230,8 @@ class _PuppetPainter extends CustomPainter {
     required this.bottomColor,
     required this.isBunny,
     required this.devastated,
+    required this.angry,
+    required this.t,
   });
 
   final PuppetPose pose;
@@ -257,6 +239,8 @@ class _PuppetPainter extends CustomPainter {
   final Color bottomColor;
   final bool isBunny;
   final bool devastated;
+  final bool angry;
+  final double t;
 
   static const _skin = _LayeredPersonAvatarState._skin;
   static const _hair = _LayeredPersonAvatarState._hair;
@@ -269,22 +253,27 @@ class _PuppetPainter extends CustomPainter {
     final h = size.height;
     final stroke = (w * 0.028).clamp(1.6, 4.2);
 
+    // Squash from the feet so hops and stomps don't pancake the figure.
+    final footY = h * 0.93;
     canvas.save();
-    canvas.translate(w / 2, h / 2);
+    canvas.translate(w / 2, footY);
     canvas.scale(pose.squashX, pose.squashY);
-    canvas.translate(-w / 2, -h / 2 + pose.headY * h * 0.15);
+    canvas.translate(-w / 2, -footY);
+    canvas.translate(0, pose.headY * h * 0.5);
 
     _drawShadow(canvas, w, h);
 
-    final neck = Offset(w / 2, h * 0.46);
-    final headC = Offset(w / 2, h * 0.34 + pose.headY * h);
-    final headR = w * 0.22;
+    final neck = Offset(w / 2, h * 0.445);
+    final headC = Offset(w / 2, h * 0.30);
+    final headR = w * 0.20;
 
+    // Arms after the shirt so inward hands stay in front of the body.
+    _drawPants(canvas, w, h, stroke);
+    _drawShoes(canvas, w, h, stroke);
+    _drawNeck(canvas, w, h, stroke);
+    _drawShirt(canvas, w, h, stroke);
     _drawArm(canvas, w, h, left: true, stroke: stroke);
     _drawArm(canvas, w, h, left: false, stroke: stroke);
-    _drawShoes(canvas, w, h, stroke);
-    _drawPants(canvas, w, h, stroke);
-    _drawShirt(canvas, w, h, stroke);
 
     canvas.save();
     canvas.translate(headC.dx, neck.dy);
@@ -303,6 +292,9 @@ class _PuppetPainter extends CustomPainter {
       _drawHair(canvas, headC, headR, stroke);
     }
     _drawFace(canvas, headC, headR, stroke);
+    if (angry) {
+      _drawAngerMark(canvas, headC, headR);
+    }
 
     canvas.restore();
     canvas.restore();
@@ -314,74 +306,135 @@ class _PuppetPainter extends CustomPainter {
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6);
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(w / 2, h * 0.93),
-        width: w * 0.38,
-        height: h * 0.055,
+        center: Offset(w / 2, h * 0.955),
+        width: w * 0.42,
+        height: h * 0.05,
       ),
       paint,
     );
   }
 
+  ({
+    double lC,
+    double rC,
+    double hipTop,
+    double ankle,
+    double crotchY,
+    double hipLegW,
+    double ankleW,
+  }) _legGeom(double w, double h) {
+    final gap = isBunny ? w * 0.072 : w * 0.064;
+    final hipW = isBunny ? w * 0.35 : w * 0.325;
+    final hipLegW = (hipW - gap) / 2;
+    final ankleW = hipLegW * (isBunny ? 0.84 : 0.76);
+    final cx = w / 2;
+    return (
+      lC: cx - (gap / 2 + hipLegW / 2),
+      rC: cx + (gap / 2 + hipLegW / 2),
+      hipTop: h * 0.648,
+      ankle: h * 0.90,
+      crotchY: h * 0.702,
+      hipLegW: hipLegW,
+      ankleW: ankleW,
+    );
+  }
+
   void _drawShoes(Canvas canvas, double w, double h, double stroke) {
-    final y = h * 0.88;
-    final shoeW = w * 0.16;
-    final shoeH = h * 0.075;
-    _fillStrokeRRect(
-      canvas,
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(w / 2 - w * 0.11, y),
-          width: shoeW,
-          height: shoeH,
+    final g = _legGeom(w, h);
+    final shoeW = g.ankleW * 1.28;
+    final shoeH = h * 0.05;
+    final y = h * 0.918;
+    for (final cx in [g.lC, g.rC]) {
+      _fillStrokeRRect(
+        canvas,
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(cx, y),
+            width: shoeW,
+            height: shoeH,
+          ),
+          Radius.circular(shoeH * 0.45),
         ),
-        Radius.circular(shoeH),
-      ),
-      _shoe,
-      stroke,
-    );
-    _fillStrokeRRect(
-      canvas,
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(w / 2 + w * 0.11, y),
-          width: shoeW,
-          height: shoeH,
-        ),
-        Radius.circular(shoeH),
-      ),
-      _shoe,
-      stroke,
-    );
+        _shoe,
+        stroke,
+      );
+    }
   }
 
   void _drawPants(Canvas canvas, double w, double h, double stroke) {
-    final pantsTop = h * 0.68;
+    final g = _legGeom(w, h);
+    final rHip = w * 0.032;
+    final rAnkle = w * 0.024;
+    final lTopO = g.lC - g.hipLegW / 2;
+    final lTopI = g.lC + g.hipLegW / 2;
+    final lBotO = g.lC - g.ankleW / 2;
+    final lBotI = g.lC + g.ankleW / 2;
+    final rTopO = g.rC + g.hipLegW / 2;
+    final rTopI = g.rC - g.hipLegW / 2;
+    final rBotO = g.rC + g.ankleW / 2;
+    final rBotI = g.rC - g.ankleW / 2;
+
     final path = Path()
-      ..addRRect(
-        RRect.fromRectAndCorners(
-          Rect.fromLTWH(w * 0.32, pantsTop, w * 0.36, h * 0.18),
-          topLeft: Radius.circular(w * 0.04),
-          topRight: Radius.circular(w * 0.04),
-          bottomLeft: Radius.circular(w * 0.06),
-          bottomRight: Radius.circular(w * 0.06),
+      ..moveTo(lTopO + rHip, g.hipTop)
+      ..lineTo(rTopO - rHip, g.hipTop)
+      ..quadraticBezierTo(rTopO, g.hipTop, rTopO, g.hipTop + rHip)
+      ..lineTo(rBotO, g.ankle - rAnkle)
+      ..quadraticBezierTo(rBotO, g.ankle, rBotO - rAnkle, g.ankle)
+      ..lineTo(rBotI + rAnkle * 0.55, g.ankle)
+      ..quadraticBezierTo(rBotI, g.ankle, rBotI, g.ankle - rAnkle)
+      ..lineTo(rTopI, g.crotchY)
+      ..quadraticBezierTo(w / 2, g.crotchY + h * 0.01, lTopI, g.crotchY)
+      ..lineTo(lBotI, g.ankle - rAnkle)
+      ..quadraticBezierTo(lBotI, g.ankle, lBotI - rAnkle * 0.55, g.ankle)
+      ..lineTo(lBotO + rAnkle, g.ankle)
+      ..quadraticBezierTo(lBotO, g.ankle, lBotO, g.ankle - rAnkle)
+      ..lineTo(lTopO, g.hipTop + rHip)
+      ..quadraticBezierTo(lTopO, g.hipTop, lTopO + rHip, g.hipTop)
+      ..close();
+    _fillStrokePath(canvas, path, bottomColor, stroke * 0.85);
+  }
+
+  void _drawNeck(Canvas canvas, double w, double h, double stroke) {
+    _fillStrokeRRect(
+      canvas,
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(w / 2, h * 0.455),
+          width: w * 0.11,
+          height: h * 0.07,
         ),
-      );
-    _fillStrokePath(canvas, path, bottomColor, stroke);
+        Radius.circular(w * 0.055),
+      ),
+      _skin,
+      stroke,
+    );
   }
 
   void _drawShirt(Canvas canvas, double w, double h, double stroke) {
+    final shirtH = h * 0.26 * pose.bodySquash;
+    final shirtW = w * 0.36;
+    final center = Offset(w / 2, h * 0.56);
     final torso = RRect.fromRectAndCorners(
       Rect.fromCenter(
-        center: Offset(w / 2, h * 0.62),
-        width: w * 0.42,
-        height: h * 0.22 * pose.bodySquash,
+        center: center,
+        width: shirtW,
+        height: shirtH,
       ),
-      topLeft: Radius.circular(w * 0.16),
-      topRight: Radius.circular(w * 0.16),
-      bottomLeft: Radius.circular(w * 0.08),
-      bottomRight: Radius.circular(w * 0.08),
+      topLeft: Radius.circular(w * 0.17),
+      topRight: Radius.circular(w * 0.17),
+      bottomLeft: Radius.circular(w * 0.10),
+      bottomRight: Radius.circular(w * 0.10),
     );
     _fillStrokeRRect(canvas, torso, topColor, stroke);
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy - shirtH * 0.12),
+        width: shirtW * 0.42,
+        height: shirtH * 0.22,
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.16),
+    );
   }
 
   void _drawArm(
@@ -392,12 +445,12 @@ class _PuppetPainter extends CustomPainter {
     required double stroke,
   }) {
     final shoulder = Offset(
-      w / 2 + (left ? -w * 0.18 : w * 0.18),
-      h * 0.55,
+      w / 2 + (left ? -w * 0.165 : w * 0.165),
+      h * 0.49,
     );
     final angle = left ? pose.armL : pose.armR;
-    final length = h * 0.2;
-    final armW = w * 0.11;
+    final length = h * 0.235;
+    final armW = w * 0.10;
 
     canvas.save();
     canvas.translate(shoulder.dx, shoulder.dy);
@@ -408,6 +461,46 @@ class _PuppetPainter extends CustomPainter {
     );
     _fillStrokeRRect(canvas, rect, _skin, stroke);
     _fillStrokeCircle(canvas, Offset(0, length), armW * 0.48, _skin, stroke);
+
+    final sleeve = RRect.fromRectAndRadius(
+      Rect.fromLTWH(-armW / 2, -armW * 0.12, armW, length * 0.36),
+      Radius.circular(armW),
+    );
+    _fillStrokeRRect(canvas, sleeve, topColor, stroke);
+    canvas.restore();
+  }
+
+  void _drawAngerMark(Canvas canvas, Offset headC, double headR) {
+    final phase = (t % 0.42) / 0.42;
+    final opacity = (1 - phase).clamp(0.0, 1.0);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '💢',
+        style: TextStyle(fontSize: headR * 0.7),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final origin = Offset(
+      headC.dx + headR * 0.58,
+      headC.dy - headR * 0.98 - headR * 0.08 * phase,
+    );
+    canvas.save();
+    canvas.translate(origin.dx, origin.dy);
+    canvas.scale(0.86 + 0.22 * phase);
+    canvas.saveLayer(
+      Rect.fromCenter(
+        center: Offset.zero,
+        width: painter.width * 1.2,
+        height: painter.height * 1.2,
+      ),
+      Paint()..color = Colors.white.withValues(alpha: opacity),
+    );
+    painter.paint(
+      canvas,
+      Offset(-painter.width / 2, -painter.height / 2),
+    );
+    canvas.restore();
     canvas.restore();
   }
 

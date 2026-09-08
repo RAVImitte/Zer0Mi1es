@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_radii.dart';
 import '../../../core/utils/partner_scene.dart';
 import '../../../core/widgets/affection_toast.dart';
 import '../../../core/widgets/app_offline_banner.dart';
@@ -19,6 +20,7 @@ import 'providers/home_providers.dart';
 import 'providers/partner_scene_provider.dart';
 import 'widgets/connection_actions.dart';
 import 'widgets/daily_status.dart';
+import 'widgets/home_coach_overlay.dart';
 import 'widgets/partner_presence.dart';
 import 'widgets/settings_sheet.dart';
 import 'widgets/talk_banner.dart';
@@ -36,6 +38,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _coach = false;
   int _coachStep = 0;
   bool _celebrated = false;
+  final _presenceKey = GlobalKey();
+  final _ritualsKey = GlobalKey();
+  final _dockKey = GlobalKey();
 
   @override
   void initState() {
@@ -49,8 +54,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       } catch (_) {}
       await syncHomeWidget(ref);
       final prefs = await SharedPreferences.getInstance();
-      if (!(prefs.getBool('home_coach_v2') ?? false) && mounted) {
-        setState(() => _coach = true);
+      if (!(prefs.getBool('home_coach_v4') ?? false) && mounted) {
+        await Future<void>.delayed(const Duration(milliseconds: 480));
+        if (mounted) setState(() => _coach = true);
       }
     });
   }
@@ -68,6 +74,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           state == AppLifecycleState.paused ||
               state == AppLifecycleState.inactive,
         );
+    if (state == AppLifecycleState.resumed) {
+      ref.read(coupleSceneProvider.notifier).refreshNotes();
+    }
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       cancelHomeWidgetSync();
@@ -77,8 +86,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Future<void> _dismissCoach() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('home_coach_v2', true);
+    await prefs.setBool('home_coach_v4', true);
     if (mounted) setState(() => _coach = false);
+  }
+
+  void _showCoach() {
+    setState(() {
+      _coachStep = 0;
+      _coach = true;
+    });
   }
 
   @override
@@ -97,9 +113,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             final drop = next.value!;
             showAffectionToast(
               context,
-              emoji: _emojiForDrop(drop.type),
-              label: drop.message?.isNotEmpty == true
-                  ? drop.message!
+              emoji: _emojiForDrop(drop.type, emoji: drop.emoji),
+              label: drop.type == 'Note'
+                  ? '$partnerName sent a note'
                   : '$partnerName sent a ${drop.type}',
             );
           }
@@ -128,20 +144,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             colors: sceneWash(myScene),
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Padding(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
+                        Text(
+                          'Zero Miles',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 22,
+                              ),
+                        ),
                         const Spacer(),
                         IconButton(
                           tooltip: 'Settings',
-                          onPressed: () => showSettingsSheet(context, ref),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () async {
+                            final replay = await showSettingsSheet(context, ref);
+                            if (replay && mounted) _showCoach();
+                          },
                           icon: Icon(AppIcons.settings,
                               color: AppColors.textSecondary),
                         ),
@@ -150,71 +181,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     const AppOfflineBanner(),
                     const TalkBanner(),
                     const VoicePlayChip(),
-                    const Expanded(
+                    Expanded(
                       flex: 5,
-                      child: ClipRect(child: PartnerPresence()),
+                      child: PartnerPresence(seatsKey: _presenceKey),
                     ),
                     const SizedBox(height: 8),
-                    const DailyStatus(),
+                    DailyStatus(key: _ritualsKey),
                     const SizedBox(height: 12),
-                    const ConnectionActions(),
+                    ConnectionActions(key: _dockKey),
                   ],
                 ),
               ),
-              if (_coach) _buildCoach(context),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCoach(BuildContext context) {
-    const steps = [
-      'Two windows. Their time of day lives in theirs — you feel the distance, you don’t read it.',
-      'Today’s three rituals sit under the sill. Outfit, photo, question.',
-      'Love is the first dock item. Kiss, hug, or sorry — with a note if you want.',
-    ];
-    return Positioned.fill(
-      child: Material(
-        color: Colors.black54,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  steps[_coachStep],
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_coachStep < steps.length - 1) {
-                      setState(() => _coachStep++);
-                    } else {
-                      _dismissCoach();
-                    }
-                  },
-                  child: Text(_coachStep < steps.length - 1 ? 'Next' : 'Got it'),
-                ),
-                TextButton(
-                  onPressed: _dismissCoach,
-                  child: const Text('Skip'),
-                ),
-              ],
             ),
-          ),
+            if (_coach)
+              HomeCoachOverlay(
+                step: _coachStep,
+                steps: [
+                  CoachStep(
+                    key: _presenceKey,
+                    radius: AppRadii.window,
+                    padding: 6,
+                    title: 'Your room',
+                    body:
+                        'Two of you, side by side. Each window is their time of day.',
+                  ),
+                  CoachStep(
+                    key: _ritualsKey,
+                    radius: AppRadii.control,
+                    padding: 10,
+                    title: 'Today',
+                    body:
+                        'Outfit, a photo, one question. Small rituals that keep you in the same day.',
+                  ),
+                  CoachStep(
+                    key: _dockKey,
+                    radius: 18,
+                    padding: 8,
+                    title: 'Reach them',
+                    body:
+                        'Love, mood, talk, and more. Start with Love — a kiss, a hug, a sorry, or a note.',
+                  ),
+                ],
+                onNext: () {
+                  if (_coachStep < 2) {
+                    setState(() => _coachStep++);
+                  } else {
+                    _dismissCoach();
+                  }
+                },
+                onSkip: _dismissCoach,
+              ),
+          ],
         ),
       ),
     );
   }
 
-  String _emojiForDrop(String type) {
+  String _emojiForDrop(String type, {String? emoji}) {
+    if (emoji != null && emoji.isNotEmpty) return emoji;
     switch (type) {
       case 'Kiss':
         return '💋';
@@ -222,6 +246,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         return '🤗';
       case 'Sorry':
         return '🥺';
+      case 'Note':
+        return '💌';
       default:
         return type.length <= 2 ? type : '💖';
     }

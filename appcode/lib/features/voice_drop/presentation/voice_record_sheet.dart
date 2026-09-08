@@ -35,6 +35,8 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
   final _player = AudioPlayer();
   Timer? _ticker;
   int _elapsedMs = 0;
+  int _pressGen = 0;
+  bool _held = false;
   bool _recording = false;
   bool _denied = false;
   String? _path;
@@ -42,23 +44,50 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _held = false;
+    _pressGen++;
     _recorder.dispose();
     _player.dispose();
     super.dispose();
   }
 
-  Future<void> _start() async {
+  void _onHoldStart() {
+    _held = true;
+    final gen = ++_pressGen;
+    _start(gen);
+  }
+
+  void _onHoldEnd({required bool keep}) {
+    _held = false;
+    _pressGen++;
+    if (_recording) {
+      _stop(keep: keep);
+    }
+  }
+
+  Future<void> _start(int gen) async {
     final hasPermission = await _recorder.hasPermission();
+    if (!mounted || gen != _pressGen) return;
     if (!hasPermission) {
       setState(() => _denied = true);
       return;
     }
+    // Permission dialog stole the gesture — wait for a fresh hold.
+    if (!_held) {
+      setState(() => _denied = false);
+      return;
+    }
     final dir = await getTemporaryDirectory();
+    if (!mounted || gen != _pressGen || !_held) return;
     _path = '${dir.path}/voice_drop.m4a';
     await _recorder.start(
       const RecordConfig(encoder: AudioEncoder.aacLc),
       path: _path!,
     );
+    if (!mounted || gen != _pressGen || !_held) {
+      if (await _recorder.isRecording()) await _recorder.stop();
+      return;
+    }
     HapticFeedback.mediumImpact();
     setState(() {
       _recording = true;
@@ -66,6 +95,10 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
       _denied = false;
     });
     _ticker = Timer.periodic(const Duration(milliseconds: 100), (t) async {
+      if (!mounted || gen != _pressGen) {
+        t.cancel();
+        return;
+      }
       final next = _elapsedMs + 100;
       if (next >= 15000) {
         t.cancel();
@@ -78,7 +111,11 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
 
   Future<void> _stop({required bool keep}) async {
     _ticker?.cancel();
-    final path = await _recorder.stop();
+    String? path;
+    if (await _recorder.isRecording()) {
+      path = await _recorder.stop();
+    }
+    if (!mounted) return;
     setState(() {
       _recording = false;
       if (keep) _path = path ?? _path;
@@ -196,14 +233,19 @@ class _VoiceRecordBodyState extends ConsumerState<_VoiceRecordBody> {
                   backgroundColor: AppColors.elevated,
                   strokeWidth: 4,
                 ),
-                GestureDetector(
-                  onLongPressStart: (_) => _start(),
-                  onLongPressEnd: (_) => _stop(keep: true),
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor:
-                        _recording ? AppColors.affection : AppColors.primary,
-                    child: Icon(AppIcons.mic, color: Colors.white, size: 32),
+                Listener(
+                  onPointerUp: (_) => _onHoldEnd(keep: true),
+                  onPointerCancel: (_) => _onHoldEnd(keep: false),
+                  child: GestureDetector(
+                    onLongPressStart: (_) => _onHoldStart(),
+                    onLongPressEnd: (_) => _onHoldEnd(keep: true),
+                    onLongPressCancel: () => _onHoldEnd(keep: false),
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor:
+                          _recording ? AppColors.affection : AppColors.primary,
+                      child: Icon(AppIcons.mic, color: Colors.white, size: 32),
+                    ),
                   ),
                 ),
               ],

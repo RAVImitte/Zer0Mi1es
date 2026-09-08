@@ -57,9 +57,10 @@ serve(async (req) => {
       const emojiMap: Record<string, string> = {
         'Kiss': '😽',
         'Hug': '🤗',
-        'Sorry': '🥺'
+        'Sorry': '🥺',
+        'Note': '💌',
       };
-      const emoji = emojiMap[dropType] || dropType;
+      const emoji = record.emoji || emojiMap[dropType] || dropType;
 
       if (msg) {
         title = `${emoji} ${emoji} ${senderName} says...`

@@ -7,6 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
+import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_page.dart';
 import '../../couple/data/supabase_couple_repository.dart';
 import '../data/supabase_photo_repository.dart';
 import '../domain/daily_photo.dart';
@@ -171,44 +174,50 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
     final coupleId = ref.watch(activeCoupleIdProvider).value;
     final uid = Supabase.instance.client.auth.currentUser?.id;
     
-    if (coupleId == null || uid == null) return const Scaffold(backgroundColor: AppColors.background, body: Center(child: CircularProgressIndicator()));
+    if (coupleId == null || uid == null) {
+      return const AppPage(
+        title: 'Today’s photo',
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     final photosStream = ref.watch(todayPhotosProvider(coupleId));
-    final partnerHasUploaded = ref.watch(partnerPhotoStatusProvider(coupleId)).value ?? false;
+    final partnerHasUploaded =
+        ref.watch(partnerPhotoStatusProvider(coupleId)).value ?? false;
+    final partnerName = ref.watch(partnerNameProvider).value ?? 'them';
+    final first = partnerName.trim().split(RegExp(r'\s+')).first;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Today’s photo'),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-      ),
-      backgroundColor: AppColors.background,
+    return AppPage(
+      title: 'Today’s photo',
       body: photosStream.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => AppErrorState(
+          message: 'Couldn’t load today’s photos.',
+          onRetry: () => ref.invalidate(todayPhotosProvider(coupleId)),
+        ),
         data: (photos) {
           final myPhoto = photos.where((p) => p.userId == uid).firstOrNull;
           final partnerPhoto = photos.where((p) => p.userId != uid).firstOrNull;
           final hasMyPhoto = myPhoto != null;
-          
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+
+          return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Column(
                 children: [
                   Expanded(
                     child: _buildLargePhotoCard(
-                      title: 'Partner\'s Moment',
+                      title: '$first’s moment',
                       photo: partnerPhoto,
                       isMyPhoto: false,
                       isUnlocked: hasMyPhoto,
-                      isPartnerUploadedHidden: partnerHasUploaded && !hasMyPhoto,
+                      isPartnerUploadedHidden:
+                          partnerHasUploaded && !hasMyPhoto,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Expanded(
                     child: _buildLargePhotoCard(
-                      title: 'Your Moment',
+                      title: 'Your moment',
                       photo: myPhoto,
                       isMyPhoto: true,
                       isUnlocked: true,
@@ -227,18 +236,17 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 4,
                         ),
-                        icon: _isUploading 
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white)) 
-                          : const Icon(Icons.camera_alt, size: 28),
-                        label: Text(_isUploading ? 'Uploading…' : 'Share today’s photo', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        icon: _isUploading
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF2A1614)))
+                          : Icon(AppIcons.camera, size: 22),
+                        label: Text(_isUploading ? 'Uploading…' : 'Share today’s photo'),
                         onPressed: _isUploading ? null : _chooseSource,
                       ),
                     ),
                   ],
                 ],
               ),
-            ),
-          );
+            );
         },
       ),
     );
@@ -407,7 +415,7 @@ class _DailyPhotoScreenState extends ConsumerState<DailyPhotoScreen> {
                               Icon(isMyPhoto ? Icons.camera_alt_outlined : Icons.hourglass_empty, color: AppColors.textSecondary.withOpacity(0.5), size: 64),
                               const SizedBox(height: 16),
                               Text(
-                                isMyPhoto ? 'Waiting for your moment...' : 'Waiting for partner...',
+                                isMyPhoto ? 'Take or choose today’s photo' : 'Waiting on them…',
                                 style: TextStyle(color: AppColors.textSecondary.withOpacity(0.5), fontSize: 16),
                               )
                             ],

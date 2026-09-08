@@ -14,10 +14,11 @@ import '../../../auth/data/supabase_auth_repository.dart';
 import '../../../auth/presentation/auth_view_model.dart';
 import '../../../couple/data/supabase_couple_repository.dart';
 
-Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
+/// Returns `true` when the user asked to replay the home guide.
+Future<bool> showSettingsSheet(BuildContext context, WidgetRef ref) async {
   final partner = ref.read(partnerNameProvider).value;
   final paired = ref.read(activeCoupleIdProvider).value != null;
-  return showAppSheet(
+  final replay = await showAppSheet<bool>(
     context: context,
     builder: (context) {
       return Padding(
@@ -28,7 +29,6 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
             ListTile(
               leading: Icon(AppIcons.person, color: AppColors.primary),
               title: const Text('You'),
-              subtitle: const Text('Edit the name they see'),
               onTap: () {
                 Navigator.pop(context);
                 _editName(context, ref);
@@ -51,24 +51,22 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
               ListTile(
                 leading: Icon(AppIcons.widget, color: AppColors.primary),
                 title: const Text('Home screen widget'),
-                subtitle: const Text(
-                  'Long-press your home screen → widgets → Zero Miles. Presence only — no talks or kisses.',
-                ),
-                isThreeLine: true,
                 onTap: () {},
               ),
             ListTile(
               leading: Icon(AppIcons.bell, color: AppColors.textSecondary),
               title: const Text('Notifications'),
-              subtitle: const Text(
-                'Pushes fire for kisses, talk, photo, and question. Open system settings to change.',
-              ),
-              isThreeLine: true,
               onTap: () => launchUrl(Uri.parse(
                 Platform.isIOS
                     ? 'app-settings:'
                     : 'package:com.example.zer0mi1es',
               )),
+            ),
+            ListTile(
+              leading: Icon(AppIcons.help, color: AppColors.primary),
+              title: const Text('Help'),
+              subtitle: const Text('See the home guide again'),
+              onTap: () => Navigator.pop(context, true),
             ),
             ListTile(
               leading: Icon(AppIcons.logout, color: AppColors.textSecondary),
@@ -106,6 +104,7 @@ Future<void> showSettingsSheet(BuildContext context, WidgetRef ref) {
       );
     },
   );
+  return replay == true;
 }
 
 Future<void> _editName(BuildContext context, WidgetRef ref) async {
