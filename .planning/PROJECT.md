@@ -4,7 +4,7 @@
 
 Zero Miles is a two-person Flutter app (Android + iOS) for long-distance partners. It is a private sanctuary: no feed, no friends list, no social sharing. After pairing, every feature is couple-scoped — daily question, photo, and outfit; live mood, sleep, love drops, and talk pings on a dual-puppet Home; short voice notes and a shared canvas; an Android home-screen snapshot of partner presence.
 
-V1 and V2 already ship on `main` (`2.0.0+2`). This GSD milestone does not rebuild those surfaces. It makes partner-visible status the same on Home, the Android widget, and the backend, with no collisions or data loss.
+V1, V2, and V3 already ship on `main` (`3.0.0+3`). This GSD milestone does not rebuild those surfaces. It makes partner-visible status the same on Home, the Android widget, and the backend, with no collisions or data loss.
 
 ## Core Value
 
@@ -64,11 +64,13 @@ Brownfield consistency — verify and fix so Validated behavior stays true on tw
 
 ## Context
 
-Brownfield Flutter + Supabase couple app. Git root is `Zer0Mi1es/` (this worktree, branch `main`), not `appcode/`. App version `2.0.0+2`. Backend: Supabase project `vkcoeudqeegnftkytiqd`, CLI via `npx supabase`. Docs live in `docs/` (PRD, ADR, SPEC). Precedence if they disagree: **ADR > SPEC > PRD > guide**. Do not ingest `docs/archive/` or treat `docs/gsd/GSD.md` as a SPEC.
+Brownfield Flutter + Supabase couple app. Git root is `Zer0Mi1es/` (this worktree, branch `main`), not `appcode/`. App version `3.0.0+3`. Backend: Supabase project `vkcoeudqeegnftkytiqd`, CLI via `npx supabase`. Docs live in `docs/` (PRD, ADR, SPEC). Precedence if they disagree: **ADR > SPEC > PRD > guide**. Do not ingest `docs/archive/` or treat `docs/gsd/GSD.md` as a SPEC.
 
 **V1 shipped:** auth, couple pairing + RLS, daily question, daily photo, OOTD, basic moods/love drops, pings, push.
 
 **V2 shipped (2026-09-05 – 2026-09-06):** couple scene, layered puppets, compact talk banner, Angry mood, Android widget, voice drops, canvas, sanctuary lighting. See `docs/releases/V2.md`.
+
+**V3 shipped (2026-09-08):** sanctuary Home from `UI-experiment` — living windows, Home dock, love-note cloud, stacked voice log, Fraunces + honey-rose. See `docs/releases/V3.md`.
 
 Presence is `coupleSceneProvider` fed by `partnerStatusProvider` (mood, sleep, talk) and `loveDropsProvider` (flights). In-app avatars are `LayeredPersonAvatar`. `PersonPainter` is the Android widget snapshot only. Talk lives in `talk_banner.dart` + `talk_expiry.dart`. Widget sync is `home_widget_sync.dart`.
 
@@ -95,7 +97,7 @@ ADR-locked. Do not reopen.
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Flutter + Supabase + Riverpod + GoRouter; FCM push; `home_widget` on Android (ADR-0001) | One mobile codebase, no custom HTTP API | ✓ Good — shipped `2.0.0+2` |
+| Flutter + Supabase + Riverpod + GoRouter; FCM push; `home_widget` on Android (ADR-0001) | One mobile codebase, no custom HTTP API | ✓ Good — shipped `3.0.0+3` |
 | Couple-private Postgres RLS; hashed 6-char pairing tokens; couple row only on join (ADR-0002) | Two-person sanctuary; raw code is ephemeral | ✓ Good |
 | Feature-first Flutter folders (ADR-0003) | Home composes features; no global widgets dump | ✓ Good |
 | `coupleSceneProvider` + `LayeredPersonAvatar`; no `AvatarViewModel` / `watchPartnerEvents` (ADR-0004) | Dual-seat presence, not a single-avatar FSM | ✓ Good |
@@ -107,4 +109,4 @@ ADR-locked. Do not reopen.
 | Angry replaces Overwhelmed; old rows still map (ADR-0010) | Stomp + 💢; no Overwhelmed on the sheet | ✓ Good |
 
 ---
-*Last updated: 2026-09-06 after `/gsd-new-project` from ingest*
+*Last updated: 2026-09-08 after V3 merge of `UI-experiment`*

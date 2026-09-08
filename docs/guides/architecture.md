@@ -62,7 +62,7 @@ The database relies heavily on PostgreSQL features to maintain the strict privac
 - The Android home-screen widget (`home_widget` + `PartnerWidgetProvider`) is a **snapshot** of partner name, mood, scene, and avatar. It must not render talk or kisses. Sleep comes from `partnerStatusProvider`, not a leftover animation cache.
 
 ## 5. Deployment & CI/CD
-- **Flutter:** Built into `.apk`/`.aab` for Android and `.ipa` for iOS. **V2 app version is `2.0.0+2`** (`appcode/pubspec.yaml`).
+- **Flutter:** Built into `.apk`/`.aab` for Android and `.ipa` for iOS. **Current app version is `3.0.0+3`** (`appcode/pubspec.yaml`). V2 was `2.0.0+2`.
 - **Supabase:** Managed via Supabase CLI migrations (`backend/supabase/migrations/`) ensuring the schema and RLS policies are version-controlled and reproducible.
 
 ## 6. V2 architecture (2026-09-05 – 2026-09-06)
@@ -75,3 +75,12 @@ Shipped in the last 72 hours. Product requirements: PRD §6.
 - **Widget sync** (`home_widget_sync.dart`) reads partner name / mood / scene / sleep / outfit — never talk or kisses.
 - **Voice** (`voice_drop/`) and **canvas** (persisted strokes) are Home features, not V1 tabs.
 - **Presence lighting** is `partnerSceneProvider` (dawn / day / dusk / night).
+
+## 7. V3 architecture (2026-09-08)
+
+Shipped by merging `UI-experiment` into `main`. Product notes: [V3](../releases/V3.md).
+
+- **Living windows** (`living_window.dart`) sit behind each seat with scene photos under `appcode/assets/scenes/`.
+- **Home dock** is the restyled `connection_actions.dart`. Love **Note** is a distinct drop type with `love_drops.emoji` (`30_love_drop_note.sql`).
+- **Love-note cloud** and **voice log** are Home wall pieces, not a second hub.
+- **Display type** is Fraunces; body stays Inter. Palette is honey-rose on warm near-black (see [ui-ux.md](ui-ux.md)).

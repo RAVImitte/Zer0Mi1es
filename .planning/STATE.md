@@ -13,7 +13,7 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-06)
+See: .planning/PROJECT.md (updated 2026-09-08)
 
 **Core value:** Partner-visible status stays consistent across Home, Android widget, and backend — no collisions or data loss
 **Current focus:** Phase 1 — Couple Identity & Private Sanctuary
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-09-06)
 Phase: 1 of 5 (Couple Identity & Private Sanctuary)
 Plan: — of — in current phase
 Status: Ready to plan
-Last activity: 2026-09-06 — Codebase audit: all 13 v1 surfaces exist on main; GSD phases still unplanned (0 plans)
+Last activity: 2026-09-08 — Merged `UI-experiment` into `main` as V3 (`3.0.0+3`). GSD phases still unplanned (0 plans). Bugfix waves not in this ship.
 
-Progress: [░░░░░░░░░░] 0% (GSD plans). Product code: V1+V2 shipped (`2.0.0+2`).
+Progress: [░░░░░░░░░░] 0% (GSD plans). Product code: V1+V2+V3 shipped (`3.0.0+3`).
 
 ## Performance Metrics
 

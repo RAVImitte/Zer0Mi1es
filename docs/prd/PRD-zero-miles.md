@@ -1,8 +1,8 @@
 ---
 type: PRD
 status: Accepted
-version: 2.0.0
-date: 2026-09-06
+version: 3.0.0
+date: 2026-09-08
 ---
 
 # PRD — Zero Miles
@@ -15,9 +15,9 @@ Zero Miles is a **two-person** mobile app for long-distance partners. It is a pr
 
 **Audience:** Couples in long-distance relationships, or any pair who wants a closed loop outside noisy chat apps.
 
-**Platform:** Flutter Android + iOS. App version **2.0.0+2**. Backend: Supabase (Postgres + Auth + Storage + Realtime + Edge Functions). Push: FCM via `push-notification`.
+**Platform:** Flutter Android + iOS. App version **3.0.0+3**. Backend: Supabase (Postgres + Auth + Storage + Realtime + Edge Functions). Push: FCM via `push-notification`.
 
-**Cross-refs:** [ADR-0001](../adr/0001-flutter-supabase-stack.md), [ADR-0002](../adr/0002-couple-private-rls.md), [V2](../releases/V2.md)
+**Cross-refs:** [ADR-0001](../adr/0001-flutter-supabase-stack.md), [ADR-0002](../adr/0002-couple-private-rls.md), [V2](../releases/V2.md), [V3](../releases/V3.md)
 
 ## User stories
 

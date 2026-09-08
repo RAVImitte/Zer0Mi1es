@@ -3,7 +3,7 @@
 **This folder is the only living documentation for the app.**  
 Git root: `Zer0Mi1es/` (branch `main`). Do not keep copies in sibling worktrees or in `D:\Chadukunta\zeromiles\docs\`.
 
-App version: **2.0.0+2**
+App version: **3.0.0+3**
 
 ## Layout
 
@@ -15,7 +15,7 @@ docs/
   specs/              as-built feature contracts (GSD ingest)
   guides/             narrative architecture + UI
   gsd/                how to run GSD on this repo
-  releases/           shipped milestone notes (V2, …)
+  releases/           shipped milestone notes (V2, V3, …)
   archive/v1/         frozen V1 PDF/DOCX — do not ingest
   archive/legacy-guides/  superseded markdown — do not ingest
 ```
@@ -28,6 +28,7 @@ docs/
 | [guides/architecture.md](guides/architecture.md) | Stack and folders |
 | [guides/ui-ux.md](guides/ui-ux.md) | Visual / Home UX |
 | [releases/V2.md](releases/V2.md) | What shipped in V2 |
+| [releases/V3.md](releases/V3.md) | What shipped in V3 |
 | [gsd/GSD.md](gsd/GSD.md) | GSD operator playbook |
 
 Precedence if they disagree: **ADR > SPEC > PRD > guide**.

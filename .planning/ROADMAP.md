@@ -2,7 +2,7 @@
 
 ## Overview
 
-Zero Miles already ships V1 and V2 on `main` (`2.0.0+2`). This milestone does not rebuild auth, pairing, Home, rituals, widget, voice, or canvas. It hardens partner-visible status — mood, presence/sleep, pairing, daily unlock, talk banner, love drops, and the Android widget — so Home, widget, and backend never collide or drop data. Work follows the couple loop: lock identity, keep the Home scene honest, make live signals collision-free, keep daily give-to-get airtight, then make the widget and persisted media match without loss.
+Zero Miles already ships V1, V2, and V3 on `main` (`3.0.0+3`). This milestone does not rebuild auth, pairing, Home, rituals, widget, voice, or canvas. It hardens partner-visible status — mood, presence/sleep, pairing, daily unlock, talk banner, love drops, and the Android widget — so Home, widget, and backend never collide or drop data. Work follows the couple loop: lock identity, keep the Home scene honest, make live signals collision-free, keep daily give-to-get airtight, then make the widget and persisted media match without loss.
 
 ## Phases
 

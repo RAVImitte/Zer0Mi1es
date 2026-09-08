@@ -10,7 +10,7 @@ Zero Miles is a two-person mobile product. It needs one codebase for Android and
 
 ## Decision
 
-- **Client:** Flutter (`appcode/`), Android + iOS only. Version `2.0.0+2`.
+- **Client:** Flutter (`appcode/`), Android + iOS only. Version `3.0.0+3`.
 - **State:** `flutter_riverpod` + `riverpod_annotation` where generated.
 - **Navigation:** `go_router` with redirects on session and `registration_status`.
 - **Backend:** Supabase Postgres, Auth, Storage, Realtime, Edge Functions (`backend/supabase/`).

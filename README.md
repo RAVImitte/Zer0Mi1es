@@ -38,9 +38,20 @@ Text / call / video pings plus Good Night / Good Morning, with a push to their p
 
 ---
 
+## ✨ V3 (shipped 2026-09-08)
+
+App version **3.0.0+3**. Sanctuary Home from `UI-experiment` on `main`:
+
+- **Living windows** and time-of-day scene photos on Home
+- **Home dock**, love-note cloud (8h), stacked voice log
+- **Larger overlapping puppets**; pairing leaves Waiting when the couple forms
+- **Note** love drop with emoji (`30_love_drop_note.sql`)
+
+See [docs/releases/V3.md](docs/releases/V3.md).
+
 ## ✨ V2 (shipped 2026-09-05 – 2026-09-06)
 
-App version **2.0.0**. Last 72 hours on `main`:
+App version **2.0.0+2**. Last 72 hours on `main` before V3:
 
 - **Couple scene** — both of you on Home as layered person puppets; Love Drops fly between seats; sleep persists
 - **Talk banner** — one line (“Gwen wants to call” + Okay + ⋯); replies expire (Okay 15m / In a bit 1h / Not now 2h / Tonight → 6am)

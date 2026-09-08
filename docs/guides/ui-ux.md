@@ -51,6 +51,14 @@ Features like *Daily Questions* and *Photo Sharing* require the user to input th
 - **Mood sheet:** 2-column tiles (Happy, Excited, Tired, Sad, Angry, Devastated).
 - **No bottom tab bar.** Canvas and voice are Home actions. Each seat has a living window for that person’s local time.
 
+## 4.5. V3 Home (shipped 2026-09-08)
+
+- **Living windows** with scene photographs behind each seat.
+- **Home dock** for Kiss / Hug / Sorry / Note / Mood / Talk / Sleep / Voice / Canvas.
+- **Love-note cloud** on the wall (8 hour expiry).
+- **Voice log** stacks up to three inbound clips; swipe to dismiss.
+- **Display type** Fraunces; **body** Inter. Honey-rose on warm near-black.
+
 ## 5. UI Components Guidelines
 - **Buttons:** Rounded corners (e.g., `BorderRadius.circular(12)`), filled with Primary or Secondary color based on context.
 - **Cards (Surfaces):** Use the Surface color (#1E293B) with subtle or no borders, maintaining a flat, modern aesthetic.
