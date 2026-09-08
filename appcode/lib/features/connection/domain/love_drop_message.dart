@@ -1,5 +1,5 @@
-/// Same window as a voice drop — a thought for about a day, then it fades.
-const kLoveNoteTtl = Duration(hours: 24);
+/// Same window as an unanswered talk ping — a thought for the waking day.
+const kLoveNoteTtl = Duration(hours: 8);
 
 class LoveDropMessage {
   const LoveDropMessage(this.type, this.message, {this.emoji, this.senderId});
