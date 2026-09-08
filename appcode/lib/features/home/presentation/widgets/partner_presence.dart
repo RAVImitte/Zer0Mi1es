@@ -23,6 +23,9 @@ import 'connection_actions.dart';
 import 'love_note_cloud.dart';
 import 'room_wall_note.dart';
 
+const kHomeWallNoteSlot = 88.0;
+const kHomeVoiceLogSlot = 92.0;
+
 class PartnerPresence extends ConsumerWidget {
   const PartnerPresence({super.key, this.seatsKey});
 
@@ -64,14 +67,11 @@ class PartnerPresence extends ConsumerWidget {
       builder: (context, constraints) {
         final seatW = constraints.maxWidth / 2;
         final windowW = seatW.clamp(96.0, 220.0);
-        final windowH = windowW * 1.18;
-        final avatarSize = (windowW * 0.74).clamp(84.0, 156.0);
-        const captionH = 36.0;
-        const noteMin = 96.0;
-        var seatBlockH = windowH + captionH;
-        if (seatBlockH + noteMin > constraints.maxHeight) {
-          seatBlockH = math.max(constraints.maxHeight - noteMin, 140);
-        }
+        final avatarSize = (windowW * 0.66).clamp(76.0, 140.0);
+        const captionH = 32.0;
+        final leftover =
+            math.max(0.0, constraints.maxHeight - kHomeWallNoteSlot);
+        final seatBlockH = math.min(leftover, windowW * 1.0 + captionH);
 
         Widget seatRow() {
           return Row(
@@ -123,16 +123,22 @@ class PartnerPresence extends ConsumerWidget {
             children: [
               Column(
                 children: [
-                  const Expanded(
+                  const SizedBox(
+                    height: kHomeWallNoteSlot,
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(8, 0, 8, 4),
                       child: _SafeFit(child: RoomWallNote()),
                     ),
                   ),
-                  SizedBox(
-                    key: seatsKey,
-                    height: seatBlockH,
-                    child: seatRow(),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SizedBox(
+                        key: seatsKey,
+                        height: seatBlockH,
+                        child: seatRow(),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -224,6 +230,7 @@ class _Seat extends ConsumerWidget {
         window: LivingWindow(
           scene: windowScene,
           unpaired: true,
+          leftSeat: leftSeat,
           onTap: () => context.push(AppRoutes.couple),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -274,6 +281,7 @@ class _Seat extends ConsumerWidget {
       window: LivingWindow(
         scene: windowScene,
         sleeping: sleeping,
+        leftSeat: leftSeat,
         rimColor: glow,
         onTap: () {
           if (isMe) {
@@ -307,7 +315,7 @@ class _Seat extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxW = constraints.maxWidth;
-        final maxH = math.max(constraints.maxHeight - 36, 80.0);
+        final maxH = math.max(constraints.maxHeight - 32, 80.0);
         final width = maxW;
         final height = maxH;
         return Align(

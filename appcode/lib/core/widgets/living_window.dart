@@ -27,6 +27,7 @@ class LivingWindow extends ConsumerStatefulWidget {
     required this.child,
     this.sleeping = false,
     this.unpaired = false,
+    this.leftSeat = true,
     this.onTap,
     this.onLongPress,
     this.rimColor,
@@ -36,6 +37,7 @@ class LivingWindow extends ConsumerStatefulWidget {
   final Widget child;
   final bool sleeping;
   final bool unpaired;
+  final bool leftSeat;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Color? rimColor;
@@ -128,6 +130,7 @@ class _LivingWindowState extends ConsumerState<LivingWindow>
                     time: _time,
                     sleeping: widget.sleeping,
                     unpaired: widget.unpaired,
+                    leftSeat: widget.leftSeat,
                     rim: rim,
                     animate: !reduce && !widget.unpaired,
                   ),
@@ -154,6 +157,7 @@ class _StagePainter extends CustomPainter {
     required this.time,
     required this.sleeping,
     required this.unpaired,
+    required this.leftSeat,
     required this.rim,
     required this.animate,
   });
@@ -163,20 +167,24 @@ class _StagePainter extends CustomPainter {
   final double time;
   final bool sleeping;
   final bool unpaired;
+  final bool leftSeat;
   final Color rim;
   final bool animate;
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Bleed past the seat so the fade finishes off-box and can mix
-    // with the partner's stage.
-    final padX = size.width * 0.42;
-    final padTop = size.height * 0.34;
-    final padBottom = size.height * 0.22;
+    // Bleed on the outer and top/bottom edges. Keep the inner edge
+    // short so it does not draw a seam across the other face.
+    final outer = size.width * 0.34;
+    final inner = size.width * 0.08;
+    final padLeft = leftSeat ? outer : inner;
+    final padRight = leftSeat ? inner : outer;
+    final padTop = size.height * 0.28;
+    final padBottom = size.height * 0.18;
     final bounds = Rect.fromLTRB(
-      -padX,
+      -padLeft,
       -padTop,
-      size.width + padX,
+      size.width + padRight,
       size.height + padBottom,
     );
     canvas.saveLayer(bounds, Paint());
@@ -375,6 +383,7 @@ class _StagePainter extends CustomPainter {
       old.scene != scene ||
       old.sleeping != sleeping ||
       old.unpaired != unpaired ||
+      old.leftSeat != leftSeat ||
       old.rim != rim ||
       old.look != look;
 }

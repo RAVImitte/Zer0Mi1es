@@ -180,7 +180,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const AppOfflineBanner(),
                     const TalkBanner(),
-                    const VoicePlayChip(),
+                    if (activeCoupleId != null)
+                      const SizedBox(
+                        height: kHomeVoiceLogSlot,
+                        child: VoicePlayChip(),
+                      ),
                     Expanded(
                       flex: 5,
                       child: PartnerPresence(seatsKey: _presenceKey),

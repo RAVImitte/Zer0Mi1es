@@ -21,57 +21,31 @@ class DailyStatus extends ConsumerWidget {
     final hasPhoto = ref.watch(photoCompletedProvider).value ?? false;
     final hasQuestion = ref.watch(questionCompletedProvider).value ?? false;
     final isPaired = ref.watch(activeCoupleIdProvider).value != null;
-    final doneCount =
-        [hasOutfit, hasPhoto, hasQuestion].where((v) => v).length;
 
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Text('Today', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(width: 10),
-            for (var i = 0; i < 3; i++) ...[
-              if (i > 0) const SizedBox(width: 4),
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i < doneCount
-                      ? AppColors.primary
-                      : AppColors.hairline,
-                ),
-              ),
-            ],
-          ],
+        _RitualChip(
+          icon: AppIcons.outfit,
+          label: 'Outfit',
+          done: hasOutfit,
+          pulse: isPaired && !hasOutfit,
+          onTap: () => _open(context, isPaired, AppRoutes.outfit),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _RitualChip(
-              icon: AppIcons.outfit,
-              label: 'Outfit',
-              done: hasOutfit,
-              pulse: isPaired && !hasOutfit,
-              onTap: () => _open(context, isPaired, AppRoutes.outfit),
-            ),
-            const SizedBox(width: 8),
-            _RitualChip(
-              icon: AppIcons.photo,
-              label: 'Photo',
-              done: hasPhoto,
-              pulse: isPaired && !hasPhoto,
-              onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
-            ),
-            const SizedBox(width: 8),
-            _RitualChip(
-              icon: AppIcons.question,
-              label: 'Question',
-              done: hasQuestion,
-              pulse: isPaired && !hasQuestion,
-              onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
-            ),
-          ],
+        const SizedBox(width: 8),
+        _RitualChip(
+          icon: AppIcons.photo,
+          label: 'Photo',
+          done: hasPhoto,
+          pulse: isPaired && !hasPhoto,
+          onTap: () => _open(context, isPaired, AppRoutes.dailyPhoto),
+        ),
+        const SizedBox(width: 8),
+        _RitualChip(
+          icon: AppIcons.question,
+          label: 'Question',
+          done: hasQuestion,
+          pulse: isPaired && !hasQuestion,
+          onTap: () => _open(context, isPaired, AppRoutes.dailyQuestion),
         ),
       ],
     );
