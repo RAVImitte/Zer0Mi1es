@@ -40,7 +40,11 @@ class PartnerPresence extends ConsumerWidget {
     final theirScene =
         ref.watch(partnerSceneProvider).value ?? myScene;
 
-    if (coupleId != null && myRole == null) {
+    final waitingOnRole = coupleId != null &&
+        myRole == null &&
+        roleAsync.isLoading &&
+        !roleAsync.hasError;
+    if (waitingOnRole) {
       return const Center(
         child: SizedBox(
           width: 22,

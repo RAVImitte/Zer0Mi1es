@@ -37,6 +37,8 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _client.auth.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(CacheKeys.myRole);
   }
 
   @override
