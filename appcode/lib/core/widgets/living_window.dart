@@ -120,6 +120,8 @@ class _LivingWindowState extends ConsumerState<LivingWindow>
               clipBehavior: Clip.none,
               children: [
                 CustomPaint(
+                  isComplex: true,
+                  willChange: !reduce && !widget.unpaired,
                   painter: _StagePainter(
                     look: look,
                     scene: widget.scene,
@@ -166,53 +168,58 @@ class _StagePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bounds = Offset.zero & size;
+    // Bleed past the seat so the fade finishes off-box and can mix
+    // with the partner's stage.
+    final padX = size.width * 0.42;
+    final padTop = size.height * 0.34;
+    final padBottom = size.height * 0.22;
+    final bounds = Rect.fromLTRB(
+      -padX,
+      -padTop,
+      size.width + padX,
+      size.height + padBottom,
+    );
     canvas.saveLayer(bounds, Paint());
 
-    _sky(canvas, size);
-    _moodGlow(canvas, size);
+    _sky(canvas, bounds);
+    _moodGlow(canvas, bounds);
     if (!unpaired) {
       _orb(canvas, size);
       if (animate) _weather(canvas, size);
     }
     _ground(canvas, size);
-    if (sleeping) _sleepDim(canvas, size);
+    if (sleeping) _sleepDim(canvas, bounds);
 
-    final maskRect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height * 0.48),
-      width: size.width * 1.35,
-      height: size.height * 1.4,
-    );
     canvas.drawRect(
       bounds,
       Paint()
         ..blendMode = BlendMode.dstIn
-        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 22)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 36)
         ..shader = RadialGradient(
-          center: const Alignment(0, 0.04),
-          radius: 0.72,
+          center: const Alignment(0, 0.08),
+          radius: 0.98,
           colors: [
             Colors.white,
-            Colors.white,
-            Colors.white.withValues(alpha: 0.55),
-            Colors.white.withValues(alpha: 0.18),
+            Colors.white.withValues(alpha: 0.88),
+            Colors.white.withValues(alpha: 0.48),
+            Colors.white.withValues(alpha: 0.16),
             Colors.transparent,
           ],
-          stops: const [0.0, 0.32, 0.55, 0.78, 1.0],
-        ).createShader(maskRect),
+          stops: const [0.0, 0.26, 0.52, 0.76, 1.0],
+        ).createShader(bounds),
     );
     canvas.restore();
   }
 
-  void _sky(Canvas canvas, Size size) {
+  void _sky(Canvas canvas, Rect bounds) {
     final dim = sleeping ? 0.55 : (unpaired ? 0.45 : 1.0);
     Color fade(Color c, [double a = 1]) =>
         c.withValues(alpha: (a * dim).clamp(0.0, 1.0));
 
     final sky = Paint()
       ..shader = RadialGradient(
-        center: const Alignment(0, -0.12),
-        radius: 1.15,
+        center: const Alignment(0, -0.08),
+        radius: 1.2,
         colors: [
           fade(look.skyHi, 0.92),
           fade(look.skyMid, 0.62),
@@ -220,21 +227,21 @@ class _StagePainter extends CustomPainter {
           fade(look.skyMid, 0),
         ],
         stops: const [0.0, 0.34, 0.62, 1.0],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, sky);
+      ).createShader(bounds);
+    canvas.drawRect(bounds, sky);
   }
 
-  void _moodGlow(Canvas canvas, Size size) {
+  void _moodGlow(Canvas canvas, Rect bounds) {
     final glow = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0, 0.35),
-        radius: 0.55,
+        radius: 0.62,
         colors: [
           rim.withValues(alpha: sleeping ? 0.12 : 0.28),
           rim.withValues(alpha: 0),
         ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, glow);
+      ).createShader(bounds);
+    canvas.drawRect(bounds, glow);
   }
 
   void _orb(Canvas canvas, Size size) {
@@ -326,9 +333,9 @@ class _StagePainter extends CustomPainter {
 
   void _ground(Canvas canvas, Size size) {
     final rect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height * 0.88),
-      width: size.width * 0.7,
-      height: size.height * 0.14,
+      center: Offset(size.width / 2, size.height * 0.9),
+      width: size.width * 1.15,
+      height: size.height * 0.22,
     );
     final paint = Paint()
       ..shader = RadialGradient(
@@ -349,17 +356,17 @@ class _StagePainter extends CustomPainter {
     );
   }
 
-  void _sleepDim(Canvas canvas, Size size) {
+  void _sleepDim(Canvas canvas, Rect bounds) {
     final paint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0, 0.2),
-        radius: 0.85,
+        radius: 0.9,
         colors: const [
           Color(0x66101828),
           Color(0x00101828),
         ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, paint);
+      ).createShader(bounds);
+    canvas.drawRect(bounds, paint);
   }
 
   @override

@@ -62,7 +62,7 @@ class PartnerPresence extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final seatW = (constraints.maxWidth - 8) / 2;
+        final seatW = constraints.maxWidth / 2;
         final windowW = seatW.clamp(96.0, 220.0);
         final windowH = windowW * 1.18;
         final avatarSize = (windowW * 0.74).clamp(84.0, 156.0);
@@ -94,7 +94,6 @@ class PartnerPresence extends ConsumerWidget {
                   bubble: scene.leftNote,
                 ),
               ),
-              const SizedBox(width: 4),
               Expanded(
                 child: _Seat(
                   leftSeat: false,
@@ -309,12 +308,8 @@ class _Seat extends ConsumerWidget {
       builder: (context, constraints) {
         final maxW = constraints.maxWidth;
         final maxH = math.max(constraints.maxHeight - 36, 80.0);
-        var width = maxW;
-        var height = width * 1.18;
-        if (height > maxH) {
-          height = maxH;
-          width = height / 1.18;
-        }
+        final width = maxW;
+        final height = maxH;
         return Align(
           alignment: Alignment.bottomCenter,
           child: Column(
